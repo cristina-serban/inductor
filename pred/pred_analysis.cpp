@@ -6,81 +6,85 @@ using namespace reach;
 using namespace pred;
 using namespace smtlib::sep;
 
-sptr_t<IndexAllocAnalysis> IndexAllocAnalysis::clone() {
-    sptr_t<IndexAllocAnalysis> copy = make_shared<IndexAllocAnalysis>();
-    copy->pred.insert(pred.begin(), pred.end());
+/* ================================ IndexAllocAnalysis ================================ */
+
+IndexAllocAnalysisPtr IndexAllocAnalysis::clone() {
+    auto copy = make_shared<IndexAllocAnalysis>();
+    copy->predicates.insert(predicates.begin(), predicates.end());
     copy->base.insert(base.begin(), base.end());
-    copy->ind.insert(ind.begin(), ind.end());
+    copy->inductive.insert(inductive.begin(), inductive.end());
     return copy;
 }
 
-bool IndexAllocAnalysis::equals(sptr_t<IndexAllocAnalysis> other) {
+bool IndexAllocAnalysis::equals(const IndexAllocAnalysisPtr& other) {
     if (!other)
         return false;
 
     if (base.size() != other->base.size() ||
-        ind.size() != other->ind.size() ||
-        pred.size() != other->pred.size()) {
+        inductive.size() != other->inductive.size() ||
+        predicates.size() != other->predicates.size()) {
         return false;
     }
 
-    for (auto it = pred.begin(); it != pred.end(); it++) {
-        string name = (*it).first;
-        if (other->pred.find(name) == other->pred.end())
+    for (const auto& predEntry : predicates) {
+        string name = predEntry.first;
+        if (other->predicates.find(name) == other->predicates.end())
             return false;
 
-        if ((*it).second.size() != other->pred[name].size())
+        if (predEntry.second.size() != other->predicates[name].size())
             return false;
 
-        for (int i = 0; i < (*it).second.size(); i++) {
-            if ((*it).second[i] != other->pred[name][i])
+        for (size_t i = 0, sz = predEntry.second.size(); i < sz; i++) {
+            if (predEntry.second[i] != other->predicates[name][i])
                 return false;
         }
     }
 
-    for (auto it = ind.begin(); it != ind.end(); it++) {
-        string name = (*it).first;
+    for (const auto& indEntry : inductive) {
+        string name = indEntry.first;
 
-        if (other->ind.find(name) == other->ind.end())
+        if (other->inductive.find(name) == other->inductive.end())
             return false;
 
-        sptr_um3<InductiveCase, vector<Allocated>> map = (*it).second;
-        sptr_um3<InductiveCase, vector<Allocated>> otherMap = other->ind[name];
+        IndexAllocInductiveMap map = indEntry.second;
+        IndexAllocInductiveMap otherMap = other->inductive[name];
 
-        for (auto itt = map.begin(); itt != map.end(); itt++) {
-            sptr_t<InductiveCase> icase = (*itt).first;
+        for (const auto& icaseEntry : map) {
+            InductiveCasePtr icase = icaseEntry.first;
+
             if (otherMap.find(icase) == otherMap.end())
                 return false;
 
-            if ((*itt).second.size() != otherMap[icase].size())
+            if (icaseEntry.second.size() != otherMap[icase].size())
                 return false;
 
-            for (int i = 0; i < (*itt).second.size(); i++) {
-                if ((*itt).second[i] != otherMap[icase][i])
+            for (size_t i = 0, sz = icaseEntry.second.size(); i < sz; i++) {
+                if (icaseEntry.second[i] != otherMap[icase][i])
                     return false;
             }
         }
     }
 
-    for (auto it = base.begin(); it != base.end(); it++) {
-        string name = (*it).first;
+    for (const auto& baseEntry : base) {
+        string name = baseEntry.first;
 
         if (other->base.find(name) == other->base.end())
             return false;
 
-        sptr_um3<BaseCase, vector<Allocated>> map = (*it).second;
-        sptr_um3<BaseCase, vector<Allocated>> otherMap = other->base[name];
+        IndexAllocBaseMap map = baseEntry.second;
+        IndexAllocBaseMap otherMap = other->base[name];
 
-        for (auto itt = map.begin(); itt != map.end(); itt++) {
-            sptr_t<BaseCase> bcase = (*itt).first;
+        for (const auto& bcaseEntry : map) {
+            BaseCasePtr bcase = bcaseEntry.first;
+
             if (otherMap.find(bcase) == otherMap.end())
                 return false;
 
-            if ((*itt).second.size() != otherMap[bcase].size())
+            if (bcaseEntry.second.size() != otherMap[bcase].size())
                 return false;
 
-            for (int i = 0; i < (*itt).second.size(); i++) {
-                if ((*itt).second[i] != otherMap[bcase][i])
+            for (size_t i = 0, sz = bcaseEntry.second.size(); i < sz; i++) {
+                if (bcaseEntry.second[i] != otherMap[bcase][i])
                     return false;
             }
         }
@@ -89,92 +93,110 @@ bool IndexAllocAnalysis::equals(sptr_t<IndexAllocAnalysis> other) {
     return true;
 }
 
-sptr_t<IndexReachAnalysis> IndexReachAnalysis::clone() {
-    sptr_t<IndexReachAnalysis> copy = make_shared<IndexReachAnalysis>();
+/* ================================ IndexReachAnalysis ================================ */
 
-    for (auto it = pred.begin(); it != pred.end(); it++) {
-        copy->pred[(*it).first] = (*it).second->clone();
+IndexReachAnalysisPtr IndexReachAnalysis::clone() {
+    auto copy = make_shared<IndexReachAnalysis>();
+
+    for (const auto& predEntry : predicates) {
+        copy->predicates[predEntry.first] = predEntry.second->clone();
     }
 
-    for (auto it = base.begin(); it != base.end(); it++) {
-        sptr_um1<BaseCase, IndexReachability> cloneBase;
-        for (auto itt = (*it).second.begin(); itt != (*it).second.end(); itt++) {
-            cloneBase[(*itt).first] = (*itt).second->clone();
+    for (const auto& baseEntry : base) {
+        IndexReachBaseMap cloneBase;
+
+        for (const auto& bcaseEntry : baseEntry.second) {
+            cloneBase[bcaseEntry.first] = bcaseEntry.second->clone();
         }
 
-        copy->base[(*it).first] = cloneBase;
+        copy->base[baseEntry.first] = cloneBase;
     }
 
-    for (auto it = ind.begin(); it != ind.end(); it++) {
-        sptr_um1<InductiveCase, IndexReachability> cloneInd;
-        for (auto itt = (*it).second.begin(); itt != (*it).second.end(); itt++) {
-            cloneInd[(*itt).first] = (*itt).second->clone();
+    for (const auto& indEntry : inductive) {
+        IndexReachInductiveMap cloneInd;
+
+        for (const auto& icaseEntry : indEntry.second) {
+            cloneInd[icaseEntry.first] = icaseEntry.second->clone();
         }
 
-        copy->ind[(*it).first] = cloneInd;
+        copy->inductive[indEntry.first] = cloneInd;
     }
 
     return copy;
 }
 
-bool IndexReachAnalysis::equals(sptr_t<IndexReachAnalysis> other) {
+bool IndexReachAnalysis::equals(const IndexReachAnalysisPtr& other) {
     if (!other)
         return false;
 
     if (base.size() != other->base.size() ||
-        ind.size() != other->ind.size() ||
-        pred.size() != other->pred.size()) {
+        inductive.size() != other->inductive.size() ||
+        predicates.size() != other->predicates.size()) {
         return false;
     }
 
-    for (auto it = pred.begin(); it != pred.end(); it++) {
-        string name = (*it).first;
-        if (other->pred.find(name) == other->pred.end())
+    for (auto& predEntry : predicates) {
+        string name = predEntry.first;
+        if (other->predicates.find(name) == other->predicates.end())
             return false;
 
-        if (!(*it).second->equals(other->pred[(*it).first]))
+        if (!predEntry.second->equals(other->predicates[predEntry.first]))
             return false;
     }
 
-    for (auto it = ind.begin(); it != ind.end(); it++) {
-        string name = (*it).first;
+    for (const auto& indEntry : inductive) {
+        string name = indEntry.first;
 
-        if (other->ind.find(name) == other->ind.end())
+        if (other->inductive.find(name) == other->inductive.end())
             return false;
 
-        sptr_um1<InductiveCase, IndexReachability> map = (*it).second;
-        sptr_um1<InductiveCase, IndexReachability> otherMap = other->ind[name];
+        IndexReachInductiveMap map = indEntry.second;
+        IndexReachInductiveMap otherMap = other->inductive[name];
 
-        for (auto itt = map.begin(); itt != map.end(); itt++) {
-            sptr_t<InductiveCase> icase = (*itt).first;
+        for (const auto& icaseEntry : map) {
+            InductiveCasePtr icase = icaseEntry.first;
             if (otherMap.find(icase) == otherMap.end())
                 return false;
 
-            if (!(*itt).second->equals(otherMap[icase]))
+            if (!icaseEntry.second->equals(otherMap[icase]))
                 return false;
         }
     }
 
-    for (auto it = base.begin(); it != base.end(); it++) {
-        string name = (*it).first;
+    for (const auto& baseEntry : base) {
+        string name = baseEntry.first;
 
         if (other->base.find(name) == other->base.end())
             return false;
 
-        sptr_um1<BaseCase, IndexReachability> map = (*it).second;
-        sptr_um1<BaseCase, IndexReachability> otherMap = other->base[name];
+        IndexReachBaseMap map = baseEntry.second;
+        IndexReachBaseMap otherMap = other->base[name];
 
-        for (auto itt = map.begin(); itt != map.end(); itt++) {
-            sptr_t<BaseCase> bcase = (*itt).first;
+        for (const auto& bcaseEntry : map) {
+            BaseCasePtr bcase = bcaseEntry.first;
             if (otherMap.find(bcase) == otherMap.end())
                 return false;
 
-            if (!(*itt).second->equals(otherMap[bcase]))
+            if (!bcaseEntry.second->equals(otherMap[bcase]))
                 return false;
         }
     }
 
     return true;
+}
+
+/* ==================================== Utilities ===================================== */
+
+string pred::allocToString(Allocated a) {
+    if (a == Allocated::ALWAYS) {
+        return "A";
+    }
+
+    if (a == Allocated::NEVER) {
+        return "N";
+    }
+
+    return "M";
 }
 
 Allocated pred::conj(Allocated a1, Allocated a2) {
@@ -185,15 +207,15 @@ Allocated pred::conj(Allocated a1, Allocated a2) {
     return Allocated::MAYBE;
 }
 
-Allocated pred::conj(vector<Allocated> vec) {
+Allocated pred::conj(const vector<Allocated>& vec) {
     bool always = true;
     bool never = true;
 
-    for (auto it = vec.begin(); it != vec.end(); it++) {
-        if (*it != Allocated::ALWAYS)
+    for (const auto& elem : vec) {
+        if (elem != Allocated::ALWAYS)
             always = false;
 
-        if (*it != Allocated::NEVER)
+        if (elem != Allocated::NEVER)
             never = false;
     }
 
@@ -206,30 +228,54 @@ Allocated pred::conj(vector<Allocated> vec) {
     return value;
 }
 
-vector<Allocated> pred::conj(vector<Allocated> vec1, vector<Allocated> vec2) {
+vector<Allocated> pred::conj(const vector<Allocated>& vec1, const vector<Allocated>& vec2) {
     vector<Allocated> result;
+
     if (vec1.size() != vec2.size()) {
         return result;
     }
 
     result = vec1;
-    for (unsigned long i = 1; i < vec2.size(); i++) {
+    for (size_t i = 1, sz = vec2.size(); i < sz; i++) {
         result[i] = conj(result[i], vec2[i]);
     }
 
     return result;
 }
 
-vector<Allocated> pred::conj(vector<vector<Allocated>> vec) {
+vector<Allocated> pred::conj(const vector<vector<Allocated>>& vec) {
     vector<Allocated> result;
+
     if (vec.empty())
         return result;
 
     result = vec[0];
-    for (unsigned long i = 1; i < vec.size(); i++) {
-        for (unsigned long j = 0; j < vec[i].size(); j++) {
+    for (size_t i = 1, szi = vec.size(); i < szi; i++) {
+        for (size_t j = 0, szj = vec[i].size(); j < szj; j++) {
             result[j] = conj(result[j], vec[i][j]);
         }
+    }
+
+    return result;
+}
+
+IndexReachabilityPtr pred::conj(const IndexReachabilityPtr& r1, const IndexReachabilityPtr& r2) {
+    IndexReachabilityPtr result = r1->clone();
+    result->conj(r2);
+
+    return result;
+}
+
+IndexReachabilityPtr pred::conj(const vector<IndexReachabilityPtr>& vec) {
+    IndexReachabilityPtr result;
+
+    if (vec.empty()) {
+        return result;
+    }
+
+    result = vec[0]->clone();
+    for (unsigned long i = 1; i < vec.size(); i++) {
+        result->conj(vec[i]);
     }
 
     return result;
@@ -251,42 +297,43 @@ Allocated pred::disj(Allocated a1, Allocated a2) {
     return Allocated::MAYBE;
 }
 
-Allocated pred::disj(vector<Allocated> vec) {
+Allocated pred::disj(const vector<Allocated>& vec) {
     bool never = true;
 
-    for (auto it = vec.begin(); it != vec.end(); it++) {
-        if (*it == Allocated::ALWAYS)
+    for (auto& elem : vec) {
+        if (elem == Allocated::ALWAYS)
             return Allocated::ALWAYS;
 
-        if (*it != Allocated::NEVER)
+        if (elem != Allocated::NEVER)
             never = false;
     }
 
     return never ? Allocated::NEVER : Allocated::MAYBE;
 }
 
-vector<Allocated> pred::disj(vector<Allocated> vec1, vector<Allocated> vec2) {
+vector<Allocated> pred::disj(const vector<Allocated>& vec1, const vector<Allocated>& vec2) {
     vector<Allocated> result;
+
     if (vec1.size() != vec2.size()) {
         return result;
     }
 
     result = vec1;
-    for (unsigned long i = 1; i < vec2.size(); i++) {
+    for (size_t i = 1, sz = vec2.size(); i < sz; i++) {
         result[i] = disj(result[i], vec2[i]);
     }
 
     return result;
 }
 
-vector<Allocated> pred::disj(vector<vector<Allocated>> vec) {
+vector<Allocated> pred::disj(const vector<vector<Allocated>>& vec) {
     vector<Allocated> result;
     if (vec.empty())
         return result;
 
     result = vec[0];
-    for (unsigned long i = 1; i < vec.size(); i++) {
-        for (unsigned long j = 0; j < vec[i].size(); j++) {
+    for (size_t i = 1, szi = vec.size(); i < szi; i++) {
+        for (size_t j = 0, szj = vec[i].size(); j < szj; j++) {
             result[j] = disj(result[j], vec[i][j]);
         }
     }
@@ -294,88 +341,58 @@ vector<Allocated> pred::disj(vector<vector<Allocated>> vec) {
     return result;
 }
 
-vector<vector<Allocated>> pred::varToIndex(vector<umap<string, Allocated>> cases,
-                                           sptr_v<SortedVariable> params) {
+StringReachabilityPtr pred::disj(const StringReachabilityPtr& reach,
+                                 const IndexReachabilityPtr& idxReach,
+                                 const vector<TermPtr>& args) {
+    StringReachabilityPtr result = reach->clone();
+
+    for (size_t i = 0, szi = args.size(); i < szi; i++) {
+        for (size_t j = 0, szj = args.size(); j < szj; j++) {
+            if (idxReach->find(i, j)) {
+                result->link(args[i]->toString(), args[j]->toString());
+            }
+        }
+    }
+
+    return result;
+}
+
+vector<vector<Allocated>> pred::varToIndex(const vector<unordered_map<string, Allocated>>& cases,
+                                           const vector<smtlib::sep::SortedVariablePtr>& params) {
     vector<vector<Allocated>> results(cases.size());
-    for (unsigned long i = 0; i < cases.size(); i++) {
-        for (unsigned long j = 0; j < params.size(); j++) {
-            results[i].push_back(cases[i][params[j]->name]);
+
+    for (size_t i = 1, sz = cases.size(); i < sz; i++) {
+        for (const auto& param : params) {
+            results[i].push_back(cases[i].at(param->name));
         }
     }
 
     return results;
 }
 
-string pred::allocToString(Allocated a) {
-    if (a == Allocated::ALWAYS) {
-        return "A";
-    } else if (a == Allocated::NEVER) {
-        return "N";
-    } else {
-        return "M";
-    }
-}
 
-sptr_t<IndexReachability> pred::conj(sptr_t<IndexReachability> r1,
-                                     sptr_t<IndexReachability> r2) {
-    sptr_t<IndexReachability> result = r1->clone();
-    result->conj(r2);
+IndexReachabilityPtr pred::varToIndex(const StringReachabilityPtr& reach,
+                                      const vector<SortedVariablePtr>& params) {
+    unordered_map<string, size_t> paramMap;
 
-    return result;
-}
-
-sptr_t<IndexReachability> pred::conj(sptr_v<IndexReachability> vec) {
-    sptr_t<IndexReachability> result;
-
-    if (vec.empty()) {
-        return result;
-    }
-
-    result = vec[0]->clone();
-    for (unsigned long i = 1; i < vec.size(); i++) {
-        result->conj(vec[i]);
-    }
-
-    return result;
-}
-
-sptr_t<IndexReachability> pred::varToIndex(sptr_t<StringReachability> reach,
-                                           sptr_v<SortedVariable> params) {
-    umap<string, unsigned long> paramMap;
-    for (unsigned long i = 0; i < params.size(); i++) {
+    for (size_t i = 0, sz = params.size(); i < sz; i++) {
         paramMap[params[i]->name] = i;
     }
 
     return reach->toIndexReachability(paramMap);
 }
 
-sptr_v<IndexReachability> pred::varToIndex(sptr_v<StringReachability> cases,
-                                           sptr_v<SortedVariable> params) {
-    sptr_v<IndexReachability> result;
+vector<IndexReachabilityPtr> pred::varToIndex(const vector<StringReachabilityPtr>& cases,
+                                              const vector<SortedVariablePtr>& params) {
+    vector<IndexReachabilityPtr> result;
 
     umap<string, unsigned long> paramMap;
-    for (unsigned long i = 0; i < params.size(); i++) {
+    for (size_t i = 0, sz = params.size(); i < sz; i++) {
         paramMap[params[i]->name] = i;
     }
 
-    for (unsigned long i = 0; i < cases.size(); i++) {
-        result.push_back(cases[i]->toIndexReachability(paramMap));
-    }
-
-    return result;
-}
-
-sptr_t<StringReachability> pred::disj(sptr_t<StringReachability> reach,
-                                      sptr_t<IndexReachability> idxReach,
-                                      sptr_v<Term> args) {
-    sptr_t<StringReachability> result = reach->clone();
-
-    for (unsigned long i = 0; i < args.size(); i++) {
-        for (unsigned long j = 0; j < args.size(); j++) {
-            if (idxReach->find(i, j)) {
-                result->link(args[i]->toString(), args[j]->toString());
-            }
-        }
+    for (const auto& caseReach : cases) {
+        result.push_back(caseReach->toIndexReachability(paramMap));
     }
 
     return result;

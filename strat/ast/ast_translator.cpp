@@ -44,26 +44,18 @@ shared_ptr<Strategy> Translator::translate(shared_ptr<Automaton> aut) {
 proof::Rule Translator::translate(shared_ptr<Rule> rule) {
     string ruleName = rule->name->value;
 
-    if(ruleName == proof::toString(proof::Rule::CALL)) {
-        return proof::Rule::CALL;
-    } else if(ruleName == proof::toString(proof::Rule::INDUCTION)) {
-        return proof::Rule::INDUCTION;
-    } else if(ruleName == proof::toString(proof::Rule::UNFOLD_LEFT)) {
-        return proof::Rule::UNFOLD_LEFT;
-    } else if(ruleName == proof::toString(proof::Rule::UNFOLD_RIGHT)) {
-        return proof::Rule::UNFOLD_RIGHT;
+    if(ruleName == proof::toString(proof::Rule::INFINITE_DESCENT)) {
+        return proof::Rule::INFINITE_DESCENT;
+    } else if(ruleName == proof::toString(proof::Rule::LEFT_UNFOLD)) {
+        return proof::Rule::LEFT_UNFOLD;
+    } else if(ruleName == proof::toString(proof::Rule::RIGHT_UNFOLD)) {
+        return proof::Rule::RIGHT_UNFOLD;
     } else if(ruleName == proof::toString(proof::Rule::REDUCE)) {
         return proof::Rule::REDUCE;
     } else if(ruleName == proof::toString(proof::Rule::SPLIT)) {
         return proof::Rule::SPLIT;
-    } else if(ruleName == proof::toString(proof::Rule::SIMPLIFY)) {
-        return proof::Rule::SIMPLIFY;
-    } else if(ruleName == proof::toString(proof::Rule::SUBSTITUTE)) {
-        return proof::Rule::SUBSTITUTE;
-    } else if(ruleName == proof::toString(proof::Rule::SMT_TRUE)) {
-        return proof::Rule::SMT_TRUE;
-    } else if(ruleName == proof::toString(proof::Rule::SMT_FALSE)) {
-        return proof::Rule::SMT_FALSE;
+    } else if(ruleName == proof::toString(proof::Rule::AXIOM)) {
+        return proof::Rule::AXIOM;
     } else {
         return proof::Rule::NONE;
     }

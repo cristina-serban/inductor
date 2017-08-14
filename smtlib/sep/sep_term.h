@@ -6,6 +6,7 @@
 #ifndef INDUCTOR_SEP_TERM_H
 #define INDUCTOR_SEP_TERM_H
 
+#include "sep_abstract.h"
 #include "sep_attribute.h"
 #include "sep_interfaces.h"
 #include "sep_match.h"
@@ -21,21 +22,21 @@ namespace smtlib {
         class QualifiedTerm : public Term,
                               public std::enable_shared_from_this<QualifiedTerm> {
         public:
-            sptr_t<Identifier> identifier;
-            sptr_v<Term> terms;
+            IdentifierPtr identifier;
+            std::vector<TermPtr> terms;
 
-            inline QualifiedTerm(sptr_t<Identifier> identifier)
-                : identifier(identifier) { }
+            inline explicit QualifiedTerm(const IdentifierPtr& identifier)
+                    : identifier(identifier) {}
 
             /**
              * \param identifier    Qualified identifier
              * \param terms         List of terms
              */
-            QualifiedTerm(sptr_t<Identifier> identifier, sptr_v<Term> &terms);
+            QualifiedTerm(const IdentifierPtr& identifier, const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== LetTerm ====================================== */
@@ -43,18 +44,18 @@ namespace smtlib {
         class LetTerm : public Term,
                         public std::enable_shared_from_this<LetTerm> {
         public:
-            sptr_v<VariableBinding> bindings;
-            sptr_t<Term> term;
+            std::vector<VariableBindingPtr> bindings;
+            TermPtr term;
 
             /**
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            LetTerm(sptr_v<VariableBinding> &bindings, sptr_t<Term> term);
+            LetTerm(const std::vector<VariableBindingPtr>& bindings, const TermPtr& term);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== ForallTerm ==================================== */
@@ -62,18 +63,18 @@ namespace smtlib {
         class ForallTerm : public Term,
                            public std::enable_shared_from_this<ForallTerm> {
         public:
-            sptr_v<SortedVariable> bindings;
-            sptr_t<Term> term;
+            std::vector<SortedVariablePtr> bindings;
+            TermPtr term;
 
             /**
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            ForallTerm(sptr_v<SortedVariable> &bindings, sptr_t<Term> term);
+            ForallTerm(const std::vector<SortedVariablePtr>& bindings, const TermPtr& term);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== ExistsTerm ==================================== */
@@ -81,18 +82,18 @@ namespace smtlib {
         class ExistsTerm : public Term,
                            public std::enable_shared_from_this<ExistsTerm> {
         public:
-            sptr_v<SortedVariable> bindings;
-            sptr_t<Term> term;
+            std::vector<SortedVariablePtr> bindings;
+            TermPtr term;
 
             /**
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            ExistsTerm(sptr_v<SortedVariable> &bindings, sptr_t<Term> term);
+            ExistsTerm(const std::vector<SortedVariablePtr>& bindings, const TermPtr& term);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== MatchTerm ===================================== */
@@ -100,18 +101,18 @@ namespace smtlib {
         class MatchTerm : public Term,
                           public std::enable_shared_from_this<MatchTerm> {
         public:
-            sptr_t<Term> term;
-            sptr_v<MatchCase> cases;
+            TermPtr term;
+            std::vector<MatchCasePtr> cases;
 
             /**
              * @param term      Term to be matched
              * @param cases     Match cases
              */
-            MatchTerm(sptr_t<Term> term, sptr_v<MatchCase> &cases);
+            MatchTerm(const TermPtr& term, const std::vector<MatchCasePtr>& cases);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================== AnnotatedTerm =================================== */
@@ -119,18 +120,18 @@ namespace smtlib {
         class AnnotatedTerm : public Term,
                               public std::enable_shared_from_this<AnnotatedTerm> {
         public:
-            sptr_t<Term> term;
-            sptr_v<Attribute> attributes;
+            TermPtr term;
+            std::vector<AttributePtr> attributes;
 
             /**
              * \param term  Inner term
              * \param attr  Attributes
              */
-            AnnotatedTerm(sptr_t<Term> term, sptr_v<Attribute> &attributes);
+            AnnotatedTerm(const TermPtr& term, const std::vector<AttributePtr>& attributes);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== TrueTerm ===================================== */
@@ -138,11 +139,11 @@ namespace smtlib {
         class TrueTerm : public Term,
                          public std::enable_shared_from_this<TrueTerm> {
         public:
-            inline TrueTerm() { }
+            inline TrueTerm() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== FalseTerm ===================================== */
@@ -150,11 +151,11 @@ namespace smtlib {
         class FalseTerm : public Term,
                           public std::enable_shared_from_this<FalseTerm> {
         public:
-            inline FalseTerm() { }
+            inline FalseTerm() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== NotTerm ====================================== */
@@ -162,33 +163,33 @@ namespace smtlib {
         class NotTerm : public Term,
                         public std::enable_shared_from_this<NotTerm> {
         public:
-            sptr_t<Term> term;
+            TermPtr term;
 
             /**
              * @param term  Inner term
              */
-            inline NotTerm(sptr_t<Term> term) : term(term) { }
+            inline explicit NotTerm(const TermPtr& term) : term(term) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =================================== ImpliesTerm ==================================== */
         /** An implication term */
         class ImpliesTerm : public Term,
-                             public std::enable_shared_from_this<ImpliesTerm> {
+                            public std::enable_shared_from_this<ImpliesTerm> {
         public:
-            sptr_v<Term> terms;
+            std::vector<TermPtr> terms;
 
             /**
              * @param terms Inner terms
              */
-            ImpliesTerm(sptr_v<Term> &terms);
+            explicit ImpliesTerm(const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== AndTerm ====================================== */
@@ -196,19 +197,19 @@ namespace smtlib {
         class AndTerm : public Term,
                         public std::enable_shared_from_this<AndTerm> {
         public:
-            sptr_v<Term> terms;
+            std::vector<TermPtr> terms;
 
             /** Default constructor */
-            AndTerm() { }
+            inline AndTerm() = default;
 
             /**
              * @param terms Inner terms
              */
-            AndTerm(sptr_v<Term> &terms);
+            explicit AndTerm(const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ====================================== OrTerm ====================================== */
@@ -216,16 +217,16 @@ namespace smtlib {
         class OrTerm : public Term,
                        public std::enable_shared_from_this<OrTerm> {
         public:
-            sptr_v<Term> terms;
+            std::vector<TermPtr> terms;
 
             /**
              * @param terms Inner terms
              */
-            OrTerm(sptr_v<Term> &terms);
+            explicit OrTerm(const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
 
         };
 
@@ -234,16 +235,16 @@ namespace smtlib {
         class XorTerm : public Term,
                         public std::enable_shared_from_this<XorTerm> {
         public:
-            sptr_v<Term> terms;
+            std::vector<TermPtr> terms;
 
             /**
              * @param terms Inner terms
              */
-            XorTerm(sptr_v<Term> &terms);
+            explicit XorTerm(const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== EqualsTerm ==================================== */
@@ -251,16 +252,16 @@ namespace smtlib {
         class EqualsTerm : public Term,
                            public std::enable_shared_from_this<EqualsTerm> {
         public:
-            sptr_v<Term> terms;
+            std::vector<TermPtr> terms;
 
             /**
              * @param terms Inner terms
              */
-            EqualsTerm(sptr_v<Term> &terms);
+            explicit EqualsTerm(const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =================================== DistinctTerm =================================== */
@@ -268,16 +269,16 @@ namespace smtlib {
         class DistinctTerm : public Term,
                              public std::enable_shared_from_this<DistinctTerm> {
         public:
-            sptr_v<Term> terms;
+            std::vector<TermPtr> terms;
 
             /**
              * @param terms Inner terms
              */
-            DistinctTerm(sptr_v<Term> &terms);
+            explicit DistinctTerm(const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== IteTerm ====================================== */
@@ -285,23 +286,23 @@ namespace smtlib {
         class IteTerm : public Term,
                         public std::enable_shared_from_this<IteTerm> {
         public:
-            sptr_t<Term> testTerm;
-            sptr_t<Term> thenTerm;
-            sptr_t<Term> elseTerm;
+            TermPtr testTerm;
+            TermPtr thenTerm;
+            TermPtr elseTerm;
 
             /**
              * @param testTerm  Test condition
              * @param thenTerm  Term for 'then' branch
              * @param elseTerm  Term for 'else' branch
              */
-            inline IteTerm(sptr_t<Term> testTerm,
-                           sptr_t<Term> thenTerm,
-                           sptr_t<Term> elseTerm)
-                : testTerm(testTerm), thenTerm(thenTerm), elseTerm(elseTerm) { }
+            inline IteTerm(const TermPtr& testTerm,
+                           const TermPtr& thenTerm,
+                           const TermPtr& elseTerm)
+                    : testTerm(testTerm), thenTerm(thenTerm), elseTerm(elseTerm) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== EmpTerm ====================================== */
@@ -309,11 +310,11 @@ namespace smtlib {
         class EmpTerm : public Term,
                         public std::enable_shared_from_this<EmpTerm> {
         public:
-            inline EmpTerm() { }
+            inline EmpTerm() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== SepTerm ====================================== */
@@ -321,19 +322,19 @@ namespace smtlib {
         class SepTerm : public Term,
                         public std::enable_shared_from_this<SepTerm> {
         public:
-            sptr_v<Term> terms;
+            std::vector<TermPtr> terms;
 
             /** Default constructor */
-            inline SepTerm() { }
+            inline SepTerm() = default;
 
             /**
              * @param terms Inner terms
              */
-            SepTerm(sptr_v<Term> &terms);
+            explicit SepTerm(const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== WandTerm ===================================== */
@@ -341,13 +342,13 @@ namespace smtlib {
         class WandTerm : public Term,
                          public std::enable_shared_from_this<WandTerm> {
         public:
-            sptr_v<Term> terms;
+            std::vector<TermPtr> terms;
 
-            WandTerm(sptr_v<Term> &terms);
+            explicit WandTerm(const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== PtoTerm ====================================== */
@@ -355,20 +356,20 @@ namespace smtlib {
         class PtoTerm : public Term,
                         public std::enable_shared_from_this<PtoTerm> {
         public:
-            sptr_t<Term> leftTerm;
-            sptr_t<Term> rightTerm;
+            TermPtr leftTerm;
+            TermPtr rightTerm;
 
             /**
              * @param leftTerm      Left-hand side of the 'points-to'
              * @param rightTerm     Right-hand side of the 'points-to'
              */
-            inline PtoTerm(sptr_t<Term> leftTerm,
-                           sptr_t<Term> rightTerm)
-                : leftTerm(leftTerm), rightTerm(rightTerm) { }
+            inline PtoTerm(const TermPtr& leftTerm,
+                           const TermPtr& rightTerm)
+                    : leftTerm(leftTerm), rightTerm(rightTerm) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== NilTerm ====================================== */
@@ -376,19 +377,19 @@ namespace smtlib {
         class NilTerm : public Term,
                         public std::enable_shared_from_this<NilTerm> {
         public:
-            sptr_t<Sort> sort;
+            SortPtr sort;
 
             /** Default constructor */
-            inline NilTerm() { }
+            inline NilTerm() = default;
 
             /**
              * @param sort  Sort of the 'nil' predicate
              */
-            inline NilTerm(sptr_t<Sort> sort) : sort(sort) { }
+            inline explicit NilTerm(const SortPtr& sort) : sort(sort) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

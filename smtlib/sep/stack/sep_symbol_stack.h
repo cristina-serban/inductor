@@ -59,6 +59,8 @@ namespace smtlib {
             sptr_t<FunEntry> tryAdd(sptr_t<FunEntry> entry);
             sptr_t<VarEntry> tryAdd(sptr_t<VarEntry> entry);
         };
+
+        typedef std::shared_ptr<SymbolStack> SymbolStackPtr;
     }
 }
 

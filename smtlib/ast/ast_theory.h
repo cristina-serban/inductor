@@ -8,7 +8,6 @@
 
 #include "ast_abstract.h"
 #include "ast_attribute.h"
-#include "ast_classes.h"
 
 #include <memory>
 #include <vector>
@@ -23,26 +22,25 @@ namespace smtlib {
         class Theory : public Root,
                        public std::enable_shared_from_this<Theory> {
         public:
-            sptr_t<Symbol> name;
-            sptr_v<Attribute> attributes;
+            SymbolPtr name;
+            std::vector<AttributePtr> attributes;
 
             /**
              * Constructs theory without attributes.
              * \param name  Theory name
              */
-            inline Theory(sptr_t<Symbol> name) : name(name) { }
+            inline explicit Theory(const SymbolPtr& name) : name(name) {}
 
             /**
              * Constructs theory with attributes.
              * \param name          Theory name
              * \param attributes    Theory attributes
              */
-            Theory(sptr_t<Symbol> name,
-                   sptr_v<Attribute>& attributes);
+            Theory(const SymbolPtr& name, const std::vector<AttributePtr>& attributes);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

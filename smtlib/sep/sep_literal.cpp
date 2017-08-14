@@ -9,6 +9,7 @@ using namespace smtlib::sep;
 using namespace std;
 
 /* ================================== NumeralLiteral ================================== */
+
 void NumeralLiteral::accept(Visitor0* visitor){
     visitor->visit(shared_from_this());
 }
@@ -41,6 +42,7 @@ string NumeralLiteral::toString() {
 }
 
 /* ================================== DecimalLiteral ================================== */
+
 void DecimalLiteral::accept(Visitor0* visitor){
     visitor->visit(shared_from_this());
 }
@@ -52,6 +54,7 @@ string DecimalLiteral::toString() {
 }
 
 /* ================================== StringLiteral =================================== */
+
 void StringLiteral::accept(Visitor0* visitor){
     visitor->visit(shared_from_this());
 }

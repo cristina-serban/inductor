@@ -21,18 +21,18 @@ namespace smtlib {
                                public std::enable_shared_from_this<SortedVariable> {
         public:
             std::string name;
-            sptr_t<Sort> sort;
+            SortPtr sort;
 
             /**
-             * \param symbol    Variable name
+             * \param name      Variable name
              * \param sort      Variable sort
              */
-            inline SortedVariable(std::string name, sptr_t<Sort> sort)
+            inline SortedVariable(const std::string& name, const SortPtr& sort)
                     : name(name), sort(sort) { }
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== VariableBinding ==================================== */
@@ -41,18 +41,18 @@ namespace smtlib {
                                 public std::enable_shared_from_this<VariableBinding> {
         public:
             std::string name;
-            sptr_t<Term> term;
+            TermPtr term;
 
             /**
-             * \param symbol    Variable name
+             * \param name      Variable name
              * \param term      Binding
              */
-            VariableBinding(std::string name, sptr_t<Term> term)
+            VariableBinding(const std::string& name, const TermPtr& term)
                     : name(name), term(term) { }
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

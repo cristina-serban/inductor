@@ -40,12 +40,26 @@ bool Unifier::unify(sptr_t<Term> node) {
             ctx->setTerm(dupTerm);
 
             long size = ctx->getEqualities().size();
+            auto& eqs = ctx->getEqualities();
+
+            for(long i = 0; i < size - 1; i++) {
+                for(long j = i+1; j < size; j++) {
+                    if(eqs[i].first->toString() == eqs[j].first->toString()
+                       && eqs[i].second->toString() == eqs[j].second->toString()
+                       || eqs[i].first->toString() == eqs[j].second->toString()
+                          && eqs[i].second->toString() == eqs[j].first->toString()) {
+                        ctx->getEqualities().erase(ctx->getEqualities().begin() + j);
+                        j--;
+                        size--;
+                    }
+                }
+            }
+
             for(long i = 0; i < size; i++) {
                 auto first = ctx->getEqualities()[i].first;
                 auto second = ctx->getEqualities()[i].second;
 
                 sptr_t<TermReplacer> replacer;
-
                 if(dynamic_pointer_cast<SimpleIdentifier>(first)
                    && replaced.end() == replaced.find(first->toString())) {
                     replacer = make_shared<TermReplacer>(make_shared<TermReplacerContext>(first, second));

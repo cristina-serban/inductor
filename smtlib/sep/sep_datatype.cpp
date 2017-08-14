@@ -6,6 +6,7 @@ using namespace std;
 using namespace smtlib::sep;
 
 /* ================================= SortDeclaration ================================== */
+
 void SortDeclaration::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -17,6 +18,7 @@ string SortDeclaration::toString() {
 }
 
 /* =============================== SelectorDeclaration ================================ */
+
 void SelectorDeclaration::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -29,8 +31,8 @@ string SelectorDeclaration::toString() {
 
 /* =============================== ConstructorDeclaration ============================== */
 
-ConstructorDeclaration::ConstructorDeclaration(string name,
-                                               sptr_v<SelectorDeclaration>& selectors)
+ConstructorDeclaration::ConstructorDeclaration(const string& name,
+                                               const vector<SelectorDeclarationPtr>& selectors)
         : name(name) {
     this->selectors.insert(this->selectors.begin(), selectors.begin(), selectors.end());
 }
@@ -42,16 +44,18 @@ void ConstructorDeclaration::accept(Visitor0* visitor) {
 string ConstructorDeclaration::toString() {
     stringstream ss;
     ss << "(" << name;
-    for (auto selIt = selectors.begin(); selIt != selectors.end(); selIt++) {
-        ss << " " << (*selIt)->toString();
+
+    for (const auto& sel : selectors) {
+        ss << " " << sel->toString();
     }
+
     ss << ")";
     return ss.str();
 }
 
 /* ============================= SimpleDatatypeDeclaration ============================ */
 
-SimpleDatatypeDeclaration::SimpleDatatypeDeclaration(sptr_v<ConstructorDeclaration>& constructors) {
+SimpleDatatypeDeclaration::SimpleDatatypeDeclaration(const vector<ConstructorDeclarationPtr>& constructors) {
     this->constructors.insert(this->constructors.begin(), constructors.begin(), constructors.end());
 }
 
@@ -62,23 +66,23 @@ void SimpleDatatypeDeclaration::accept(Visitor0* visitor) {
 string SimpleDatatypeDeclaration::toString() {
     stringstream ss;
     ss << "(";
-    bool first = true;
-    for (auto consIt = constructors.begin(); consIt != constructors.end(); consIt++) {
-        if(first)
-            first = false;
-        else
+
+    for (size_t i = 0, sz = constructors.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*consIt)->toString();
+
+        ss << constructors[i]->toString();
     }
+
     ss << ")";
     return ss.str();
 }
 
 /* =========================== ParametricDatatypeDeclaration ========================== */
 
-ParametricDatatypeDeclaration::ParametricDatatypeDeclaration(vector<string>& params,
-                                                             sptr_v<ConstructorDeclaration>& constructors) {
-    this->params.insert(this->params.begin(), params.begin(), params.end());
+ParametricDatatypeDeclaration::ParametricDatatypeDeclaration(const vector<string>& parameters,
+                                                             const vector<ConstructorDeclarationPtr>& constructors) {
+    this->parameters.insert(this->parameters.begin(), parameters.begin(), parameters.end());
     this->constructors.insert(this->constructors.begin(), constructors.begin(), constructors.end());
 }
 
@@ -90,27 +94,22 @@ string ParametricDatatypeDeclaration::toString() {
     stringstream ss;
     ss << "(par (";
 
-    bool first = true;
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        if(first)
-            first = false;
-        else
+    for (size_t i = 0, sz = parameters.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << *paramIt;
+
+        ss << parameters[i];
     }
 
     ss << ") (";
 
-    first = true;
-    for (auto consIt = constructors.begin(); consIt != constructors.end(); consIt++) {
-        if(first)
-            first = false;
-        else
+    for (size_t i = 0, sz = constructors.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*consIt)->toString();
+
+        ss << constructors[i]->toString();
     }
 
     ss << "))";
-
     return ss.str();
 }

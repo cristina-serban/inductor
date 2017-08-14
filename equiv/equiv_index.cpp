@@ -25,9 +25,9 @@ long IndexEquivalence::unite(unsigned long i, unsigned long j) {
     if (iclass < 0 || jclass < 0)
         return -1;
 
-    for (unsigned long it = 0; it < classes.size(); it++) {
-        if (classes[it] == jclass)
-            classes[it] = iclass;
+    for (size_t k = 0, sz = classes.size(); k < sz; k++) {
+        if (classes[k] == jclass)
+            classes[k] = iclass;
     }
 
     return iclass;
@@ -36,27 +36,24 @@ long IndexEquivalence::unite(unsigned long i, unsigned long j) {
 string IndexEquivalence::toString() {
     stringstream ss;
 
-    bool first1 = true;
-    for(unsigned long i = 0; i < classes.size(); i++) {
-        if(first1) {
-            first1 = false;
-        } else {
+    for (size_t i = 0, szi = classes.size(); i < szi; i++) {
+        if (i != 0)
             ss << "; ";
-        }
+
+        ss << (i + 1) << " => {";
 
         long iclass = find(i);
+        bool first = true;
 
-        ss << (i+1) << " => {";
-        bool first2 = true;
-        for(unsigned long j = 0; j < classes.size(); j++) {
-            if(find(j) == iclass) {
-                if(first2) {
-                    first2 = false;
+        for (size_t j = 0, szj = classes.size(); j < szj; j++) {
+            if (find(j) == iclass) {
+                if (first) {
+                    first = false;
                 } else {
                     ss << ", ";
                 }
 
-                ss << (j+1);
+                ss << (j + 1);
             }
         }
         ss << "}";

@@ -13,11 +13,24 @@
 #include <memory>
 
 namespace pred {
+    class Case;
+
     class BaseCase;
 
     class InductiveCase;
 
     class PredicateCall;
+
+    class Constraint;
+
+    class InductivePredicate;
+
+    typedef std::shared_ptr<Case> CasePtr;
+    typedef std::shared_ptr<BaseCase> BaseCasePtr;
+    typedef std::shared_ptr<InductiveCase> InductiveCasePtr;
+    typedef std::shared_ptr<PredicateCall> PredicateCallPtr;
+    typedef std::shared_ptr<Constraint> ConstraintPtr;
+    typedef std::shared_ptr<InductivePredicate> InductivePredicatePtr;
 
     /* ================================ InductivePredicate ================================ */
     /** An inductive predicate */
@@ -27,36 +40,36 @@ namespace pred {
         std::string name;
 
         /** Formal parameters */
-        sptr_v<smtlib::sep::SortedVariable> params;
+        std::vector<smtlib::sep::SortedVariablePtr> parameters;
 
         /** Return sort (always Bool) */
-        sptr_t<smtlib::sep::Sort> sort;
+        smtlib::sep::SortPtr sort;
 
-        /** Base cases (no inductive calls) */
-        sptr_v<BaseCase> baseCases;
+        /** Base cases (i.e cases without any inductive calls) */
+        std::vector<BaseCasePtr> baseCases;
 
-        /** Inductive cases (at least one inductive call) */
-        sptr_v<InductiveCase> indCases;
+        /** Inductive cases (i.e. cases with at least one inductive call) */
+        std::vector<InductiveCasePtr> indCases;
 
-        InductivePredicate(std::string name,
-                           sptr_v<smtlib::sep::SortedVariable> &params);
+        InductivePredicate(const std::string& name,
+                           const std::vector<smtlib::sep::SortedVariablePtr>& parameters);
 
-        InductivePredicate(std::string name,
-                           sptr_v<smtlib::sep::SortedVariable> &params,
-                           sptr_v<BaseCase> baseCases,
-                           sptr_v<InductiveCase> indCases);
+        InductivePredicate(const std::string& name,
+                           const std::vector<smtlib::sep::SortedVariablePtr>& parameters,
+                           const std::vector<BaseCasePtr>& baseCases,
+                           const std::vector<InductiveCasePtr>& indCases);
 
         /** Whether the definition includes only self-calls (and not calls to other predicates) */
         bool isOnlySelfRecursive();
 
         /** Clones the definition */
-        sptr_t<InductivePredicate> clone();
+        InductivePredicatePtr clone();
 
         /** Replace parameter occurrences with terms */
-        void replace(sptr_um2<std::string, smtlib::sep::Term> args);
+        void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments);
 
         /** Rename existential bindings by adding a certain index */
-        void renameBindings(std::string index);
+        void renameBindings(const std::string& index);
     };
 
     /* ==================================== Constraint ==================================== */
@@ -64,131 +77,134 @@ namespace pred {
     class Constraint {
     public:
         /** Pure part (anything but 'pto', 'emp') */
-        sptr_v<smtlib::sep::Term> pure;
+        std::vector<smtlib::sep::TermPtr> pure;
 
         /** Spatial part ('pto', 'emp') */
-        sptr_v<smtlib::sep::Term> spatial;
+        std::vector<smtlib::sep::TermPtr> spatial;
 
         /** Merge another constraint into this one */
-        void merge(sptr_t<Constraint> constr);
-
-        /** Translates the expression back into a term */
-        sptr_t<smtlib::sep::Term> toTerm();
+        void merge(const ConstraintPtr& other);
 
         /** Clones the expression */
-        sptr_t<Constraint> clone();
+        ConstraintPtr clone();
+
+        /** Translates the expression back into a term */
+        smtlib::sep::TermPtr toTerm();
 
         /** Replace parameter occurrences with terms */
-        void replace(sptr_um2<std::string, smtlib::sep::Term> args);
+        void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments);
     };
 
     /* ======================================= Case ======================================= */
     class Case {
         /** Translates the case back into a term */
-        virtual sptr_t<smtlib::sep::Term> toTerm() = 0;
+        virtual smtlib::sep::TermPtr toTerm() = 0;
 
         /** Textual form of the case */
         inline virtual std::string toString() { return toTerm()->toString(); }
 
         /** Replace parameter occurrences with terms */
-        virtual void replace(sptr_um2<std::string, smtlib::sep::Term> args) = 0;
+        virtual void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments) = 0;
 
         /** Rename existential bindings by adding a certain index */
-        virtual void renameBindings(std::string index) = 0;
+        virtual void renameBindings(const std::string& index) = 0;
     };
 
     /* ===================================== BaseCase ===================================== */
     class BaseCase : public Case {
     public:
         /** Optional existential bindings */
-        sptr_v<smtlib::sep::SortedVariable> bindings;
+        std::vector<smtlib::sep::SortedVariablePtr> bindings;
 
         /** Mandatory expression */
-        sptr_t<Constraint> constr;
+        ConstraintPtr constraint;
 
-        inline BaseCase(sptr_t<Constraint> constr) : constr(constr) {}
+        inline explicit BaseCase(const ConstraintPtr& constraint) : constraint(constraint) {}
 
-        BaseCase(sptr_v<smtlib::sep::SortedVariable> bindings,
-                 sptr_t<Constraint> constr);
-
-        /** Translates the case back into a term */
-        virtual sptr_t<smtlib::sep::Term> toTerm();
+        BaseCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+                 const ConstraintPtr& constraint);
 
         /** Clones the base case */
-        sptr_t<BaseCase> clone();
+        BaseCasePtr clone();
+
+        /** Translates the case back into a term */
+        smtlib::sep::TermPtr toTerm() override;
 
         /** Replace parameter occurrences with terms */
-        virtual void replace(sptr_um2<std::string, smtlib::sep::Term> args);
+        void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments) override;
 
         /** Rename existential bindings by adding a certain index */
-        virtual void renameBindings(std::string index);
+        void renameBindings(const std::string& index) override;
     };
 
     /* ================================== InductiveCase =================================== */
     class InductiveCase : public Case {
     public:
         /** Optional existential bindings */
-        sptr_v<smtlib::sep::SortedVariable> bindings;
+        std::vector<smtlib::sep::SortedVariablePtr> bindings;
 
         /** Optional expression */
-        sptr_t<Constraint> expr;
+        ConstraintPtr constraint;
 
         /** Inductive calls (at least one) */
-        sptr_v<PredicateCall> calls;
+        std::vector<PredicateCallPtr> calls;
 
-        inline InductiveCase() {}
+        inline InductiveCase() = default;
 
-        inline InductiveCase(sptr_t<Constraint> expr) : expr(expr) {}
+        inline explicit InductiveCase(const ConstraintPtr& constraint) : constraint(constraint) {}
 
-        InductiveCase(sptr_v<smtlib::sep::SortedVariable> bindings,
-                      sptr_t<Constraint> expr);
+        InductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+                      const ConstraintPtr& constraint);
 
-        InductiveCase(sptr_t<Constraint> expr, sptr_v<PredicateCall> calls);
+        InductiveCase(const ConstraintPtr& constraint,
+                      const std::vector<PredicateCallPtr>& calls);
 
-        InductiveCase(sptr_v<smtlib::sep::SortedVariable> bindings,
-                      sptr_t<Constraint> expr, sptr_v<PredicateCall> calls);
+        InductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+                      const ConstraintPtr& constraint,
+                      const std::vector<PredicateCallPtr>& calls);
 
-        InductiveCase(sptr_v<PredicateCall> calls);
+        InductiveCase(const std::vector<PredicateCallPtr>& calls);
 
-        InductiveCase(sptr_v<smtlib::sep::SortedVariable> bindings,
-                      sptr_v<PredicateCall> calls);
-
-        /** Translates the case back into a term */
-        virtual sptr_t<smtlib::sep::Term> toTerm();
+        InductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+                      const std::vector<PredicateCallPtr>& calls);
 
         /** Clones the inductive case */
-        sptr_t<InductiveCase> clone();
+        InductiveCasePtr clone();
+
+        /** Translates the case back into a term */
+        smtlib::sep::TermPtr toTerm() override;
 
         /** Replace parameter occurrences with terms */
-        virtual void replace(sptr_um2<std::string, smtlib::sep::Term> args);
+        void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments) override;
 
         /** Rename existential bindings by adding a certain index */
-        virtual void renameBindings(std::string index);
+        void renameBindings(const std::string& index) override;
     };
 
     /* ================================== PredicateCall =================================== */
     class PredicateCall {
     public:
         /** Name of the predicate to call */
-        std::string pred;
+        std::string predicate;
         /** Optional call arguments */
-        sptr_v<smtlib::sep::Term> args;
+        std::vector<smtlib::sep::TermPtr> arguments;
 
-        inline PredicateCall(std::string pred): pred(pred) { }
+        inline explicit PredicateCall(const std::string& predicate) : predicate(predicate) {}
 
-        PredicateCall(std::string pred, sptr_v<smtlib::sep::Term> args);
+        PredicateCall(const std::string& predicate,
+                      const std::vector<smtlib::sep::TermPtr>& arguments);
 
         /** Translates the call back into a term */
-        sptr_t<smtlib::sep::Term> toTerm();
+        smtlib::sep::TermPtr toTerm();
 
         /** Textual form of the call */
         std::string toString();
 
         /** Clones the predicate call */
-        sptr_t<PredicateCall> clone();
+        PredicateCallPtr clone();
 
         /** Replace parameter occurrences with terms */
-        virtual void replace(sptr_um2<std::string, smtlib::sep::Term> args);
+        void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments);
     };
 }
 

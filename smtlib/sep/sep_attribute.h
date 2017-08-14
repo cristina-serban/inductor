@@ -23,13 +23,10 @@ namespace smtlib {
         struct Attribute : public Node {
             std::string keyword;
 
-            inline Attribute() { }
+            inline Attribute() = default;
 
-            inline Attribute(std::string keyword) : keyword(keyword) { }
-
-            virtual void accept(Visitor0 *visitor) = 0;
-
-            virtual std::string toString() = 0;
+            inline explicit Attribute(const std::string& keyword)
+                    : keyword(keyword) {}
         };
 
         /* ================================= SimpleAttribute ================================== */
@@ -37,15 +34,14 @@ namespace smtlib {
         class SimpleAttribute : public Attribute,
                                 public std::enable_shared_from_this<SimpleAttribute> {
         public:
-            inline SimpleAttribute() { }
+            inline SimpleAttribute() = default;
 
-            inline SimpleAttribute(std::string keyword) {
-                this->keyword = keyword;
-            }
+            inline explicit SimpleAttribute(const std::string& keyword)
+                    : Attribute(keyword) {}
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== SExpressionAttribute =============================== */
@@ -53,18 +49,16 @@ namespace smtlib {
         class SExpressionAttribute : public Attribute,
                                      public std::enable_shared_from_this<SExpressionAttribute> {
         public:
-            sptr_t<SExpression> value;
+            SExpressionPtr value;
 
-            inline SExpressionAttribute() { }
+            inline SExpressionAttribute() {}
 
-            inline SExpressionAttribute(std::string keyword,
-                                        sptr_t<SExpression> value) : value(value) {
-                this->keyword = keyword;
-            }
+            inline SExpressionAttribute(const std::string& keyword, const SExpressionPtr& value)
+                    : Attribute(keyword), value(value) {}
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= SymbolAttribute ================================== */
@@ -74,15 +68,14 @@ namespace smtlib {
         public:
             std::string value;
 
-            inline SymbolAttribute() { }
+            inline SymbolAttribute() = default;
 
-            inline SymbolAttribute(std::string keyword, std::string value) : value(value) {
-                this->keyword = keyword;
-            }
+            inline SymbolAttribute(const std::string& keyword, const std::string& value)
+                    : Attribute(keyword), value(value) {}
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= BooleanAttribute ================================= */
@@ -92,15 +85,14 @@ namespace smtlib {
         public:
             bool value;
 
-            inline BooleanAttribute() { }
+            inline BooleanAttribute() {}
 
-            inline BooleanAttribute(std::string symbol, bool value) : value(value) {
-                this->keyword = keyword;
-            }
+            inline BooleanAttribute(const std::string& keyword, bool value)
+                    : Attribute(keyword), value(value) {}
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= NumeralAttribute ================================= */
@@ -108,18 +100,16 @@ namespace smtlib {
         class NumeralAttribute : public Attribute,
                                  public std::enable_shared_from_this<NumeralAttribute> {
         public:
-            sptr_t<NumeralLiteral> value;
+            NumeralLiteralPtr value;
 
-            inline NumeralAttribute() { }
+            inline NumeralAttribute() {}
 
-            inline NumeralAttribute(std::string symbol,
-                                    sptr_t<NumeralLiteral> value) : value(value) {
-                this->keyword = keyword;
-            }
+            inline NumeralAttribute(const std::string& symbol, const NumeralLiteralPtr& value)
+                    : Attribute(keyword), value(value) {}
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= DecimalAttribute ================================= */
@@ -127,18 +117,16 @@ namespace smtlib {
         class DecimalAttribute : public Attribute,
                                  public std::enable_shared_from_this<DecimalAttribute> {
         public:
-            sptr_t<DecimalLiteral> value;
+            DecimalLiteralPtr value;
 
-            inline DecimalAttribute() { }
+            inline DecimalAttribute() = default;
 
-            inline DecimalAttribute(std::string symbol,
-                                    sptr_t<DecimalLiteral> value) : value(value) {
-                this->keyword = keyword;
-            }
+            inline DecimalAttribute(const std::string& keyword, const DecimalLiteralPtr& value)
+                    : Attribute(keyword), value(value) {}
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= StringAttribute ================================== */
@@ -146,18 +134,16 @@ namespace smtlib {
         class StringAttribute : public Attribute,
                                 public std::enable_shared_from_this<StringAttribute> {
         public:
-            sptr_t<StringLiteral> value;
+            StringLiteralPtr value;
 
-            inline StringAttribute() { }
+            inline StringAttribute() = default;
 
-            inline StringAttribute(std::string symbol,
-                                   sptr_t<StringLiteral> value) : value(value) {
-                this->keyword = keyword;
-            }
+            inline StringAttribute(const std::string& keyword, const StringLiteralPtr& value)
+                    : Attribute(keyword), value(value) {}
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ TheoriesAttribute ================================= */
@@ -167,13 +153,13 @@ namespace smtlib {
         public:
             std::vector<std::string> theories;
 
-            inline TheoriesAttribute() { this->keyword = KW_THEORIES; }
+            inline TheoriesAttribute() : Attribute(KW_THEORIES) {}
 
-            TheoriesAttribute(std::vector<std::string> &theories);
+            explicit TheoriesAttribute(const std::vector<std::string>& theories);
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================== SortsAttribute ================================== */
@@ -181,15 +167,15 @@ namespace smtlib {
         class SortsAttribute : public Attribute,
                                public std::enable_shared_from_this<SortsAttribute> {
         public:
-            sptr_v<SortSymbolDeclaration> declarations;
+            std::vector<SortSymbolDeclarationPtr> declarations;
 
-            inline SortsAttribute() { this->keyword = KW_SORTS; }
+            inline SortsAttribute() : Attribute(KW_SORTS) {}
 
-            SortsAttribute(sptr_v<SortSymbolDeclaration> &decls);
+            explicit SortsAttribute(const std::vector<SortSymbolDeclarationPtr>& decls);
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================== FunsAttribute =================================== */
@@ -197,15 +183,15 @@ namespace smtlib {
         class FunsAttribute : public Attribute,
                               public std::enable_shared_from_this<FunsAttribute> {
         public:
-            sptr_v<FunSymbolDeclaration> declarations;
+            std::vector<FunSymbolDeclarationPtr> declarations;
 
-            inline FunsAttribute() { this->keyword = KW_FUNS; }
+            inline FunsAttribute() : Attribute(KW_FUNS) {}
 
-            FunsAttribute(sptr_v<FunSymbolDeclaration> &decls);
+            explicit FunsAttribute(const std::vector<FunSymbolDeclarationPtr>& decls);
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

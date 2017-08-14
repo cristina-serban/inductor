@@ -39,6 +39,7 @@ namespace smtlib {
         class Constructor : public virtual Node,
                             public Pattern {
         };
+
     }
 }
 

@@ -6,7 +6,7 @@
 using namespace std;
 using namespace reach;
 
-bool StringReachability::add(string x) {
+bool StringReachability::add(const string& x) {
     if (map.find(x) != map.end())
         return false;
 
@@ -17,7 +17,7 @@ bool StringReachability::add(string x) {
     return true;
 }
 
-bool StringReachability::link(string x, string y) {
+bool StringReachability::link(const string& x, const string& y) {
     if (map.find(x) == map.end() || std::find(map[x].begin(), map[x].end(), y) != map[x].end()) {
         return false;
     }
@@ -28,7 +28,7 @@ bool StringReachability::link(string x, string y) {
     return true;
 }
 
-bool StringReachability::unlink(string x, string y) {
+bool StringReachability::unlink(const string& x, const string& y) {
     if (map.find(x) == map.end() || std::find(map[x].begin(), map[x].end(), y) == map[x].end()) {
         return false;
     }
@@ -38,29 +38,29 @@ bool StringReachability::unlink(string x, string y) {
     return true;
 }
 
-vector<string> StringReachability::find(string x) {
+vector<string> StringReachability::find(const string& x) {
     return map[x];
 }
 
 vector<string> StringReachability::keys() {
     vector<string> result;
-    for (auto it = map.begin(); it != map.end(); it++) {
-        result.push_back((*it).first);
+    for (const auto& entry : map) {
+        result.push_back(entry.first);
     }
 
     return result;
 }
 
-bool StringReachability::fill(vector<string> vec) {
-    for (auto it = vec.begin(); it != vec.end(); it++) {
-        if (!add(*it))
+bool StringReachability::fill(const vector<string>& vec) {
+    for (const auto& elem : vec) {
+        if (!add(elem))
             return false;
     }
 
     return true;
 }
 
-bool StringReachability::find(string x, string y) {
+bool StringReachability::find(const string& x, const string& y) {
     if (map.find(x) == map.end()) {
         return false;
     }
@@ -68,51 +68,18 @@ bool StringReachability::find(string x, string y) {
     return std::find(map[x].begin(), map[x].end(), y) != map[x].end();
 }
 
-umap<string, vector<string>> StringReachability::copyMap() {
-    umap<string, vector<string>> result;
-    result.insert(map.begin(), map.end());
-    return result;
-};
-
-bool StringReachability::equalsMap(umap<string, vector<string>> other) {
-    if (map.size() != other.size())
-        return false;
-
-    for (auto it = map.begin(); it != map.end(); it++) {
-        if (other.find((*it).first) == other.end())
-            return false;
-
-        vector<string> otherVec = other[(*it).first];
-
-        if ((*it).second.size() != otherVec.size())
-            return false;
-
-        for (unsigned long i = 0; i < (*it).second.size(); i++) {
-            if (std::find(otherVec.begin(), otherVec.end(), (*it).second[i]) == otherVec.end())
-                return false;
-        }
-
-        for (unsigned long i = 0; i < otherVec.size(); i++) {
-            if (std::find((*it).second.begin(), (*it).second.end(), otherVec[i]) == (*it).second.end())
-                return false;
-        }
-    }
-
-    return true;
-}
-
 void StringReachability::close() {
-    umap<string, vector<string>> copy;
+    unordered_map<string, vector<string>> copy;
     do {
         copy = copyMap();
-        for (auto it = map.begin(); it != map.end(); it++) {
+        for (const auto& entry : map) {
             vector<string> trans;
-            for (unsigned long i = 0; i < (*it).second.size(); i++) {
-                trans.insert(trans.begin(), map[(*it).second[i]].begin(), map[(*it).second[i]].end());
+            for (const auto& elem : entry.second) {
+                trans.insert(trans.begin(), map[elem].begin(), map[elem].end());
             }
 
-            for (unsigned long i = 0; i < trans.size(); i++) {
-                link((*it).first, trans[i]);
+            for (const auto& tr : trans) {
+                link(entry.first, tr);
             }
         }
 
@@ -125,24 +92,24 @@ sptr_t<StringReachability> StringReachability::clone() {
     return result;
 }
 
-sptr_t<IndexReachability> StringReachability::toIndexReachability(umap<string, unsigned long> params) {
+sptr_t<IndexReachability> StringReachability::toIndexReachability(const unordered_map<string, unsigned long>& params) {
     sptr_t<IndexReachability> result = make_shared<IndexReachability>();
 
-    for (unsigned long i = 0; i < params.size(); i++) {
+    for (size_t i = 0, sz = params.size(); i < sz; i++) {
         result->add();
     }
 
-    for (auto it = map.begin(); it != map.end(); it++) {
-        if (params.find((*it).first) == params.end())
+    for (const auto& entry : map) {
+        if (params.find(entry.first) == params.end())
             continue;
 
-        unsigned long pos1 = params[(*it).first];
+        unsigned long pos1 = params.at(entry.first);
 
-        for (auto itt = (*it).second.begin(); itt != (*it).second.end(); itt++) {
-            if (params.find(*itt) == params.end())
+        for (const auto& elem : entry.second) {
+            if (params.find(elem) == params.end())
                 continue;
 
-            unsigned long pos2 = params[*itt];
+            unsigned long pos2 = params.at(elem);
             result->link(pos1, pos2);
         }
     }
@@ -155,18 +122,51 @@ std::string StringReachability::toString() {
     ss << "{";
 
     bool first = true;
-    for (auto i = map.begin(); i != map.end(); i++) {
-        for (unsigned long j = 0; j < map[(*i).first].size(); j++) {
+    for (const auto& entry : map) {
+        for (const auto& elem : entry.second) {
             if (!first) {
                 ss << ", ";
             } else {
                 first = false;
             }
 
-            ss << "(" << (*i).first << ", " << map[(*i).first][j] << ")";
+            ss << "(" << entry.first << ", " << elem << ")";
         }
     }
 
     ss << "}";
     return ss.str();
+}
+
+unordered_map<string, vector<string>> StringReachability::copyMap() {
+    unordered_map<string, vector<string>> result;
+    result.insert(map.begin(), map.end());
+    return result;
+};
+
+bool StringReachability::equalsMap(const unordered_map<string, vector<string>>& other) {
+    if (map.size() != other.size())
+        return false;
+
+    for (const auto& entry : map) {
+        if (other.find(entry.first) == other.end())
+            return false;
+
+        const vector<string>& otherVec = other.at(entry.first);
+
+        if (entry.second.size() != otherVec.size())
+            return false;
+
+        for (const auto& elem : entry.second) {
+            if (std::find(otherVec.begin(), otherVec.end(), elem) == otherVec.end())
+                return false;
+        }
+
+        for (const auto& i : otherVec) {
+            if (std::find(entry.second.begin(), entry.second.end(), i) == entry.second.end())
+                return false;
+        }
+    }
+
+    return true;
 }

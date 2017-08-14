@@ -63,6 +63,9 @@ namespace smtlib {
 
             bool check(sptr_t<Node> node);
         };
+
+        typedef std::shared_ptr<OccurrenceChecker> OccurrenceCheckerPtr;
+        typedef std::shared_ptr<OccurrenceCheckerContext> OccurrenceCheckerContextPtr;
     }
 }
 

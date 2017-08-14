@@ -5,7 +5,7 @@
 using namespace std;
 using namespace smtlib::sep;
 
-Script::Script(sptr_v<Command>& commands) {
+Script::Script(const vector<CommandPtr>& commands) {
     this->commands.insert(this->commands.end(), commands.begin(), commands.end());
 }
 
@@ -15,8 +15,10 @@ void Script::accept(Visitor0* visitor){
 
 string Script::toString() {
     stringstream ss;
-    for (auto commandIt = commands.begin(); commandIt != commands.end(); commandIt++) {
-        ss << (*commandIt)->toString() << "\n";
+
+    for (const auto& cmd : commands) {
+        ss << cmd->toString() << "\n";
     }
+
     return ss.str();
 }

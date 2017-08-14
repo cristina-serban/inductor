@@ -7,14 +7,14 @@ using namespace smtlib::sep;
 
 /* ================================ FunctionDeclaration =============================== */
 
-FunctionDeclaration::FunctionDeclaration(string name,
-                                         sptr_v<SortedVariable>& params,
-                                         sptr_t<Sort> sort)
+FunctionDeclaration::FunctionDeclaration(const string& name,
+                                         const sptr_v<SortedVariable>& params,
+                                         const SortPtr& sort)
         : name(name), sort(sort) {
-    this->params.insert(this->params.end(), params.begin(), params.end());
+    this->parameters.insert(this->parameters.end(), params.begin(), params.end());
 }
 
-void FunctionDeclaration::accept(Visitor0* visitor){
+void FunctionDeclaration::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -22,28 +22,28 @@ string FunctionDeclaration::toString() {
     stringstream ss;
     ss << name << " (";
 
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        if(paramIt != params.begin())
+    for (size_t i = 0, sz = parameters.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << "(" << (*paramIt)->toString() << ")";
+
+        ss << parameters[i]->toString();
     }
 
     ss << ") " << sort->toString();
-
     return ss.str();
 }
 
 /* ================================ FunctionDefinition ================================ */
 
-FunctionDefinition::FunctionDefinition(string name,
-                                       sptr_v<SortedVariable>& params,
-                                       sptr_t<Sort> sort,
-                                       sptr_t<Term> body)
+FunctionDefinition::FunctionDefinition(const string& name,
+                                       const sptr_v<SortedVariable>& parameters,
+                                       const SortPtr& sort,
+                                       const TermPtr& body)
         : body(body) {
-    signature = make_shared<FunctionDeclaration>(name, params, sort);
+    signature = make_shared<FunctionDeclaration>(name, parameters, sort);
 }
 
-void FunctionDefinition::accept(Visitor0* visitor){
+void FunctionDefinition::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 

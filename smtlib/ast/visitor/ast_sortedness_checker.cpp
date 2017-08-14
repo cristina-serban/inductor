@@ -81,8 +81,8 @@ sptr_t<SortInfo> SortednessChecker::getInfo(sptr_t<DeclareSortCommand> node) {
 }
 
 sptr_t<SortInfo> SortednessChecker::getInfo(sptr_t<DefineSortCommand> node) {
-    return make_shared<SortInfo>(node->symbol->toString(), node->params.size(),
-                                 node->params, ctx->getStack()->expand(node->sort), node);
+    return make_shared<SortInfo>(node->symbol->toString(), node->parameters.size(),
+                                 node->parameters, ctx->getStack()->expand(node->sort), node);
 }
 
 
@@ -146,7 +146,7 @@ sptr_t<FunInfo> SortednessChecker::getInfo(sptr_t<ParametricFunDeclaration> node
     }
 
     sptr_t<FunInfo> funInfo = make_shared<FunInfo>(node->identifier->toString(), newsig,
-                                                       node->params, node->attributes, node);
+                                                       node->parameters, node->attributes, node);
 
     sptr_v<Attribute> attrs = node->attributes;
     for (auto attr = attrs.begin(); attr != attrs.end(); attr++) {
@@ -178,7 +178,7 @@ sptr_t<FunInfo> SortednessChecker::getInfo(sptr_t<DeclareConstCommand> node) {
 }
 
 sptr_t<FunInfo> SortednessChecker::getInfo(sptr_t<DeclareFunCommand> node) {
-    sptr_v<Sort> &sig = node->params;
+    sptr_v<Sort> &sig = node->parameters;
     sptr_v<Sort> newsig;
 
     for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
@@ -193,7 +193,7 @@ sptr_t<FunInfo> SortednessChecker::getInfo(sptr_t<DeclareFunCommand> node) {
 
 sptr_t<FunInfo> SortednessChecker::getInfo(sptr_t<DefineFunCommand> node) {
     sptr_v<Sort> newsig;
-    sptr_v<SortedVariable> &params = node->definition->signature->params;
+    sptr_v<SortedVariable> &params = node->definition->signature->parameters;
     for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
         newsig.push_back(ctx->getStack()->expand((*paramIt)->sort));
     }
@@ -205,7 +205,7 @@ sptr_t<FunInfo> SortednessChecker::getInfo(sptr_t<DefineFunCommand> node) {
 
 sptr_t<FunInfo> SortednessChecker::getInfo(sptr_t<DefineFunRecCommand> node) {
     sptr_v<Sort> newsig;
-    sptr_v<SortedVariable> &params = node->definition->signature->params;
+    sptr_v<SortedVariable> &params = node->definition->signature->parameters;
     for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
         newsig.push_back(ctx->getStack()->expand((*paramIt)->sort));
     }
@@ -219,7 +219,7 @@ sptr_v<FunInfo> SortednessChecker::getInfo(sptr_t<DefineFunsRecCommand> node) {
     sptr_v<FunInfo> infos;
     for (unsigned long i = 0; i < node->declarations.size(); i++) {
         sptr_v<Sort> newsig;
-        sptr_v<SortedVariable> &params = node->declarations[i]->params;
+        sptr_v<SortedVariable> &params = node->declarations[i]->parameters;
         for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
             newsig.push_back(ctx->getStack()->expand((*paramIt)->sort));
         }
@@ -241,14 +241,14 @@ sptr_v<SymbolInfo> SortednessChecker::getInfo(sptr_t<DeclareDatatypeCommand> nod
 
     if (pdecl) {
         // Add datatype (parametric) sort info
-        infos.push_back(make_shared<SortInfo>(typeName, pdecl->params.size(), node));
+        infos.push_back(make_shared<SortInfo>(typeName, pdecl->parameters.size(), node));
 
         // Build a sort representing the datatype (to be used in the signatures of the constructors and selectors)
         sptr_t<Sort> typeSort = make_shared<Sort>(make_shared<SimpleIdentifier>(node->symbol));
 
-        sptr_v<Symbol> params = pdecl->params;
+        sptr_v<Symbol> params = pdecl->parameters;
         for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-            typeSort->args.push_back(make_shared<Sort>(make_shared<SimpleIdentifier>(*paramIt)));
+            typeSort->arguments.push_back(make_shared<Sort>(make_shared<SimpleIdentifier>(*paramIt)));
         }
 
         typeSort = ctx->getStack()->expand(typeSort);
@@ -271,12 +271,12 @@ sptr_v<SymbolInfo> SortednessChecker::getInfo(sptr_t<DeclareDatatypeCommand> nod
                 selSig.push_back(ctx->getStack()->expand((*selIt)->sort));
 
                 // Add selector function info
-                infos.push_back(make_shared<FunInfo>(selName, selSig, pdecl->params, node));
+                infos.push_back(make_shared<FunInfo>(selName, selSig, pdecl->parameters, node));
             }
 
             // Add constructor function info
             consSig.push_back(typeSort);
-            infos.push_back(make_shared<FunInfo>(consName, consSig, pdecl->params, node));
+            infos.push_back(make_shared<FunInfo>(consName, consSig, pdecl->parameters, node));
         }
 
     } else {
@@ -342,9 +342,9 @@ sptr_v<SymbolInfo> SortednessChecker::getInfo(sptr_t<DeclareDatatypesCommand> no
                     make_shared<Sort>(make_shared<SimpleIdentifier>(node->sorts[i]->symbol));
             typeSort = ctx->getStack()->expand(typeSort);
 
-            sptr_v<Symbol> params = pdecl->params;
+            sptr_v<Symbol> params = pdecl->parameters;
             for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-                typeSort->args.push_back(make_shared<Sort>(make_shared<SimpleIdentifier>(*paramIt)));
+                typeSort->arguments.push_back(make_shared<Sort>(make_shared<SimpleIdentifier>(*paramIt)));
             }
 
             sptr_v<ConstructorDeclaration> constructors = pdecl->constructors;
@@ -366,12 +366,12 @@ sptr_v<SymbolInfo> SortednessChecker::getInfo(sptr_t<DeclareDatatypesCommand> no
                     selSig.push_back(ctx->getStack()->expand((*selIt)->sort));
 
                     // Add selector function info
-                    infos.push_back(make_shared<FunInfo>(selName, selSig, pdecl->params, node));
+                    infos.push_back(make_shared<FunInfo>(selName, selSig, pdecl->parameters, node));
                 }
 
                 // Add constructor function info
                 consSig.push_back(typeSort);
-                infos.push_back(make_shared<FunInfo>(consName, consSig, pdecl->params, node));
+                infos.push_back(make_shared<FunInfo>(consName, consSig, pdecl->parameters, node));
             }
         } else {
             // Build a sort representing the datatype (to be used in the signatures of the constructors and selectors)
@@ -482,17 +482,17 @@ SortednessChecker::checkSort(sptr_t<Sort> sort, sptr_t<Node> source,
         err = addError(ErrorMessages::buildSortUnknown(name, sort->rowLeft, sort->colLeft,
                                                        sort->rowRight, sort->colRight), source, err);
 
-        for (auto sortIt = sort->args.begin(); sortIt != sort->args.end(); sortIt++) {
+        for (auto sortIt = sort->arguments.begin(); sortIt != sort->arguments.end(); sortIt++) {
             checkSort(*sortIt, source, err);
         }
     } else {
-        if (sort->args.size() != info->arity) {
-            err = addError(ErrorMessages::buildSortArity(name, info->arity, sort->args.size(),
+        if (sort->arguments.size() != info->arity) {
+            err = addError(ErrorMessages::buildSortArity(name, info->arity, sort->arguments.size(),
                                                          sort->rowLeft, sort->colLeft,
                                                          sort->rowRight, sort->colRight),
                            source, info, err);
         } else {
-            for (auto sortIt = sort->args.begin(); sortIt != sort->args.end(); sortIt++) {
+            for (auto sortIt = sort->arguments.begin(); sortIt != sort->arguments.end(); sortIt++) {
                 checkSort(*sortIt, source, err);
             }
         }
@@ -516,21 +516,21 @@ SortednessChecker::checkSort(sptr_v<Symbol> &params, sptr_t<Sort> sort, sptr_t<N
             err = addError(ErrorMessages::buildSortUnknown(name, sort->rowLeft, sort->colLeft,
                                                            sort->rowRight, sort->colRight), source, err);
 
-            sptr_v<Sort> argSorts = sort->args;
+            sptr_v<Sort> argSorts = sort->arguments;
             for (auto sortIt = argSorts.begin(); sortIt != argSorts.end(); sortIt++) {
                 checkSort(params, *sortIt, source, err);
             }
         } else {
-            if (sort->args.empty())
+            if (sort->arguments.empty())
                 return err;
 
-            if (sort->args.size() != info->arity) {
-                err = addError(ErrorMessages::buildSortArity(name, info->arity, sort->args.size(),
+            if (sort->arguments.size() != info->arity) {
+                err = addError(ErrorMessages::buildSortArity(name, info->arity, sort->arguments.size(),
                                                              sort->rowLeft, sort->colLeft,
                                                              sort->rowRight, sort->colRight),
                                source, info, err);
             } else {
-                sptr_v<Sort> argSorts = sort->args;
+                sptr_v<Sort> argSorts = sort->arguments;
                 for (auto sortIt = argSorts.begin(); sortIt != argSorts.end(); sortIt++) {
                     checkSort(params, *sortIt, source, err);
                 }
@@ -575,7 +575,7 @@ void SortednessChecker::visit(sptr_t<DeclareConstCommand> node) {
 void SortednessChecker::visit(sptr_t<DeclareFunCommand> node) {
     sptr_t<NodeError> err;
 
-    sptr_v<Sort> params = node->params;
+    sptr_v<Sort> params = node->parameters;
     for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
         err = checkSort(*paramIt, node, err);
     }
@@ -615,7 +615,7 @@ void SortednessChecker::visit(sptr_t<DeclareDatatypeCommand> node) {
             sptr_v<SelectorDeclaration> selectors = (*consIt)->selectors;
 
             for (auto selIt = selectors.begin(); selIt != selectors.end(); selIt++) {
-                err = checkSort(pdecl->params, (*selIt)->sort, node, err);
+                err = checkSort(pdecl->parameters, (*selIt)->sort, node, err);
             }
         }
     } else {
@@ -673,7 +673,7 @@ void SortednessChecker::visit(sptr_t<DeclareDatatypesCommand> node) {
                 sptr_v<SelectorDeclaration> selectors = (*consIt)->selectors;
 
                 for (auto selIt = selectors.begin(); selIt != selectors.end(); selIt++) {
-                    declerr = checkSort(pdecl->params, (*selIt)->sort, pdecl, declerr);
+                    declerr = checkSort(pdecl->parameters, (*selIt)->sort, pdecl, declerr);
                 }
             }
         } else {
@@ -716,7 +716,7 @@ void SortednessChecker::visit(sptr_t<DeclareSortCommand> node) {
 void SortednessChecker::visit(sptr_t<DefineFunCommand> node) {
     sptr_t<NodeError> err;
 
-    sptr_v<SortedVariable> sig = node->definition->signature->params;
+    sptr_v<SortedVariable> sig = node->definition->signature->parameters;
     for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
         err = checkSort((*sortIt)->sort, node, err);
     }
@@ -730,7 +730,7 @@ void SortednessChecker::visit(sptr_t<DefineFunCommand> node) {
     } else {
         ctx->getStack()->push();
 
-        sptr_v<SortedVariable> &bindings = node->definition->signature->params;
+        sptr_v<SortedVariable> &bindings = node->definition->signature->parameters;
         for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
             ctx->getStack()->tryAdd(make_shared<VarInfo>((*bindingIt)->symbol->toString(),
                                                ctx->getStack()->expand((*bindingIt)->sort), node));
@@ -763,7 +763,7 @@ void SortednessChecker::visit(sptr_t<DefineFunCommand> node) {
 void SortednessChecker::visit(sptr_t<DefineFunRecCommand> node) {
     sptr_t<NodeError> err;
 
-    sptr_v<SortedVariable> sig = node->definition->signature->params;
+    sptr_v<SortedVariable> sig = node->definition->signature->parameters;
     for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
         err = checkSort((*sortIt)->sort, node, err);
     }
@@ -778,7 +778,7 @@ void SortednessChecker::visit(sptr_t<DefineFunRecCommand> node) {
         ctx->getStack()->push();
         ctx->getStack()->tryAdd(nodeInfo);
 
-        sptr_v<SortedVariable> &bindings = node->definition->signature->params;
+        sptr_v<SortedVariable> &bindings = node->definition->signature->parameters;
         for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
             ctx->getStack()->tryAdd(make_shared<VarInfo>((*bindingIt)->symbol->toString(),
                                                ctx->getStack()->expand((*bindingIt)->sort), node));
@@ -814,7 +814,7 @@ void SortednessChecker::visit(sptr_t<DefineFunsRecCommand> node) {
     sptr_v<Term> &bodies = node->bodies;
 
     for (auto declIt = decls.begin(); declIt != decls.end(); declIt++) {
-        sptr_v<SortedVariable> sig = (*declIt)->params;
+        sptr_v<SortedVariable> sig = (*declIt)->parameters;
         for (auto itt = sig.begin(); itt != sig.end(); itt++) {
             err = checkSort((*itt)->sort, node, err);
         }
@@ -841,7 +841,7 @@ void SortednessChecker::visit(sptr_t<DefineFunsRecCommand> node) {
 
         for (unsigned long i = 0; i < decls.size(); i++) {
             ctx->getStack()->push();
-            sptr_v<SortedVariable> &bindings = decls[i]->params;
+            sptr_v<SortedVariable> &bindings = decls[i]->parameters;
             for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
                 ctx->getStack()->tryAdd(make_shared<VarInfo>((*bindingIt)->symbol->toString(),
                                                    ctx->getStack()->expand((*bindingIt)->sort), node));
@@ -879,7 +879,7 @@ void SortednessChecker::visit(sptr_t<DefineFunsRecCommand> node) {
 
 void SortednessChecker::visit(sptr_t<DefineSortCommand> node) {
     sptr_t<NodeError> err;
-    err = checkSort(node->params, node->sort, node, err);
+    err = checkSort(node->parameters, node->sort, node, err);
 
     sptr_t<SortInfo> nodeInfo = getInfo(node);
     sptr_t<SortInfo> dupInfo = ctx->getStack()->tryAdd(nodeInfo);
@@ -1106,7 +1106,7 @@ void SortednessChecker::visit(sptr_t<ParametricFunDeclaration> node) {
 
     sptr_v<Sort> sig = node->signature;
     for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
-        err = checkSort(node->params, *sortIt, node, err);
+        err = checkSort(node->parameters, *sortIt, node, err);
     }
 
     sptr_t<FunInfo> nodeInfo = getInfo(node);

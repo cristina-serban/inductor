@@ -89,7 +89,7 @@ string StringAttribute::toString() {
 
 /* ================================ TheoriesAttribute ================================= */
 
-TheoriesAttribute::TheoriesAttribute(vector<string> &theories) {
+TheoriesAttribute::TheoriesAttribute(const vector<std::string>& theories) {
     this->keyword = KW_THEORIES;
     this->theories.insert(this->theories.begin(), theories.begin(), theories.end());
 }
@@ -101,18 +101,21 @@ void TheoriesAttribute::accept(Visitor0* visitor) {
 string TheoriesAttribute::toString() {
     stringstream ss;
     ss << keyword << " (";
-    for (auto valueIt = theories.begin(); valueIt != theories.end(); valueIt++) {
-        ss << *valueIt;
-        if (valueIt + 1 != theories.end())
+
+    for (size_t i = 0, sz = theories.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
+
+        ss << theories[i];
     }
+
     ss << ")";
     return ss.str();
 }
 
 /* ================================== SortsAttribute ================================== */
 
-SortsAttribute::SortsAttribute(sptr_v<SortSymbolDeclaration> &decls) {
+SortsAttribute::SortsAttribute(const vector<SortSymbolDeclarationPtr>& decls) {
     this->keyword = KW_SORTS;
     this->declarations.insert(this->declarations.begin(), decls.begin(), decls.end());
 }
@@ -124,18 +127,21 @@ void SortsAttribute::accept(Visitor0* visitor) {
 string SortsAttribute::toString() {
     stringstream ss;
     ss << keyword << " (";
-    for (auto valueIt = declarations.begin(); valueIt != declarations.end(); valueIt++) {
-        ss << *valueIt;
-        if (valueIt + 1 != declarations.end())
+
+    for (size_t i = 0, sz = declarations.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
+
+        ss << declarations[i]->toString();
     }
+
     ss << ")";
     return ss.str();
 }
 
 /* ================================== FunsAttribute =================================== */
 
-FunsAttribute::FunsAttribute(sptr_v<FunSymbolDeclaration> &decls) {
+FunsAttribute::FunsAttribute(const vector<FunSymbolDeclarationPtr>& decls) {
     this->keyword = KW_FUNS;
     this->declarations.insert(this->declarations.begin(), decls.begin(), decls.end());
 }
@@ -147,11 +153,14 @@ void FunsAttribute::accept(Visitor0* visitor) {
 string FunsAttribute::toString() {
     stringstream ss;
     ss << keyword << " (";
-    for (auto valueIt = declarations.begin(); valueIt != declarations.end(); valueIt++) {
-        ss << *valueIt;
-        if (valueIt + 1 != declarations.end())
+
+    for (size_t i = 0, sz = declarations.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
+
+        ss << declarations[i]->toString();
     }
+
     ss << ")";
     return ss.str();
 }

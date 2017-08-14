@@ -156,7 +156,7 @@ void Duplicator::visit(sptr_t<DeclareDatatypesCommand> node) {
 
 void Duplicator::visit(sptr_t<DeclareFunCommand> node) {
     auto newSymbol = dynamic_pointer_cast<Symbol>(wrappedVisit(node->symbol));
-    auto newParams = duplicate<Sort>(node->params);
+    auto newParams = duplicate<Sort>(node->parameters);
     auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
     ret = make_shared<DeclareFunCommand>(newSymbol, newParams, newSort);
 
@@ -215,7 +215,7 @@ void Duplicator::visit(sptr_t<DefineFunsRecCommand> node) {
 
 void Duplicator::visit(sptr_t<DefineSortCommand> node) {
     auto newSymbol = dynamic_pointer_cast<Symbol>(wrappedVisit(node->symbol));
-    auto newParams = duplicate<Symbol>(node->params);
+    auto newParams = duplicate<Symbol>(node->parameters);
     auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
     ret = make_shared<DefineSortCommand>(newSymbol, newParams, newSort);
 
@@ -416,7 +416,7 @@ void Duplicator::visit(sptr_t<SetOptionCommand> node) {
 
 void Duplicator::visit(sptr_t<FunctionDeclaration> node) {
     auto newSymbol = dynamic_pointer_cast<Symbol>(wrappedVisit(node->symbol));
-    auto newParams = duplicate<SortedVariable>(node->params);
+    auto newParams = duplicate<SortedVariable>(node->parameters);
     auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
     ret = make_shared<FunctionDeclaration>(newSymbol, newParams, newSort);
 
@@ -530,7 +530,7 @@ void Duplicator::visit(sptr_t<Script> node) {
 
 void Duplicator::visit(sptr_t<Sort> node) {
     auto newId = dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier));
-    auto newArgs = duplicate<Sort>(node->args);
+    auto newArgs = duplicate<Sort>(node->arguments);
     ret = make_shared<Sort>(newId, newArgs);
 
     ret->colLeft = node->colLeft;
@@ -541,7 +541,7 @@ void Duplicator::visit(sptr_t<Sort> node) {
 }
 
 void Duplicator::visit(sptr_t<CompSExpression> node) {
-    auto newExps = duplicate<SExpression>(node->exprs);
+    auto newExps = duplicate<SExpression>(node->expressions);
 
     ret = make_shared<CompSExpression>(newExps);
 
@@ -613,7 +613,7 @@ void Duplicator::visit(sptr_t<SimpleDatatypeDeclaration> node) {
 }
 
 void Duplicator::visit(sptr_t<ParametricDatatypeDeclaration> node) {
-    auto newParams = duplicate<Symbol>(node->params);
+    auto newParams = duplicate<Symbol>(node->parameters);
     auto newConstructors = duplicate<ConstructorDeclaration>(node->constructors);
     ret = make_shared<ParametricDatatypeDeclaration>(newParams, newConstructors);
 
@@ -700,7 +700,7 @@ void Duplicator::visit(sptr_t<SimpleFunDeclaration> node) {
 }
 
 void Duplicator::visit(sptr_t<ParametricFunDeclaration> node) {
-    auto newParams  = duplicate<Symbol>(node->params);
+    auto newParams  = duplicate<Symbol>(node->parameters);
     auto newIdentifier = dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier));
     auto newSignature = duplicate<Sort>(node->signature);
     auto newAttrs = duplicate<Attribute>(node->attributes);

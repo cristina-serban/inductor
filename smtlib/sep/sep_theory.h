@@ -22,25 +22,24 @@ namespace smtlib {
                        public std::enable_shared_from_this<Theory> {
         public:
             std::string name;
-            sptr_v<Attribute> attributes;
+            std::vector<AttributePtr> attributes;
 
             /**
              * Constructs theory without attributes.
              * \param name  Theory name
              */
-            inline Theory(std::string name) : name(name) { }
+            inline explicit Theory(const std::string& name) : name(name) { }
 
             /**
              * Constructs theory with attributes.
              * \param name          Theory name
              * \param attributes    Theory attributes
              */
-            Theory(std::string name,
-                   sptr_v<Attribute>& attributes);
+            Theory(const std::string& name, const std::vector<AttributePtr>& attributes);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

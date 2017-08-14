@@ -6,27 +6,34 @@
 namespace smtlib {
     namespace sep {
 
-        class AttributeValue : public virtual Node { };
+        class AttributeValue : public virtual Node {
+        };
 
-        class SExpression : public virtual Node { };
+        class SExpression : public virtual Node {
+        };
 
-        class Term : public virtual Node { };
+        class Term : public virtual Node {
+        };
 
         class Identifier : public virtual Node,
-                           public Term { };
+                           public Term {
+        };
 
-        class Index : public virtual Node { };
+        class Index : public virtual Node {
+        };
 
         class SpecConstant : public virtual Node,
                              public SExpression,
                              public Term,
-                             public AttributeValue { };
+                             public AttributeValue {
+        };
 
-        class Pattern : public virtual Node { };
+        class Pattern : public virtual Node {
+        };
 
         class Constructor : public virtual Node,
-                            public Pattern { };
-
+                            public Pattern {
+        };
 
     }
 }

@@ -8,7 +8,6 @@
 
 #include "ast_abstract.h"
 #include "ast_basic.h"
-#include "ast_classes.h"
 #include "ast_interfaces.h"
 
 #include "util/global_typedef.h"

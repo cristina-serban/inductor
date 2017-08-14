@@ -6,6 +6,7 @@
 #ifndef INDUCTOR_SEP_SORT_H
 #define INDUCTOR_SEP_SORT_H
 
+#include "sep_abstract.h"
 #include "sep_basic.h"
 
 #include <memory>
@@ -18,27 +19,27 @@ namespace smtlib {
                      public std::enable_shared_from_this<Sort> {
         public:
             std::string name;
-            sptr_v<Sort> args;
+            std::vector<SortPtr> arguments;
 
             /**
              * Constructor for a simple sort
-             * \param identifier    Sort name
+             * \param name      Sort name
              */
-            inline Sort(std::string name) : name(name) { }
+            inline explicit Sort(const std::string& name) : name(name) { }
 
             /**
              * Constructor for a sort with arguments
-             * \param identifier    Sort name
-             * \param args          Sort arguments
+             * \param name      Sort name
+             * \param arguments Sort arguments
              */
-            Sort(std::string name, sptr_v<Sort>& args);
+            Sort(const std::string& name, const std::vector<SortPtr>& arguments);
 
             /** Checks whether the sort has arguments */
             bool hasArgs();
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

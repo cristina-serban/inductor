@@ -49,11 +49,11 @@ SyntaxChecker::checkParamUsage(sptr_v<Symbol> &params,
     if (isParam) {
         paramUsage[name] = true;
 
-        if (!sort->args.empty()) {
+        if (!sort->arguments.empty()) {
             err = addError(ErrorMessages::buildSortParamArity(sort->toString(), name), source, err);
         }
     } else {
-        sptr_v<Sort> argSorts = sort->args;
+        sptr_v<Sort> argSorts = sort->arguments;
         for (auto argIt = argSorts.begin(); argIt != argSorts.end(); argIt++) {
             checkParamUsage(params, paramUsage, *argIt, source, err);
         }
@@ -257,7 +257,7 @@ void SyntaxChecker::visit(sptr_t<DeclareDatatypesCommand> node) {
         sptr_t<ParametricDatatypeDeclaration> decl =
                 dynamic_pointer_cast<ParametricDatatypeDeclaration>(node->declarations[i]);
         if (decl) {
-            paramCount = decl->params.size();
+            paramCount = decl->parameters.size();
         }
 
         if (arity != paramCount) {
@@ -285,7 +285,7 @@ void SyntaxChecker::visit(sptr_t<DeclareFunCommand> node) {
         visit0(node->symbol);
     }
 
-    visit0(node->params);
+    visit0(node->parameters);
 
     if (!node->sort) {
         err = addError(ErrorMessages::ERR_DECL_FUN_MISSING_RET, node, err);
@@ -388,7 +388,7 @@ void SyntaxChecker::visit(sptr_t<DefineSortCommand> node) {
     }
 
     // Check parameter list
-    visit0(node->params);
+    visit0(node->parameters);
 
     // Check definition
     if (!node->sort) {
@@ -399,11 +399,11 @@ void SyntaxChecker::visit(sptr_t<DefineSortCommand> node) {
 
     // Check parameter usage
     unordered_map<string, bool> paramUsage;
-    err = checkParamUsage(node->params, paramUsage, node->sort, node, err);
+    err = checkParamUsage(node->parameters, paramUsage, node->sort, node, err);
 
-    if (paramUsage.size() != node->params.size()) {
+    if (paramUsage.size() != node->parameters.size()) {
         vector<string> unusedParams;
-        sptr_v<Symbol> params = node->params;
+        sptr_v<Symbol> params = node->parameters;
         for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
             string pname = (*paramIt)->toString();
             if (paramUsage.find(pname) == paramUsage.end()) {
@@ -667,7 +667,7 @@ void SyntaxChecker::visit(sptr_t<FunctionDeclaration> node) {
         visit0(node->symbol);
     }
 
-    visit0(node->params);
+    visit0(node->parameters);
 
     if (!node->sort) {
         err = addError(ErrorMessages::ERR_FUN_DECL_MISSING_RET, node, err);
@@ -922,10 +922,10 @@ void SyntaxChecker::visit(sptr_t<Sort> node) {
         visit0(node->identifier);
     }
 
-    if (node->hasArgs() && node->args.empty()) {
+    if (node->hasArgs() && node->arguments.empty()) {
         err = addError(ErrorMessages::ERR_SORT_EMPTY_ARGS, node, err);
     } else {
-        visit0(node->args);
+        visit0(node->arguments);
     }
 }
 
@@ -937,7 +937,7 @@ void SyntaxChecker::visit(sptr_t<CompSExpression> node) {
         return;
     }
 
-    visit0(node->exprs);
+    visit0(node->expressions);
 }
 
 void SyntaxChecker::visit(sptr_t<SortSymbolDeclaration> node) {
@@ -1041,10 +1041,10 @@ void SyntaxChecker::visit(sptr_t<ParametricFunDeclaration> node) {
     }
 
     // Check parameter list
-    if (node->params.empty()) {
+    if (node->parameters.empty()) {
         err = addError(ErrorMessages::ERR_PARAM_FUN_SYM_DECL_EMPTY_PARAMS, node, err);
     } else {
-        visit0(node->params);
+        visit0(node->parameters);
     }
 
     // Check identifier
@@ -1065,12 +1065,12 @@ void SyntaxChecker::visit(sptr_t<ParametricFunDeclaration> node) {
     unordered_map<string, bool> paramUsage;
     sptr_v<Sort> sig = node->signature;
     for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
-        err = checkParamUsage(node->params, paramUsage, *sortIt, node, err);
+        err = checkParamUsage(node->parameters, paramUsage, *sortIt, node, err);
     }
 
-    if (paramUsage.size() != node->params.size()) {
+    if (paramUsage.size() != node->parameters.size()) {
         vector<string> unusedParams;
-        sptr_v<Symbol> params = node->params;
+        sptr_v<Symbol> params = node->parameters;
         for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
             string pname = (*paramIt)->toString();
             if (paramUsage.find(pname) == paramUsage.end()) {
@@ -1172,10 +1172,10 @@ void SyntaxChecker::visit(sptr_t<ParametricDatatypeDeclaration> node) {
         return;
     }
 
-    if (node->params.empty()) {
+    if (node->parameters.empty()) {
         err = addError(ErrorMessages::ERR_PARAM_DATATYPE_DECL_EMPTY_PARAMS, node, err);
     } else {
-        visit0(node->params);
+        visit0(node->parameters);
     }
 
     if (node->constructors.empty()) {
@@ -1190,13 +1190,13 @@ void SyntaxChecker::visit(sptr_t<ParametricDatatypeDeclaration> node) {
     for (auto consIt = constructors.begin(); consIt != constructors.end(); consIt++) {
         sptr_v<SelectorDeclaration> selectors = (*consIt)->selectors;
         for (auto selit = selectors.begin(); selit != selectors.end(); selit++) {
-            err = checkParamUsage(node->params, paramUsage, (*selit)->sort, node, err);
+            err = checkParamUsage(node->parameters, paramUsage, (*selit)->sort, node, err);
         }
     }
 
-    if (paramUsage.size() != node->params.size()) {
+    if (paramUsage.size() != node->parameters.size()) {
         vector<string> unusedParams;
-        sptr_v<Symbol> params = node->params;
+        sptr_v<Symbol> params = node->parameters;
         for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
             string pname = (*paramIt)->toString();
             if (paramUsage.find(pname) == paramUsage.end()) {

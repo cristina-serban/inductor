@@ -61,7 +61,7 @@ sptr_t<SortEntry> StackLoader::buildEntry(sptr_t<DeclareSortCommand> node) {
 }
 
 sptr_t<SortEntry> StackLoader::buildEntry(sptr_t<DefineSortCommand> node) {
-    return make_shared<SortEntry>(node->name, node->params.size(), node->params,
+    return make_shared<SortEntry>(node->name, node->parameters.size(), node->parameters,
                                   ctx->getStack()->expand(node->sort), node);
 }
 
@@ -119,7 +119,7 @@ sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<ParametricFunDeclaration> node) 
     }
 
     sptr_t<FunEntry> funEntry = make_shared<FunEntry>(node->identifier->toString(), newsig,
-                                                          node->params, node->attributes, node);
+                                                          node->parameters, node->attributes, node);
 
     sptr_v<Attribute> attrs = node->attributes;
     for (auto attr = attrs.begin(); attr != attrs.end(); attr++) {
@@ -151,7 +151,7 @@ sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DeclareConstCommand> node) {
 }
 
 sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DeclareFunCommand> node) {
-    sptr_v<Sort> &sig = node->params;
+    sptr_v<Sort> &sig = node->parameters;
     sptr_v<Sort> newsig;
 
     for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
@@ -166,7 +166,7 @@ sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DeclareFunCommand> node) {
 
 sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunCommand> node) {
     sptr_v<Sort> newsig;
-    sptr_v<SortedVariable> &params = node->definition->signature->params;
+    sptr_v<SortedVariable> &params = node->definition->signature->parameters;
     for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
         newsig.push_back(ctx->getStack()->expand((*paramIt)->sort));
     }
@@ -178,7 +178,7 @@ sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunCommand> node) {
 
 sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunRecCommand> node) {
     sptr_v<Sort> newsig;
-    sptr_v<SortedVariable> &params = node->definition->signature->params;
+    sptr_v<SortedVariable> &params = node->definition->signature->parameters;
     for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
         newsig.push_back(ctx->getStack()->expand((*paramIt)->sort));
     }
@@ -192,7 +192,7 @@ sptr_v<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunsRecCommand> node) {
     sptr_v<FunEntry> infos;
     for (unsigned long i = 0; i < node->declarations.size(); i++) {
         sptr_v<Sort> newsig;
-        sptr_v<SortedVariable> &params = node->declarations[i]->params;
+        sptr_v<SortedVariable> &params = node->declarations[i]->parameters;
         for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
             newsig.push_back(ctx->getStack()->expand((*paramIt)->sort));
         }
@@ -214,14 +214,14 @@ sptr_t<DatatypeEntry> StackLoader::buildEntry(sptr_t<DeclareDatatypeCommand> nod
 
     if (pdecl) {
         // Add datatype (parametric) sort info
-        entry->sort = make_shared<SortEntry>(typeName, pdecl->params.size(), node);
+        entry->sort = make_shared<SortEntry>(typeName, pdecl->parameters.size(), node);
 
         // Build a sort representing the datatype (to be used in the signatures of the constructors and selectors)
         sptr_t<Sort> typeSort = make_shared<Sort>(node->name);
 
-        vector<string> params = pdecl->params;
+        vector<string> params = pdecl->parameters;
         for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-            typeSort->args.push_back(make_shared<Sort>(*paramIt));
+            typeSort->arguments.push_back(make_shared<Sort>(*paramIt));
         }
 
         typeSort = ctx->getStack()->expand(typeSort);
@@ -244,12 +244,12 @@ sptr_t<DatatypeEntry> StackLoader::buildEntry(sptr_t<DeclareDatatypeCommand> nod
                 selSig.push_back(ctx->getStack()->expand((*selIt)->sort));
 
                 // Add selector function info
-                entry->funs.push_back(make_shared<FunEntry>(selName, selSig, pdecl->params, node));
+                entry->funs.push_back(make_shared<FunEntry>(selName, selSig, pdecl->parameters, node));
             }
 
             // Add constructor function info
             consSig.push_back(typeSort);
-            entry->funs.push_back(make_shared<FunEntry>(consName, consSig, pdecl->params, node));
+            entry->funs.push_back(make_shared<FunEntry>(consName, consSig, pdecl->parameters, node));
         }
 
     } else {
@@ -323,9 +323,9 @@ sptr_v<DatatypeEntry> StackLoader::buildEntry(sptr_t<DeclareDatatypesCommand> no
                 make_shared<Sort>(node->sorts[i]->name);
             typeSort = ctx->getStack()->expand(typeSort);
 
-            vector<string> params = pdecl->params;
+            vector<string> params = pdecl->parameters;
             for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-                typeSort->args.push_back(make_shared<Sort>(*paramIt));
+                typeSort->arguments.push_back(make_shared<Sort>(*paramIt));
             }
 
             sptr_v<ConstructorDeclaration> constructors = pdecl->constructors;
@@ -347,12 +347,12 @@ sptr_v<DatatypeEntry> StackLoader::buildEntry(sptr_t<DeclareDatatypesCommand> no
                     selSig.push_back(ctx->getStack()->expand((*selIt)->sort));
 
                     // Add selector function info
-                    entry->funs.push_back(make_shared<FunEntry>(selName, selSig, pdecl->params, node));
+                    entry->funs.push_back(make_shared<FunEntry>(selName, selSig, pdecl->parameters, node));
                 }
 
                 // Add constructor function info
                 consSig.push_back(typeSort);
-                entry->funs.push_back(make_shared<FunEntry>(consName, consSig, pdecl->params, node));
+                entry->funs.push_back(make_shared<FunEntry>(consName, consSig, pdecl->parameters, node));
             }
         } else {
             // Build a sort representing the datatype (to be used in the signatures of the constructors and selectors)

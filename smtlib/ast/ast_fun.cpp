@@ -7,11 +7,11 @@ using namespace smtlib::ast;
 
 /* ================================ FunctionDeclaration =============================== */
 
-FunctionDeclaration::FunctionDeclaration(sptr_t<Symbol> symbol,
-                                         const sptr_v<SortedVariable>& params,
-                                         sptr_t<Sort> sort)
+FunctionDeclaration::FunctionDeclaration(const SymbolPtr& symbol,
+                                         const vector<SortedVariablePtr>& parameters,
+                                         const SortPtr& sort)
         : symbol(symbol), sort(sort) {
-    this->params.insert(this->params.end(), params.begin(), params.end());
+    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
 }
 
 void FunctionDeclaration::accept(Visitor0* visitor){
@@ -22,25 +22,25 @@ string FunctionDeclaration::toString() {
     stringstream ss;
     ss << symbol->toString() << " (";
 
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        if(paramIt != params.begin())
+    for (size_t i = 0, sz = parameters.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << "(" << (*paramIt)->toString() << ")";
+
+        ss << parameters[i]->toString();
     }
 
     ss << ") " << sort->toString();
-
     return ss.str();
 }
 
 /* ================================ FunctionDefinition ================================ */
 
-FunctionDefinition::FunctionDefinition(sptr_t<Symbol> symbol,
-                                       const sptr_v<SortedVariable>& params,
-                                       sptr_t<Sort> sort,
-                                       sptr_t<Term> body)
+FunctionDefinition::FunctionDefinition(const SymbolPtr& symbol,
+                                       const vector<SortedVariablePtr>& parameters,
+                                       const SortPtr& sort,
+                                       const TermPtr& body)
         : body(body) {
-    signature = make_shared<FunctionDeclaration>(symbol, params, sort);
+    signature = make_shared<FunctionDeclaration>(symbol, parameters, sort);
 }
 
 void FunctionDefinition::accept(Visitor0* visitor){

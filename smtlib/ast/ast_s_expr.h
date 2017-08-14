@@ -6,7 +6,7 @@
 #ifndef INDUCTOR_AST_S_EXPR_H
 #define INDUCTOR_AST_S_EXPR_H
 
-#include "ast_classes.h"
+#include "ast_abstract.h"
 #include "ast_interfaces.h"
 
 #include <memory>
@@ -19,18 +19,16 @@ namespace smtlib {
                                 public AttributeValue,
                                 public std::enable_shared_from_this<CompSExpression> {
         public:
-            sptr_v<SExpression> exprs;
+            std::vector<SExpressionPtr> expressions;
 
             /**
-             * \param exprs     Subexpressions
+             * \param expressions     Subexpressions
              */
-            inline CompSExpression(sptr_v<SExpression>& exprs) {
-                this->exprs.insert(this->exprs.end(), exprs.begin(), exprs.end());
-            }
+            explicit CompSExpression(const std::vector<SExpressionPtr>& expressions);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

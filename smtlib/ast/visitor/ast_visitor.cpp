@@ -63,7 +63,7 @@ void DummyVisitor0::visit(sptr_t<DeclareDatatypesCommand> node) {
 
 void DummyVisitor0::visit(sptr_t<DeclareFunCommand> node) {
     visit0(node->symbol);
-    visit0(node->params);
+    visit0(node->parameters);
     visit0(node->sort);
 }
 
@@ -86,7 +86,7 @@ void DummyVisitor0::visit(sptr_t<DefineFunsRecCommand> node) {
 
 void DummyVisitor0::visit(sptr_t<DefineSortCommand> node) {
     visit0(node->symbol);
-    visit0(node->params);
+    visit0(node->parameters);
     visit0(node->sort);
 }
 
@@ -144,7 +144,7 @@ void DummyVisitor0::visit(sptr_t<SetOptionCommand> node) {
 
 void DummyVisitor0::visit(sptr_t<FunctionDeclaration> node) {
     visit0(node->symbol);
-    visit0(node->params);
+    visit0(node->parameters);
     visit0(node->sort);
 }
 
@@ -184,11 +184,11 @@ void DummyVisitor0::visit(sptr_t<Script> node) {
 
 void DummyVisitor0::visit(sptr_t<Sort> node) {
     visit0(node->identifier);
-    visit0(node->args);
+    visit0(node->arguments);
 }
 
 void DummyVisitor0::visit(sptr_t<CompSExpression> node) {
-    visit0(node->exprs);
+    visit0(node->expressions);
 }
 
 void DummyVisitor0::visit(sptr_t<SortSymbolDeclaration> node) {
@@ -218,7 +218,7 @@ void DummyVisitor0::visit(sptr_t<SimpleDatatypeDeclaration> node) {
 
 void DummyVisitor0::visit(sptr_t<ParametricDatatypeDeclaration> node) {
     visit0(node->constructors);
-    visit0(node->params);
+    visit0(node->parameters);
 }
 
 void DummyVisitor0::visit(sptr_t<QualifiedConstructor> node) {
@@ -255,7 +255,7 @@ void DummyVisitor0::visit(sptr_t<SimpleFunDeclaration> node) {
 }
 
 void DummyVisitor0::visit(sptr_t<ParametricFunDeclaration> node) {
-    visit0(node->params);
+    visit0(node->parameters);
     visit0(node->identifier);
     visit0(node->signature);
     visit0(node->attributes);

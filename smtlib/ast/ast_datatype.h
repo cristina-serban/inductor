@@ -8,7 +8,6 @@
 
 #include "ast_abstract.h"
 #include "ast_basic.h"
-#include "ast_classes.h"
 #include "ast_literal.h"
 #include "ast_sort.h"
 
@@ -19,19 +18,19 @@ namespace smtlib {
         class SortDeclaration : public Node,
                                 public std::enable_shared_from_this<SortDeclaration> {
         public:
-            sptr_t<Symbol> symbol;
-            sptr_t<NumeralLiteral> arity;
+            SymbolPtr symbol;
+            NumeralLiteralPtr arity;
 
             /**
              * \param symbol    Datatype (sort) name
              * \param arity     Arity
              */
-            inline SortDeclaration(sptr_t<Symbol> symbol, sptr_t<NumeralLiteral> arity)
+            inline SortDeclaration(const SymbolPtr& symbol, const NumeralLiteralPtr& arity)
                     : symbol(symbol), arity(arity) { }
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== SelectorDeclaration ================================ */
@@ -39,20 +38,19 @@ namespace smtlib {
         class SelectorDeclaration : public Node,
                                     public std::enable_shared_from_this<SelectorDeclaration> {
         public:
-            sptr_t<Symbol> symbol;
-            sptr_t<Sort> sort;
+            SymbolPtr symbol;
+            SortPtr sort;
 
             /**
              * \param symbol    Selector name
              * \param sort      Selector sort
              */
-            inline SelectorDeclaration(sptr_t<Symbol> symbol,
-                                       sptr_t<Sort> sort)
+            inline SelectorDeclaration(const SymbolPtr& symbol, const SortPtr& sort)
                     : symbol(symbol), sort(sort) { }
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== ConstructorDeclaration ============================== */
@@ -60,19 +58,19 @@ namespace smtlib {
         class ConstructorDeclaration : public Node,
                                        public std::enable_shared_from_this<ConstructorDeclaration> {
         public:
-            sptr_t<Symbol> symbol;
-            sptr_v<SelectorDeclaration> selectors;
+            SymbolPtr symbol;
+            std::vector<SelectorDeclarationPtr> selectors;
 
             /**
              * \param symbol        Constructor name
              * \param selectors     Selectors for the constructor
              */
-            ConstructorDeclaration(sptr_t<Symbol> symbol,
-                                   sptr_v<SelectorDeclaration>& selectors);
+            ConstructorDeclaration(const SymbolPtr& symbol,
+                                   const std::vector<SelectorDeclarationPtr>& selectors);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ DatatypeDeclaration =============================== */
@@ -84,16 +82,16 @@ namespace smtlib {
         class SimpleDatatypeDeclaration : public DatatypeDeclaration,
                                           public std::enable_shared_from_this<SimpleDatatypeDeclaration>  {
         public:
-            sptr_v<ConstructorDeclaration> constructors;
+            std::vector<ConstructorDeclarationPtr> constructors;
 
             /**
              * \param constructors  Constructors for this datatype
              */
-            SimpleDatatypeDeclaration(sptr_v<ConstructorDeclaration>& constructors);
+            explicit SimpleDatatypeDeclaration(const std::vector<ConstructorDeclarationPtr>& constructors);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =========================== ParametricDatatypeDeclaration ========================== */
@@ -101,19 +99,19 @@ namespace smtlib {
         class ParametricDatatypeDeclaration : public DatatypeDeclaration,
                                               public std::enable_shared_from_this<ParametricDatatypeDeclaration> {
         public:
-            sptr_v<Symbol> params;
-            sptr_v<ConstructorDeclaration> constructors;
+            std::vector<SymbolPtr> parameters;
+            std::vector<ConstructorDeclarationPtr> constructors;
 
             /**
              * \param params        Parameters for the declaration
              * \param constructors  Constructors for this datatype
              */
-            ParametricDatatypeDeclaration(sptr_v<Symbol>& params,
-                                          sptr_v<ConstructorDeclaration>& constructors);
+            ParametricDatatypeDeclaration(const std::vector<SymbolPtr> parameters,
+                                          const std::vector<ConstructorDeclarationPtr> constructors);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

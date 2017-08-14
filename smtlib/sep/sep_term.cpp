@@ -7,8 +7,8 @@ using namespace smtlib::sep;
 
 /* ================================== QualifiedTerm =================================== */
 
-QualifiedTerm::QualifiedTerm(sptr_t<Identifier> identifier,
-                             sptr_v<Term>& terms)
+QualifiedTerm::QualifiedTerm(const IdentifierPtr& identifier,
+                             const vector<TermPtr>& terms)
         : identifier(identifier) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
@@ -19,12 +19,10 @@ void QualifiedTerm::accept(Visitor0* visitor){
 
 string QualifiedTerm::toString() {
     stringstream ss;
-    ss << "(" << identifier->toString() << " ";
+    ss << "(" << identifier->toString();
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
-            ss << " ";
-        ss << (*termIt)->toString();
+    for (const auto& term : terms) {
+        ss << " " << term->toString();
     }
 
     ss << ")";
@@ -33,8 +31,8 @@ string QualifiedTerm::toString() {
 
 /* ===================================== LetTerm ====================================== */
 
-LetTerm::LetTerm(sptr_v<VariableBinding>& bindings,
-                 sptr_t<Term> term)
+LetTerm::LetTerm(const vector<VariableBindingPtr>& bindings,
+                 const TermPtr& term)
         : term(term) {
     this->bindings.insert(this->bindings.end(), bindings.begin(), bindings.end());
 }
@@ -47,20 +45,21 @@ string LetTerm::toString() {
     stringstream ss;
     ss << "(let (";
 
-    for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
-        if(bindingIt != bindings.begin())
+    for (size_t i = 0, sz = bindings.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << "(" << (*bindingIt)->toString() << ")";
+
+        ss << "(" << bindings[i]->toString() << ")";
     }
 
     ss << ") " << term->toString() << ")";
-
     return ss.str();
 }
 
 /* ==================================== ForallTerm ==================================== */
-ForallTerm::ForallTerm(sptr_v<SortedVariable>& bindings,
-                       sptr_t<Term> term)
+
+ForallTerm::ForallTerm(const vector<SortedVariablePtr>& bindings,
+                       const TermPtr& term)
         : term(term)  {
     this->bindings.insert(this->bindings.end(), bindings.begin(), bindings.end());
 }
@@ -73,20 +72,21 @@ string ForallTerm::toString() {
     stringstream ss;
     ss << "(forall (";
 
-    for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
-        if(bindingIt != bindings.begin())
+    for (size_t i = 0, sz = bindings.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << "(" << (*bindingIt)->toString() << ")";
+
+        ss << "(" << bindings[i]->toString() << ")";
     }
 
     ss << ") " << term->toString() << ")";
-
     return ss.str();
 }
 
 /* ==================================== ExistsTerm ==================================== */
-ExistsTerm::ExistsTerm(sptr_v<SortedVariable>& bindings,
-                       sptr_t<Term> term)
+
+ExistsTerm::ExistsTerm(const vector<SortedVariablePtr>& bindings,
+                       const TermPtr& term)
         : term(term) {
     this->bindings.insert(this->bindings.end(), bindings.begin(), bindings.end());
 }
@@ -99,20 +99,21 @@ string ExistsTerm::toString() {
     stringstream ss;
     ss << "(exists (";
 
-    for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
-        if(bindingIt != bindings.begin())
+    for (size_t i = 0, sz = bindings.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << "(" << (*bindingIt)->toString() << ")";
+
+        ss << "(" << bindings[i]->toString() << ")";
     }
 
     ss << ") " << term->toString() << ")";
-
     return ss.str();
 }
 
 /* ==================================== MatchTerm ===================================== */
-MatchTerm::MatchTerm(sptr_t<Term> term,
-                     sptr_v<MatchCase>& cases)
+
+MatchTerm::MatchTerm(const TermPtr& term,
+                     const vector<MatchCasePtr>& cases)
     : term(term) {
     this->cases.insert(this->cases.begin(), cases.begin(), cases.end());
 }
@@ -124,16 +125,19 @@ void MatchTerm::accept(Visitor0* visitor) {
 string MatchTerm::toString() {
     stringstream ss;
     ss << "(match " << term->toString();
-    for (auto caseIt = cases.begin(); caseIt != cases.end(); caseIt++) {
-        ss << " " << (*caseIt)->toString();
+
+    for (auto caseIt : cases) {
+        ss << " " << caseIt->toString();
     }
+
     ss << ")";
     return ss.str();
 }
 
 /* ================================== AnnotatedTerm =================================== */
-AnnotatedTerm::AnnotatedTerm(sptr_t<Term> term,
-                             sptr_v<Attribute>& attributes)
+
+AnnotatedTerm::AnnotatedTerm(const TermPtr& term,
+                             const vector<AttributePtr>& attributes)
         : term(term) {
     this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
 }
@@ -146,10 +150,11 @@ string AnnotatedTerm::toString() {
     stringstream ss;
     ss << "( ! " << term->toString() << " ";
 
-    for (auto attrIt = attributes.begin(); attrIt != attributes.end(); attrIt++) {
-        if(attrIt != attributes.begin())
+    for (size_t i = 0, sz = attributes.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*attrIt)->toString();
+
+        ss << attributes[i]->toString();
     }
 
     ss << ")";
@@ -190,7 +195,7 @@ string NotTerm::toString() {
 
 /* =================================== ImpliesTerm ==================================== */
 
-ImpliesTerm::ImpliesTerm(sptr_v<Term> &terms) {
+ImpliesTerm::ImpliesTerm(const vector<TermPtr> &terms) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
@@ -202,10 +207,11 @@ string ImpliesTerm::toString() {
     stringstream ss;
     ss << "(=> ";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << ")";
@@ -214,7 +220,7 @@ string ImpliesTerm::toString() {
 
 /* ===================================== AndTerm ====================================== */
 
-AndTerm::AndTerm(sptr_v<Term> &terms) {
+AndTerm::AndTerm(const vector<TermPtr> &terms) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
@@ -226,10 +232,11 @@ string AndTerm::toString() {
     stringstream ss;
     ss << "(and ";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << ")";
@@ -238,7 +245,7 @@ string AndTerm::toString() {
 
 /* ====================================== OrTerm ====================================== */
 
-OrTerm::OrTerm(sptr_v<Term> &terms) {
+OrTerm::OrTerm(const vector<TermPtr> &terms) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
@@ -250,10 +257,11 @@ string OrTerm::toString() {
     stringstream ss;
     ss << "(or ";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << ")";
@@ -262,7 +270,7 @@ string OrTerm::toString() {
 
 /* ===================================== XorTerm ====================================== */
 
-XorTerm::XorTerm(sptr_v<Term> &terms) {
+XorTerm::XorTerm(const vector<TermPtr> &terms) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
@@ -274,10 +282,11 @@ string XorTerm::toString() {
     stringstream ss;
     ss << "(xor ";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << ")";
@@ -286,7 +295,7 @@ string XorTerm::toString() {
 
 /* ==================================== EqualsTerm ==================================== */
 
-EqualsTerm::EqualsTerm(sptr_v<Term> &terms) {
+EqualsTerm::EqualsTerm(const vector<TermPtr> &terms) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
@@ -298,10 +307,11 @@ string EqualsTerm::toString() {
     stringstream ss;
     ss << "(= ";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << ")";
@@ -310,7 +320,7 @@ string EqualsTerm::toString() {
 
 /* =================================== DistinctTerm =================================== */
 
-DistinctTerm::DistinctTerm(sptr_v<Term> &terms) {
+DistinctTerm::DistinctTerm(const vector<TermPtr> &terms) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
@@ -322,10 +332,11 @@ string DistinctTerm::toString() {
     stringstream ss;
     ss << "(distinct ";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << ")";
@@ -362,7 +373,7 @@ void SepTerm::accept(Visitor0* visitor){
     visitor->visit(shared_from_this());
 }
 
-SepTerm::SepTerm(sptr_v<Term> &terms) {
+SepTerm::SepTerm(const vector<TermPtr> &terms) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
@@ -370,10 +381,11 @@ string SepTerm::toString() {
     stringstream ss;
     ss << "(sep ";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << ")";
@@ -386,7 +398,7 @@ void WandTerm::accept(Visitor0* visitor){
     visitor->visit(shared_from_this());
 }
 
-WandTerm::WandTerm(sptr_v<Term> &terms) {
+WandTerm::WandTerm(const vector<TermPtr> &terms) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
@@ -394,10 +406,11 @@ string WandTerm::toString() {
     stringstream ss;
     ss << "(wand ";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << ")";

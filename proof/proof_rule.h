@@ -9,8 +9,13 @@
 namespace proof {
     /** Types of proof rules */
     enum Rule {
-        NONE = 0, CALL, IDENTITY, INDUCTION, SUBSTITUTE, SMT_TRUE,
-        SMT_FALSE, UNFOLD_LEFT, UNFOLD_RIGHT, REDUCE, SPLIT, SIMPLIFY
+        NONE = 0,
+        LEFT_UNFOLD,
+        RIGHT_UNFOLD,
+        REDUCE,
+        SPLIT,
+        INFINITE_DESCENT,
+        AXIOM
     };
 
     /** Get name for proof rule */
@@ -32,6 +37,8 @@ namespace proof {
         Rule rule;
 
     public:
+        std::vector<std::string> nextStratStates;
+
         inline RuleApplication() : rule(Rule::NONE) { }
         inline RuleApplication(Rule rule) : rule(rule) { }
 
@@ -40,65 +47,38 @@ namespace proof {
         virtual inline ~RuleApplication() { }
     };
 
-    struct CallApplication : public RuleApplication {
-        std::vector<size_t> leftIndices;
-        std::vector<std::vector<size_t>> rightIndices;
-
-        inline CallApplication() { rule = Rule::CALL; }
+    struct InfDescentApplication : public RuleApplication {
+        inline InfDescentApplication() : RuleApplication(Rule::INFINITE_DESCENT) {}
     };
 
-    struct IdentityApplication : public RuleApplication {
-        inline IdentityApplication() { rule = Rule::IDENTITY; }
+    struct AxiomApplication : public RuleApplication {
+        inline AxiomApplication() : RuleApplication(Rule::AXIOM) {}
     };
 
-    struct InductionApplication : public RuleApplication {
-        inline InductionApplication() { rule = Rule::INDUCTION; }
-    };
-
-    struct SubstituteApplication : public RuleApplication {
-        std::vector<sptr_um2<std::string, smtlib::sep::Term>> subst;
-
-        inline SubstituteApplication() { rule = Rule::SUBSTITUTE; }
-    };
-
-    struct SmtTrueApplication : public RuleApplication {
-        inline SmtTrueApplication() { rule = Rule::SMT_TRUE; }
-    };
-
-    struct SmtFalseApplication : public RuleApplication {
-        inline SmtFalseApplication() { rule = Rule::SMT_FALSE; }
-    };
-
-    struct UnfoldLeftApplication : public RuleApplication {
+    struct LeftUnfoldApplication : public RuleApplication {
         std::vector<size_t> indices;
         sptr_v<State> unfolded;
         sptr_t<RuleNode> ruleNode;
 
-        inline UnfoldLeftApplication() { rule = Rule::UNFOLD_LEFT; }
+        inline LeftUnfoldApplication() : RuleApplication(Rule::LEFT_UNFOLD) {}
     };
 
-    struct UnfoldRightApplication : public RuleApplication {
-        std::vector<std::vector<size_t>> indices;
+    struct RightUnfoldApplication : public RuleApplication {
+        std::vector<size_t> indices;
 
-        inline UnfoldRightApplication() { rule = Rule::UNFOLD_RIGHT; }
+        inline RightUnfoldApplication() : RuleApplication(Rule::RIGHT_UNFOLD) {}
     };
 
     struct ReduceApplication : public RuleApplication {
-        sptr_t<Pair> newPair;
+        std::vector<sptr_um2<std::string, smtlib::sep::Term>> subst;
+        std::vector<bool> entails;
 
-        ReduceApplication();
+        ReduceApplication() : RuleApplication(Rule::REDUCE) {}
     };
 
     struct SplitApplication : public RuleApplication {
-        inline SplitApplication() { rule = Rule::SPLIT; }
+        inline SplitApplication() : RuleApplication(Rule::SPLIT) {}
     };
-
-    struct SimplifyApplication : public RuleApplication {
-        sptr_v<State> newRight;
-
-        inline SimplifyApplication() { rule = Rule::SIMPLIFY; }
-    };
-
 }
 
 #endif //INDUCTOR_PROOF_RULE_H

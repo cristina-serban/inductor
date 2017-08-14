@@ -6,8 +6,8 @@
 #ifndef INDUCTOR_AST_TERM_H
 #define INDUCTOR_AST_TERM_H
 
+#include "ast_abstract.h"
 #include "ast_attribute.h"
-#include "ast_classes.h"
 #include "ast_interfaces.h"
 #include "ast_match.h"
 #include "ast_variable.h"
@@ -22,18 +22,18 @@ namespace smtlib {
         class QualifiedTerm : public Term,
                               public std::enable_shared_from_this<QualifiedTerm> {
         public:
-            sptr_t<Identifier> identifier;
-            sptr_v<Term> terms;
+            IdentifierPtr identifier;
+            std::vector<TermPtr> terms;
 
             /**
              * \param identifier    Qualified identifier
              * \param terms         List of terms
              */
-            QualifiedTerm(sptr_t<Identifier> identifier, sptr_v<Term>& terms);
+            QualifiedTerm(const IdentifierPtr& identifier, const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0 *visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ===================================== LetTerm ====================================== */
@@ -41,18 +41,18 @@ namespace smtlib {
         class LetTerm : public Term,
                         public std::enable_shared_from_this<LetTerm> {
         public:
-            sptr_v<VariableBinding> bindings;
-            sptr_t<Term> term;
+            std::vector<VariableBindingPtr> bindings;
+            TermPtr term;
 
             /**
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            LetTerm(sptr_v<VariableBinding>& bindings, sptr_t<Term> term);
+            LetTerm(const std::vector<VariableBindingPtr>& bindings, const TermPtr& term);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0 *visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== ForallTerm ==================================== */
@@ -60,19 +60,18 @@ namespace smtlib {
         class ForallTerm : public Term,
                            public std::enable_shared_from_this<ForallTerm> {
         public:
-            sptr_v<SortedVariable> bindings;
-            sptr_t<Term> term;
+            std::vector<SortedVariablePtr> bindings;
+            TermPtr term;
 
             /**
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            ForallTerm(sptr_v<SortedVariable>& bindings,
-                       sptr_t<Term> term);
+            ForallTerm(const std::vector<SortedVariablePtr>& bindings, const TermPtr& term);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0 *visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== ExistsTerm ==================================== */
@@ -80,19 +79,18 @@ namespace smtlib {
         class ExistsTerm : public Term,
                            public std::enable_shared_from_this<ExistsTerm> {
         public:
-            sptr_v<SortedVariable> bindings;
-            sptr_t<Term> term;
+            std::vector<SortedVariablePtr> bindings;
+            TermPtr term;
 
             /**
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            ExistsTerm(sptr_v<SortedVariable>& bindings,
-                       sptr_t<Term> term);
+            ExistsTerm(const std::vector<SortedVariablePtr>& bindings, const TermPtr& term);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0 *visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== MatchTerm ===================================== */
@@ -100,18 +98,18 @@ namespace smtlib {
         class MatchTerm : public Term,
                           public std::enable_shared_from_this<MatchTerm> {
         public:
-            sptr_t<Term> term;
-            sptr_v<MatchCase> cases;
+            TermPtr term;
+            std::vector<MatchCasePtr> cases;
 
             /**
              * @param term      Term to be matched
              * @param cases     Match cases
              */
-            MatchTerm(sptr_t<Term> term, sptr_v<MatchCase>& cases);
+            MatchTerm(const TermPtr& term, const std::vector<MatchCasePtr>& cases);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0 *visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================== AnnotatedTerm =================================== */
@@ -119,19 +117,18 @@ namespace smtlib {
         class AnnotatedTerm : public Term,
                               public std::enable_shared_from_this<AnnotatedTerm> {
         public:
-            sptr_t<Term> term;
-            sptr_v<Attribute> attributes;
+            TermPtr term;
+            std::vector<AttributePtr> attributes;
 
             /**
              * \param term  Inner term
              * \param attr  Attributes
              */
-            AnnotatedTerm(sptr_t<Term> term,
-                          sptr_v<Attribute>& attributes);
+            AnnotatedTerm(const TermPtr& term, const std::vector<AttributePtr>& attributes);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0 *visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

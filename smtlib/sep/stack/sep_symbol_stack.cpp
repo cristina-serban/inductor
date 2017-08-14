@@ -127,7 +127,7 @@ sptr_t<Sort> SymbolStack::replace(sptr_t<Sort> sort,
     } else {
         sptr_v<Sort> newargs;
         bool changed = false;
-        sptr_v<Sort> argSorts = sort->args;
+        sptr_v<Sort> argSorts = sort->arguments;
         for (auto argIt = argSorts.begin(); argIt != argSorts.end(); argIt++) {
             sptr_t<Sort> result = replace(*argIt, mapping);
 
@@ -165,13 +165,13 @@ sptr_t<Sort> SymbolStack::expand(sptr_t<Sort> sort) {
         }
     } else {
         if (entry) {
-            if (entry->arity != sort->args.size())
+            if (entry->arity != sort->arguments.size())
                 return null;
 
-            if (entry->params.size() == sort->args.size()) {
+            if (entry->params.size() == sort->arguments.size()) {
                 unordered_map<string, sptr_t<Sort>> mapping;
                 for (int i = 0; i < entry->params.size(); i++) {
-                    mapping[entry->params[i]] = sort->args[i];
+                    mapping[entry->params[i]] = sort->arguments[i];
                 }
 
                 sptr_t<Sort> newsort = replace(entry->sort, mapping);
@@ -183,7 +183,7 @@ sptr_t<Sort> SymbolStack::expand(sptr_t<Sort> sort) {
         } else {
             sptr_v<Sort> newargs;
             bool changed = false;
-            sptr_v<Sort> argSorts = sort->args;
+            sptr_v<Sort> argSorts = sort->arguments;
             for (auto argIt = argSorts.begin(); argIt != argSorts.end(); argIt++) {
                 sptr_t<Sort> result = expand(*argIt);
                 if (!result)
@@ -222,10 +222,10 @@ bool SymbolStack::equal(vector<string>& params1,
         return false;
     }
 
-    if (sort1->args.size() != sort2->args.size())
+    if (sort1->arguments.size() != sort2->arguments.size())
         return false;
 
-    if (sort1->args.size() == 0) {
+    if (sort1->arguments.size() == 0) {
         bool isParam1 = false;
         bool isParam2 = false;
 
@@ -255,8 +255,8 @@ bool SymbolStack::equal(vector<string>& params1,
         if (sort1->name != sort2->name)
             return false;
 
-        for (unsigned long k = 0; k < sort1->args.size(); k++) {
-            if (!equal(params1, sort1->args[k], params2, sort2->args[k], mapping))
+        for (unsigned long k = 0; k < sort1->arguments.size(); k++) {
+            if (!equal(params1, sort1->arguments[k], params2, sort2->arguments[k], mapping))
                 return false;
         }
 

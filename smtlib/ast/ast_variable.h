@@ -8,7 +8,6 @@
 
 #include "ast_abstract.h"
 #include "ast_basic.h"
-#include "ast_classes.h"
 #include "ast_interfaces.h"
 #include "ast_sort.h"
 
@@ -19,40 +18,37 @@ namespace smtlib {
         /* ================================== SortedVariable ================================== */
         /** A sorted variable. */
         struct SortedVariable : public Node, public std::enable_shared_from_this<SortedVariable> {
-            sptr_t<Symbol> symbol;
-            sptr_t<Sort> sort;
+            SymbolPtr symbol;
+            SortPtr sort;
 
             /**
              * \param symbol    Variable name
              * \param sort      Variable sort
              */
-            inline SortedVariable(sptr_t<Symbol> symbol,
-                                  sptr_t<Sort> sort)
+            inline SortedVariable(const SymbolPtr& symbol, const SortPtr& sort)
                     : symbol(symbol), sort(sort) {}
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0 *visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= VariableBinding ================================== */
         /** A variable binding. */
         struct VariableBinding : public Node, public std::enable_shared_from_this<VariableBinding> {
-            sptr_t<Symbol> symbol;
-            sptr_t<Term> term;
+            SymbolPtr symbol;
+            TermPtr term;
 
             /**
              * \param symbol    Variable name
              * \param term      Binding
              */
-            VariableBinding(sptr_t<Symbol> symbol,
-                            sptr_t<Term> term)
-                    : symbol(symbol), term(term) {
-            }
+            VariableBinding(const SymbolPtr& symbol, const TermPtr& term)
+                    : symbol(symbol), term(term) {}
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0 *visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

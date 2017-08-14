@@ -7,7 +7,6 @@
 #define INDUCTOR_SEP_SCRIPT_H
 
 #include "sep_abstract.h"
-#include "sep_basic.h"
 #include "sep_command.h"
 
 #include <memory>
@@ -22,21 +21,21 @@ namespace smtlib {
         class Script : public Root,
                        public std::enable_shared_from_this<Script> {
         public:
-            sptr_v<Command> commands;
+            std::vector<CommandPtr> commands;
 
             /**
              * Default constructor
              */
-            inline Script() { }
+            inline Script() = default;
 
             /**
              * \param cmds    Command list
              */
-            Script(sptr_v<Command>& commands);
+            explicit Script(const std::vector<CommandPtr>& commands);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

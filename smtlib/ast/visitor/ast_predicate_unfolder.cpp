@@ -125,10 +125,10 @@ void PredicateUnfolder::visit(sptr_t<QualifiedTerm> node) {
         }
 
         replaceContext->getRenamingMap().clear();
-        for (int i = 0; i < signature->params.size(); i++) {
+        for (int i = 0; i < signature->parameters.size(); i++) {
             stringstream ss;
             ss << node->terms[i]->toString();
-            replaceContext->getRenamingMap()[signature->params[i]->symbol->toString()] = ss.str();
+            replaceContext->getRenamingMap()[signature->parameters[i]->symbol->toString()] = ss.str();
         }
         dup->accept(renamer.get());
 
@@ -298,7 +298,7 @@ void PredicateUnfolder::visit(sptr_t<SetOptionCommand> node) {
 
 void PredicateUnfolder::visit(sptr_t<FunctionDeclaration> node) {
     wrappedVisit(arg + 1, node->symbol);
-    for (sptr_t<SortedVariable> it : node->params) {
+    for (sptr_t<SortedVariable> it : node->parameters) {
         wrappedVisit(arg + 1, it);
     }
     wrappedVisit(arg + 1, node->sort);
@@ -359,14 +359,14 @@ void PredicateUnfolder::visit(sptr_t<Script> node) {
 
 void PredicateUnfolder::visit(sptr_t<Sort> node) {
     wrappedVisit(arg + 1, node->identifier);
-    for (sptr_t<Sort> it : node->args) {
+    for (sptr_t<Sort> it : node->arguments) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
 void PredicateUnfolder::visit(sptr_t<CompSExpression> node) {
-    for (sptr_t<SExpression> it : node->exprs) {
+    for (sptr_t<SExpression> it : node->expressions) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
@@ -412,7 +412,7 @@ void PredicateUnfolder::visit(sptr_t<ParametricDatatypeDeclaration> node) {
     for (sptr_t<ConstructorDeclaration> it : node->constructors) {
         wrappedVisit(arg + 1, it);
     }
-    for (sptr_t<Symbol> it : node->params) {
+    for (sptr_t<Symbol> it : node->parameters) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
@@ -468,7 +468,7 @@ void PredicateUnfolder::visit(sptr_t<SimpleFunDeclaration> node) {
 }
 
 void PredicateUnfolder::visit(sptr_t<ParametricFunDeclaration> node) {
-    for (sptr_t<Symbol> it : node->params) {
+    for (sptr_t<Symbol> it : node->parameters) {
         wrappedVisit(arg + 1, it);
     }
     wrappedVisit(arg + 1, node->identifier);

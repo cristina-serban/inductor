@@ -3,6 +3,7 @@
 
 #include "proof_tree.h"
 
+#include "strat/proof_strategy.h"
 #include "util/global_typedef.h"
 
 namespace proof {
@@ -82,7 +83,7 @@ namespace proof {
         sptr_t<RuleNode> parent;
         sptr_v<RuleNode> children;
 
-        // todo add strategy state here
+        strat::StateList stratStates;
 
         inline PairStmtNode() { }
 

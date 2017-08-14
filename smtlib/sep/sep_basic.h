@@ -31,11 +31,11 @@ namespace smtlib {
             /**
              * \param value     Textual value of the symbol
              */
-            inline Symbol(std::string value) : value(value) { }
+            inline explicit Symbol(const std::string& value) : value(value) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ====================================== Keyword ===================================== */
@@ -52,11 +52,11 @@ namespace smtlib {
             /**
              * \param value     Textual value of the keyword
              */
-            inline Keyword(std::string value) : value(value) { }
+            inline explicit Keyword(const std::string& value) : value(value) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= MetaSpecConstant ================================= */
@@ -77,11 +77,11 @@ namespace smtlib {
             /**
              * \param type  Meta specification constant type
              */
-            inline MetaSpecConstant(MetaSpecConstant::Type type) : type(type) { }
+            inline explicit MetaSpecConstant(MetaSpecConstant::Type type) : type(type) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =================================== BooleanValue =================================== */
@@ -98,11 +98,11 @@ namespace smtlib {
             /**
              * \param value Truth value ("true" or "false")
              */
-            inline BooleanValue(bool value) : value(value) { }
+            inline explicit BooleanValue(bool value) : value(value) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =================================== PropLiteral ==================================== */
@@ -117,12 +117,12 @@ namespace smtlib {
              * \param symbol    Symbol of the literal
              * \param negated   Whether the symbol is negated
              */
-            inline PropLiteral(std::string value, bool negated)
-                    : value(value), negated(negated) { }
+            inline PropLiteral(const std::string& value, bool negated)
+                    : value(value), negated(negated) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

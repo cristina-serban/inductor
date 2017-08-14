@@ -8,7 +8,6 @@
 
 #include "ast_classes.h"
 
-#include "util/global_typedef.h"
 #include "visitor/ast_visitor.h"
 
 #include <string>
@@ -24,7 +23,7 @@ namespace smtlib {
             int rowRight{0};
             int colLeft{0};
             int colRight{0};
-            sptr_t<std::string> filename;
+            std::shared_ptr<std::string> filename;
 
             inline Node() = default;
 

@@ -104,6 +104,9 @@ namespace smtlib {
 
             sptr_t<SymbolStack> load(sptr_t<Node> node);
         };
+
+        typedef std::shared_ptr<StackLoader> StackLoaderPtr;
+        typedef std::shared_ptr<StackLoaderContext> StackLoaderContextPtr;
     }
 }
 

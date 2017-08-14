@@ -9,132 +9,151 @@
 
 namespace pred {
     class PredicateTable;
+
+    typedef std::shared_ptr<PredicateTable> PredicateTablePtr;
 }
 
 namespace proof {
     class State;
+
     class EntailmentChecker;
 
-    sptr_t<proof::State> toState(sptr_t<pred::PredicateTable> table, sptr_t<smtlib::sep::Term> term);
+    typedef std::shared_ptr<State> StatePtr;
+    typedef std::shared_ptr<EntailmentChecker> EntailmentCheckerPtr;
+
+    proof::StatePtr toState(pred::PredicateTablePtr table, smtlib::sep::TermPtr term);
 }
 
 namespace pred {
     class PredicateTable {
         friend class proof::EntailmentChecker;
-        friend sptr_t<proof::State> proof::toState(sptr_t<pred::PredicateTable> table, sptr_t<smtlib::sep::Term> term);
-    private:
-        sptr_t<smtlib::sep::SymbolStack> stack;
 
-        sptr_t<EquivAnalysis> equiv;
-        sptr_t<AllocAnalysis> alloc;
-        sptr_t<ReachAnalysis> reach;
+        friend proof::StatePtr proof::toState(pred::PredicateTablePtr table, smtlib::sep::TermPtr term);
+
+    private:
+        smtlib::sep::SymbolStackPtr stack;
+
+        EquivAnalysisPtr equiv;
+        AllocAnalysisPtr alloc;
+        ReachAnalysisPtr reach;
 
         /* ============================== Loading the predicates ============================== */
         /** Load predicate from a define-fun command */
-        void load(std::shared_ptr<smtlib::sep::DefineFunCommand> cmd);
+        void load(const smtlib::sep::DefineFunCommandPtr& cmd);
 
         /** Load predicate from a define-fun-rec command */
-        void load(std::shared_ptr<smtlib::sep::DefineFunRecCommand> cmd);
+        void load(const smtlib::sep::DefineFunRecCommandPtr& cmd);
 
         /** Load predicate from a define-funs-rec command */
-        void load(std::shared_ptr<smtlib::sep::DefineFunsRecCommand> cmd);
+        void load(const smtlib::sep::DefineFunsRecCommandPtr& cmd);
 
         /** Load predicate from its signature and body */
-        void load(sptr_t<smtlib::sep::FunctionDeclaration> decl,
-                  sptr_t<smtlib::sep::Term> term);
-
-        /** Create predicate and add it to the table */
-        sptr_t<InductivePredicate> add(sptr_t<smtlib::sep::FunctionDeclaration> decl);
+        void load(const smtlib::sep::FunctionDeclarationPtr& decl,
+                  const smtlib::sep::TermPtr& term);
 
         /** Load predicate definition from its body */
-        void load(sptr_t<InductivePredicate> pred,
-                  sptr_t<smtlib::sep::OrTerm> body);
+        void load(const InductivePredicatePtr& pred,
+                  const smtlib::sep::OrTermPtr& body);
+
+        /** Create predicate and add it to the table */
+        InductivePredicatePtr add(const smtlib::sep::FunctionDeclarationPtr& decl);
 
         /** Check whether the term defines an inductive case */
-        bool isInductiveCase(sptr_t<smtlib::sep::Term> term);
+        bool isInductiveCase(const smtlib::sep::TermPtr& term);
 
         /** Check whether the term represents an inductive call */
-        bool isInductiveCall(sptr_t<smtlib::sep::Term> term);
+        bool isInductiveCall(const smtlib::sep::TermPtr& term);
 
         /** Check whether the term is spatial */
-        bool isSpatial(sptr_t<smtlib::sep::Term> term);
+        bool isSpatial(const smtlib::sep::TermPtr& term);
 
         /** Builds a base case from the term */
-        sptr_t<BaseCase> buildBaseCase(sptr_t<smtlib::sep::Term> term);
+        BaseCasePtr buildBaseCase(const smtlib::sep::TermPtr& term);
 
         /** Builds an inductive case from the term */
-        sptr_t<InductiveCase> buildInductiveCase(sptr_t<smtlib::sep::Term> term);
+        InductiveCasePtr buildInductiveCase(const smtlib::sep::TermPtr& term);
 
         /** Builds an inductive case from the bindings and the qualified term */
-        sptr_t<InductiveCase> buildInductiveCase(sptr_v<smtlib::sep::SortedVariable> bindings,
-                                                 sptr_t<smtlib::sep::QualifiedTerm> term);
+        InductiveCasePtr buildInductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+                                            const smtlib::sep::QualifiedTermPtr& term);
 
         /** Builds an inductive case from the bindings and the separation term */
-        sptr_t<InductiveCase> buildInductiveCase(sptr_v<smtlib::sep::SortedVariable> bindings,
-                                                 sptr_t<smtlib::sep::SepTerm> term);
+        InductiveCasePtr buildInductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+                                            const smtlib::sep::SepTermPtr& term);
 
         /** Builds a predicate call from the qualified term */
-        sptr_t<PredicateCall> buildPredicateCall(sptr_t<smtlib::sep::QualifiedTerm> term);
+        PredicateCallPtr buildPredicateCall(const smtlib::sep::QualifiedTermPtr& term);
 
         /** Builds an expression from the term */
-        sptr_t<Constraint> buildExpression(sptr_t<smtlib::sep::Term> term);
+        ConstraintPtr buildConstraint(const smtlib::sep::TermPtr& term);
 
         /** Breaks the terms into all its subterms */
-        sptr_v<smtlib::sep::Term> buildTermList(sptr_t<smtlib::sep::Term> term);
+        std::vector<smtlib::sep::TermPtr> buildTermList(const smtlib::sep::TermPtr& term);
 
         /* ============================== Analysing equivalence  ============================== */
         void printEquiv();
 
         void buildEquiv();
 
-        void buildEquiv(std::string pred, sptr_t<BaseCase> bcase,
-                        sptr_v<smtlib::sep::SortedVariable> params);
+        void buildEquiv(const std::string& pred, const BaseCasePtr& bcase,
+                        const std::vector<smtlib::sep::SortedVariablePtr>& params);
 
-        void buildEquiv(std::string pred, sptr_t<InductiveCase> icase,
-                        sptr_v<smtlib::sep::SortedVariable> params);
+        void buildEquiv(const std::string& pred, const InductiveCasePtr& icase,
+                        const std::vector<smtlib::sep::SortedVariablePtr>& params);
 
-        void buildIndexEquiv(std::string pred, sptr_t<BaseCase> bcase,
-                             umap<std::string, unsigned long> paramMap);
+        void buildIndexEquiv(const std::string& pred, const BaseCasePtr& bcase,
+                             const std::unordered_map<std::string, unsigned long>& paramMap);
 
-        void buildIndexEquiv(std::string pred, sptr_t<InductiveCase> icase,
-                             umap<std::string, unsigned long> paramMap);
+        void buildIndexEquiv(const std::string& pred, const InductiveCasePtr& icase,
+                             const std::unordered_map<std::string, unsigned long>& paramMap);
 
         /* ============================== Analysing allocation  =============================== */
         void initAlloc();
-        void initAlloc(std::string pred);
-        void initAlloc(std::string pred, sptr_t<BaseCase> bcase);
-        void initAlloc(std::string pred, sptr_t<InductiveCase> icase);
 
-        void analyseAlloc(std::string pred);
-        void analyseAlloc(std::string pred, sptr_t<InductiveCase> icase);
+        void initAlloc(const std::string& pred);
 
-        void analyseAllocFirst(std::string pred, sptr_t<InductiveCase> icase);
-        void analyseAllocRecurse(std::string pred, sptr_t<InductiveCase> icase);
+        void initAlloc(const std::string& pred, const BaseCasePtr& bcase);
+
+        void initAlloc(const std::string&, const InductiveCasePtr& icase);
+
+        void analyseAlloc(const std::string& pred);
+
+        void analyseAlloc(const std::string& pred, const InductiveCasePtr& icase);
+
+        void analyseAllocFirst(const std::string& pred, const InductiveCasePtr& icase);
+
+        void analyseAllocRecurse(const std::string& pred, const InductiveCasePtr& icase);
 
         /* ============================= Analysing reachability  ============================== */
         void initReach();
-        void initReach(std::string pred);
-        void initReach(std::string pred, sptr_t<BaseCase> bcase);
-        void initReach(std::string pred, sptr_t<InductiveCase> icase);
 
-        void analyseReach(std::string pred);
-        void analyseReach(std::string pred, sptr_t<InductiveCase> icase);
+        void initReach(const std::string& pred);
 
-        void analyseReachFirst(std::string pred, sptr_t<InductiveCase> icase);
-        void analyseReachRecurse(std::string pred, sptr_t<InductiveCase> icase);
+        void initReach(const std::string& pred, const BaseCasePtr& bcase);
+
+        void initReach(const std::string&pred, const InductiveCasePtr& icase);
+
+        void analyseReach(const std::string& pred);
+
+        void analyseReach(const std::string&, const InductiveCasePtr& icase);
+
+        void analyseReachFirst(const std::string& pred, const InductiveCasePtr& icase);
+
+        void analyseReachRecurse(const std::string& pred, const InductiveCasePtr& icase);
+
     public:
-        sptr_um2<std::string, InductivePredicate> predicates;
+        std::unordered_map<std::string, InductivePredicatePtr> predicates;
         std::vector<std::string> errors;
 
         inline PredicateTable() : equiv(std::make_shared<EquivAnalysis>()),
                                   alloc(std::make_shared<AllocAnalysis>()),
                                   reach(std::make_shared<ReachAnalysis>()),
-                                  stack(std::make_shared<smtlib::sep::SymbolStack>()) { }
+                                  stack(std::make_shared<smtlib::sep::SymbolStack>()) {}
 
-        PredicateTable(sptr_um2<std::string, InductivePredicate> &predicates);
+        explicit PredicateTable(std::unordered_map<std::string, InductivePredicatePtr>& predicates);
 
         /** Load predicate definitions from an SMT-LIB+SEPLOG script */
-        bool load(std::shared_ptr<smtlib::sep::Script> script);
+        bool load(smtlib::sep::ScriptPtr script);
 
         /** Analyse allocation of predicate parameters */
         void analyseAlloc();
@@ -150,10 +169,6 @@ namespace pred {
 
         /** Print reachability analysis results */
         void printReachAnalysis();
-
-
-
-
     };
 }
 

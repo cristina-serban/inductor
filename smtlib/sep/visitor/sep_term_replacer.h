@@ -88,6 +88,9 @@ namespace smtlib {
                 return wrappedVisit(term);
             }
         };
+
+        typedef std::shared_ptr<TermReplacer> TermReplacerPtr;
+        typedef std::shared_ptr<TermReplacerContext> TermReplacerContextPtr;
     }
 }
 

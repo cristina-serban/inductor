@@ -9,7 +9,6 @@
 #include "ast_abstract.h"
 #include "ast_attribute.h"
 #include "ast_basic.h"
-#include "ast_classes.h"
 #include "ast_datatype.h"
 #include "ast_fun.h"
 #include "ast_interfaces.h"
@@ -140,7 +139,7 @@ namespace smtlib {
                                   public std::enable_shared_from_this<DeclareFunCommand> {
         public:
             SymbolPtr symbol;
-            std::vector<SortPtr> params;
+            std::vector<SortPtr> parameters;
             SortPtr sort;
 
             /**
@@ -149,7 +148,7 @@ namespace smtlib {
              * \param sort      Sort of the return value
              */
             DeclareFunCommand(const SymbolPtr& symbol,
-                              const std::vector<SortPtr>& params,
+                              const std::vector<SortPtr>& parameters,
                               const SortPtr& sort);
 
             void accept(Visitor0* visitor) override;
@@ -278,7 +277,7 @@ namespace smtlib {
                                   public std::enable_shared_from_this<DefineSortCommand> {
         public:
             SymbolPtr symbol;
-            std::vector<SymbolPtr> params;
+            std::vector<SymbolPtr> parameters;
             SortPtr sort;
 
             /**
@@ -287,7 +286,7 @@ namespace smtlib {
              * \param sort      Definition of the new sort
              */
             DefineSortCommand(const SymbolPtr& symbol,
-                              const std::vector<SymbolPtr>& params,
+                              const std::vector<SymbolPtr>& parameters,
                               const SortPtr& sort);
 
             void accept(Visitor0* visitor) override;
@@ -359,7 +358,7 @@ namespace smtlib {
             /**
              * \param flag  Flag name
              */
-            inline GetInfoCommand(const KeywordPtr& flag)
+            inline explicit GetInfoCommand(const KeywordPtr& flag)
                     : flag(flag) {}
 
             void accept(Visitor0* visitor) override;
@@ -372,7 +371,7 @@ namespace smtlib {
         class GetModelCommand : public Command,
                                 public std::enable_shared_from_this<GetModelCommand> {
         public:
-            inline GetModelCommand() {}
+            inline GetModelCommand() = default;
 
             void accept(Visitor0* visitor) override;
 

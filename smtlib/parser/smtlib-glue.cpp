@@ -30,26 +30,26 @@ using namespace std;
 using namespace smtlib;
 using namespace smtlib::ast;
 
-sptr_um2<smtlib::ast::Node*, smtlib::ast::Node> smtlib_nodemap;
+unordered_map<smtlib::ast::Node*, smtlib::ast::NodePtr> smtlib_nodemap;
 
 template<class T>
-sptr_t<T> share(AstPtr nakedPtr) {
+shared_ptr<T> share(AstPtr nakedPtr) {
     return dynamic_pointer_cast<T>(smtlib_nodemap[nakedPtr]);
 }
 
 template<>
-sptr_t<SpecConstant> share(AstPtr nakedPtr) {
-    sptr_t<NumeralLiteral> option1 = dynamic_pointer_cast<NumeralLiteral>(smtlib_nodemap[nakedPtr]);
+SpecConstantPtr share(AstPtr nakedPtr) {
+    NumeralLiteralPtr option1 = dynamic_pointer_cast<NumeralLiteral>(smtlib_nodemap[nakedPtr]);
     if (option1) {
         return option1->shared_from_this();
     }
 
-    sptr_t<DecimalLiteral> option2 = dynamic_pointer_cast<DecimalLiteral>(smtlib_nodemap[nakedPtr]);
+    DecimalLiteralPtr option2 = dynamic_pointer_cast<DecimalLiteral>(smtlib_nodemap[nakedPtr]);
     if (option2) {
         return option2->shared_from_this();
     }
 
-    sptr_t<StringLiteral> option3 = dynamic_pointer_cast<StringLiteral>(smtlib_nodemap[nakedPtr]);
+    StringLiteralPtr option3 = dynamic_pointer_cast<StringLiteral>(smtlib_nodemap[nakedPtr]);
     if (option3) {
         return option3->shared_from_this();
     }
@@ -58,153 +58,153 @@ sptr_t<SpecConstant> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<Command> share(AstPtr nakedPtr) {
-    sptr_t<AssertCommand> option1 = dynamic_pointer_cast<AssertCommand>(smtlib_nodemap[nakedPtr]);
+CommandPtr share(AstPtr nakedPtr) {
+    AssertCommandPtr option1 = dynamic_pointer_cast<AssertCommand>(smtlib_nodemap[nakedPtr]);
     if (option1) {
         return option1->shared_from_this();
     }
 
-    sptr_t<CheckSatCommand> option2 = dynamic_pointer_cast<CheckSatCommand>(smtlib_nodemap[nakedPtr]);
+    CheckSatCommandPtr option2 = dynamic_pointer_cast<CheckSatCommand>(smtlib_nodemap[nakedPtr]);
     if (option2) {
         return option2->shared_from_this();
     }
 
-    sptr_t<CheckSatAssumCommand> option3 = dynamic_pointer_cast<CheckSatAssumCommand>(smtlib_nodemap[nakedPtr]);
+    CheckSatAssumCommandPtr option3 = dynamic_pointer_cast<CheckSatAssumCommand>(smtlib_nodemap[nakedPtr]);
     if (option3) {
         return option3->shared_from_this();
     }
 
-    sptr_t<DeclareConstCommand> option4 = dynamic_pointer_cast<DeclareConstCommand>(smtlib_nodemap[nakedPtr]);
+    DeclareConstCommandPtr option4 = dynamic_pointer_cast<DeclareConstCommand>(smtlib_nodemap[nakedPtr]);
     if (option4) {
         return option4->shared_from_this();
     }
 
-    sptr_t<DeclareFunCommand> option5 = dynamic_pointer_cast<DeclareFunCommand>(smtlib_nodemap[nakedPtr]);
+    DeclareFunCommandPtr option5 = dynamic_pointer_cast<DeclareFunCommand>(smtlib_nodemap[nakedPtr]);
     if (option5) {
         return option5->shared_from_this();
     }
 
-    sptr_t<DeclareSortCommand> option6 = dynamic_pointer_cast<DeclareSortCommand>(smtlib_nodemap[nakedPtr]);
+    DeclareSortCommandPtr option6 = dynamic_pointer_cast<DeclareSortCommand>(smtlib_nodemap[nakedPtr]);
     if (option6) {
         return option6->shared_from_this();
     }
 
-    sptr_t<DefineFunCommand> option7 = dynamic_pointer_cast<DefineFunCommand>(smtlib_nodemap[nakedPtr]);
+    DefineFunCommandPtr option7 = dynamic_pointer_cast<DefineFunCommand>(smtlib_nodemap[nakedPtr]);
     if (option7) {
         return option7->shared_from_this();
     }
 
-    sptr_t<DefineFunRecCommand> option8 = dynamic_pointer_cast<DefineFunRecCommand>(smtlib_nodemap[nakedPtr]);
+    DefineFunRecCommandPtr option8 = dynamic_pointer_cast<DefineFunRecCommand>(smtlib_nodemap[nakedPtr]);
     if (option8) {
         return option8->shared_from_this();
     }
 
-    sptr_t<DefineFunsRecCommand> option9 = dynamic_pointer_cast<DefineFunsRecCommand>(smtlib_nodemap[nakedPtr]);
+    DefineFunsRecCommandPtr option9 = dynamic_pointer_cast<DefineFunsRecCommand>(smtlib_nodemap[nakedPtr]);
     if (option9) {
         return option9->shared_from_this();
     }
 
-    sptr_t<DefineSortCommand> option10 = dynamic_pointer_cast<DefineSortCommand>(smtlib_nodemap[nakedPtr]);
+    DefineSortCommandPtr option10 = dynamic_pointer_cast<DefineSortCommand>(smtlib_nodemap[nakedPtr]);
     if (option10) {
         return option10->shared_from_this();
     }
 
-    sptr_t<EchoCommand> option11 = dynamic_pointer_cast<EchoCommand>(smtlib_nodemap[nakedPtr]);
+    EchoCommandPtr option11 = dynamic_pointer_cast<EchoCommand>(smtlib_nodemap[nakedPtr]);
     if (option11) {
         return option11->shared_from_this();
     }
 
-    sptr_t<ExitCommand> option12 = dynamic_pointer_cast<ExitCommand>(smtlib_nodemap[nakedPtr]);
+    ExitCommandPtr option12 = dynamic_pointer_cast<ExitCommand>(smtlib_nodemap[nakedPtr]);
     if (option12) {
         return option12->shared_from_this();
     }
 
-    sptr_t<SetOptionCommand> option13 = dynamic_pointer_cast<SetOptionCommand>(smtlib_nodemap[nakedPtr]);
+    SetOptionCommandPtr option13 = dynamic_pointer_cast<SetOptionCommand>(smtlib_nodemap[nakedPtr]);
     if (option13) {
         return option13->shared_from_this();
     }
 
-    sptr_t<GetAssertsCommand> option14 = dynamic_pointer_cast<GetAssertsCommand>(smtlib_nodemap[nakedPtr]);
+    GetAssertsCommandPtr option14 = dynamic_pointer_cast<GetAssertsCommand>(smtlib_nodemap[nakedPtr]);
     if (option14) {
         return option14->shared_from_this();
     }
 
-    sptr_t<GetAssignsCommand> option15 = dynamic_pointer_cast<GetAssignsCommand>(smtlib_nodemap[nakedPtr]);
+    GetAssignsCommandPtr option15 = dynamic_pointer_cast<GetAssignsCommand>(smtlib_nodemap[nakedPtr]);
     if (option15) {
         return option15->shared_from_this();
     }
 
-    sptr_t<GetInfoCommand> option16 = dynamic_pointer_cast<GetInfoCommand>(smtlib_nodemap[nakedPtr]);
+    GetInfoCommandPtr option16 = dynamic_pointer_cast<GetInfoCommand>(smtlib_nodemap[nakedPtr]);
     if (option16) {
         return option16->shared_from_this();
     }
 
-    sptr_t<GetModelCommand> option17 = dynamic_pointer_cast<GetModelCommand>(smtlib_nodemap[nakedPtr]);
+    GetModelCommandPtr option17 = dynamic_pointer_cast<GetModelCommand>(smtlib_nodemap[nakedPtr]);
     if (option17) {
         return option17->shared_from_this();
     }
 
-    sptr_t<GetOptionCommand> option18 = dynamic_pointer_cast<GetOptionCommand>(smtlib_nodemap[nakedPtr]);
+    GetOptionCommandPtr option18 = dynamic_pointer_cast<GetOptionCommand>(smtlib_nodemap[nakedPtr]);
     if (option18) {
         return option18->shared_from_this();
     }
 
-    sptr_t<GetProofCommand> option19 = dynamic_pointer_cast<GetProofCommand>(smtlib_nodemap[nakedPtr]);
+    GetProofCommandPtr option19 = dynamic_pointer_cast<GetProofCommand>(smtlib_nodemap[nakedPtr]);
     if (option19) {
         return option19->shared_from_this();
     }
 
-    sptr_t<GetUnsatAssumsCommand> option20 = dynamic_pointer_cast<GetUnsatAssumsCommand>(smtlib_nodemap[nakedPtr]);
+    GetUnsatAssumsCommandPtr option20 = dynamic_pointer_cast<GetUnsatAssumsCommand>(smtlib_nodemap[nakedPtr]);
     if (option20) {
         return option20->shared_from_this();
     }
 
-    sptr_t<GetUnsatCoreCommand> option21 = dynamic_pointer_cast<GetUnsatCoreCommand>(smtlib_nodemap[nakedPtr]);
+    GetUnsatCoreCommandPtr option21 = dynamic_pointer_cast<GetUnsatCoreCommand>(smtlib_nodemap[nakedPtr]);
     if (option21) {
         return option21->shared_from_this();
     }
 
-    sptr_t<GetValueCommand> option22 = dynamic_pointer_cast<GetValueCommand>(smtlib_nodemap[nakedPtr]);
+    GetValueCommandPtr option22 = dynamic_pointer_cast<GetValueCommand>(smtlib_nodemap[nakedPtr]);
     if (option22) {
         return option22->shared_from_this();
     }
 
-    sptr_t<PopCommand> option23 = dynamic_pointer_cast<PopCommand>(smtlib_nodemap[nakedPtr]);
+    PopCommandPtr option23 = dynamic_pointer_cast<PopCommand>(smtlib_nodemap[nakedPtr]);
     if (option23) {
         return option23->shared_from_this();
     }
 
-    sptr_t<PushCommand> option24 = dynamic_pointer_cast<PushCommand>(smtlib_nodemap[nakedPtr]);
+    PushCommandPtr option24 = dynamic_pointer_cast<PushCommand>(smtlib_nodemap[nakedPtr]);
     if (option24) {
         return option24->shared_from_this();
     }
 
-    sptr_t<ResetCommand> option25 = dynamic_pointer_cast<ResetCommand>(smtlib_nodemap[nakedPtr]);
+    ResetCommandPtr option25 = dynamic_pointer_cast<ResetCommand>(smtlib_nodemap[nakedPtr]);
     if (option25) {
         return option25->shared_from_this();
     }
 
-    sptr_t<ResetAssertsCommand> option26 = dynamic_pointer_cast<ResetAssertsCommand>(smtlib_nodemap[nakedPtr]);
+    ResetAssertsCommandPtr option26 = dynamic_pointer_cast<ResetAssertsCommand>(smtlib_nodemap[nakedPtr]);
     if (option26) {
         return option26->shared_from_this();
     }
 
-    sptr_t<SetInfoCommand> option27 = dynamic_pointer_cast<SetInfoCommand>(smtlib_nodemap[nakedPtr]);
+    SetInfoCommandPtr option27 = dynamic_pointer_cast<SetInfoCommand>(smtlib_nodemap[nakedPtr]);
     if (option27) {
         return option27->shared_from_this();
     }
 
-    sptr_t<SetLogicCommand> option28 = dynamic_pointer_cast<SetLogicCommand>(smtlib_nodemap[nakedPtr]);
+    SetLogicCommandPtr option28 = dynamic_pointer_cast<SetLogicCommand>(smtlib_nodemap[nakedPtr]);
     if (option28) {
         return option28->shared_from_this();
     }
 
-    sptr_t<DeclareDatatypeCommand> option29 = dynamic_pointer_cast<DeclareDatatypeCommand>(smtlib_nodemap[nakedPtr]);
+    DeclareDatatypeCommandPtr option29 = dynamic_pointer_cast<DeclareDatatypeCommand>(smtlib_nodemap[nakedPtr]);
     if (option29) {
         return option29->shared_from_this();
     }
 
-    sptr_t<DeclareDatatypesCommand> option30 = dynamic_pointer_cast<DeclareDatatypesCommand>(smtlib_nodemap[nakedPtr]);
+    DeclareDatatypesCommandPtr option30 = dynamic_pointer_cast<DeclareDatatypesCommand>(smtlib_nodemap[nakedPtr]);
     if (option30) {
         return option30->shared_from_this();
     }
@@ -213,24 +213,24 @@ sptr_t<Command> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<FunSymbolDeclaration> share(AstPtr nakedPtr) {
-    sptr_t<SpecConstFunDeclaration> option6 = dynamic_pointer_cast<SpecConstFunDeclaration>(smtlib_nodemap[nakedPtr]);
+FunSymbolDeclarationPtr share(AstPtr nakedPtr) {
+    SpecConstFunDeclarationPtr option6 = dynamic_pointer_cast<SpecConstFunDeclaration>(smtlib_nodemap[nakedPtr]);
     if (option6) {
         return option6->shared_from_this();
     }
 
-    sptr_t<MetaSpecConstFunDeclaration> option7 = dynamic_pointer_cast<MetaSpecConstFunDeclaration>(
+    MetaSpecConstFunDeclarationPtr option7 = dynamic_pointer_cast<MetaSpecConstFunDeclaration>(
             smtlib_nodemap[nakedPtr]);
     if (option7) {
         return option7->shared_from_this();
     }
 
-    sptr_t<SimpleFunDeclaration> option8 = dynamic_pointer_cast<SimpleFunDeclaration>(smtlib_nodemap[nakedPtr]);
+    SimpleFunDeclarationPtr option8 = dynamic_pointer_cast<SimpleFunDeclaration>(smtlib_nodemap[nakedPtr]);
     if (option8) {
         return option8->shared_from_this();
     }
 
-    sptr_t<ParametricFunDeclaration> option9 = dynamic_pointer_cast<ParametricFunDeclaration>(smtlib_nodemap[nakedPtr]);
+    ParametricFunDeclarationPtr option9 = dynamic_pointer_cast<ParametricFunDeclaration>(smtlib_nodemap[nakedPtr]);
     if (option9) {
         return option9->shared_from_this();
     }
@@ -239,13 +239,13 @@ sptr_t<FunSymbolDeclaration> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<Constructor> share(AstPtr nakedPtr) {
-    sptr_t<Symbol> option1 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
+ConstructorPtr share(AstPtr nakedPtr) {
+    SymbolPtr option1 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
     if (option1) {
         return option1->shared_from_this();
     }
 
-    sptr_t<QualifiedConstructor> option2 = dynamic_pointer_cast<QualifiedConstructor>(smtlib_nodemap[nakedPtr]);
+    QualifiedConstructorPtr option2 = dynamic_pointer_cast<QualifiedConstructor>(smtlib_nodemap[nakedPtr]);
     if (option2) {
         return option2->shared_from_this();
     }
@@ -254,17 +254,17 @@ sptr_t<Constructor> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<Pattern> share(AstPtr nakedPtr) {
+PatternPtr share(AstPtr nakedPtr) {
     if (dynamic_cast<Constructor*>(nakedPtr)) {
         return share<Constructor>(nakedPtr);
     }
 
-    sptr_t<Symbol> option1 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
+    SymbolPtr option1 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
     if (option1) {
         return option1->shared_from_this();
     }
 
-    sptr_t<QualifiedPattern> option2 = dynamic_pointer_cast<QualifiedPattern>(smtlib_nodemap[nakedPtr]);
+    QualifiedPatternPtr option2 = dynamic_pointer_cast<QualifiedPattern>(smtlib_nodemap[nakedPtr]);
     if (option2) {
         return option2->shared_from_this();
     }
@@ -273,14 +273,14 @@ sptr_t<Pattern> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<DatatypeDeclaration> share(AstPtr nakedPtr) {
-    sptr_t<SimpleDatatypeDeclaration> option1 =
+DatatypeDeclarationPtr share(AstPtr nakedPtr) {
+    SimpleDatatypeDeclarationPtr option1 =
             dynamic_pointer_cast<SimpleDatatypeDeclaration>(smtlib_nodemap[nakedPtr]);
     if (option1) {
         return option1->shared_from_this();
     }
 
-    sptr_t<ParametricDatatypeDeclaration> option2 =
+    ParametricDatatypeDeclarationPtr option2 =
             dynamic_pointer_cast<ParametricDatatypeDeclaration>(smtlib_nodemap[nakedPtr]);
     if (option2) {
         return option2->shared_from_this();
@@ -290,8 +290,8 @@ sptr_t<DatatypeDeclaration> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<AttributeValue> share(AstPtr nakedPtr) {
-    sptr_t<BooleanValue> option1 = dynamic_pointer_cast<BooleanValue>(smtlib_nodemap[nakedPtr]);
+AttributeValuePtr share(AstPtr nakedPtr) {
+    BooleanValuePtr option1 = dynamic_pointer_cast<BooleanValue>(smtlib_nodemap[nakedPtr]);
     if (option1) {
         return option1->shared_from_this();
     }
@@ -300,7 +300,7 @@ sptr_t<AttributeValue> share(AstPtr nakedPtr) {
         return share<SpecConstant>(nakedPtr);
     }
 
-    sptr_t<SortSymbolDeclaration> option5 = dynamic_pointer_cast<SortSymbolDeclaration>(smtlib_nodemap[nakedPtr]);
+    SortSymbolDeclarationPtr option5 = dynamic_pointer_cast<SortSymbolDeclaration>(smtlib_nodemap[nakedPtr]);
     if (option5) {
         return option5->shared_from_this();
     }
@@ -309,17 +309,17 @@ sptr_t<AttributeValue> share(AstPtr nakedPtr) {
         return share<FunSymbolDeclaration>(nakedPtr);
     }
 
-    sptr_t<Symbol> option10 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
+    SymbolPtr option10 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
     if (option10) {
         return option10->shared_from_this();
     }
 
-    sptr_t<CompSExpression> option11 = dynamic_pointer_cast<CompSExpression>(smtlib_nodemap[nakedPtr]);
+    CompSExpressionPtr option11 = dynamic_pointer_cast<CompSExpression>(smtlib_nodemap[nakedPtr]);
     if (option11) {
         return option11->shared_from_this();
     }
 
-    sptr_t<CompAttributeValue> option12 = dynamic_pointer_cast<CompAttributeValue>(smtlib_nodemap[nakedPtr]);
+    CompAttributeValuePtr option12 = dynamic_pointer_cast<CompAttributeValue>(smtlib_nodemap[nakedPtr]);
     if (option12) {
         return option12->shared_from_this();
     }
@@ -328,22 +328,22 @@ sptr_t<AttributeValue> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<SExpression> share(AstPtr nakedPtr) {
+SExpressionPtr share(AstPtr nakedPtr) {
     if (dynamic_cast<SpecConstant*>(nakedPtr)) {
         return share<SpecConstant>(nakedPtr);
     }
 
-    sptr_t<Symbol> option4 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
+    SymbolPtr option4 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
     if (option4) {
         return option4->shared_from_this();
     }
 
-    sptr_t<Keyword> option5 = dynamic_pointer_cast<Keyword>(smtlib_nodemap[nakedPtr]);
+    KeywordPtr option5 = dynamic_pointer_cast<Keyword>(smtlib_nodemap[nakedPtr]);
     if (option5) {
         return option5->shared_from_this();
     }
 
-    sptr_t<CompSExpression> option6 = dynamic_pointer_cast<CompSExpression>(smtlib_nodemap[nakedPtr]);
+    CompSExpressionPtr option6 = dynamic_pointer_cast<CompSExpression>(smtlib_nodemap[nakedPtr]);
     if (option6) {
         return option6->shared_from_this();
     }
@@ -352,13 +352,13 @@ sptr_t<SExpression> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<Identifier> share(AstPtr nakedPtr) {
-    sptr_t<SimpleIdentifier> option1 = dynamic_pointer_cast<SimpleIdentifier>(smtlib_nodemap[nakedPtr]);
+IdentifierPtr share(AstPtr nakedPtr) {
+    SimpleIdentifierPtr option1 = dynamic_pointer_cast<SimpleIdentifier>(smtlib_nodemap[nakedPtr]);
     if (option1) {
         return option1->shared_from_this();
     }
 
-    sptr_t<QualifiedIdentifier> option2 = dynamic_pointer_cast<QualifiedIdentifier>(smtlib_nodemap[nakedPtr]);
+    QualifiedIdentifierPtr option2 = dynamic_pointer_cast<QualifiedIdentifier>(smtlib_nodemap[nakedPtr]);
     if (option2) {
         return option2->shared_from_this();
     }
@@ -367,7 +367,7 @@ sptr_t<Identifier> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<Term> share(AstPtr nakedPtr) {
+TermPtr share(AstPtr nakedPtr) {
     if (dynamic_cast<SpecConstant*>(nakedPtr)) {
         return share<SpecConstant>(nakedPtr);
     }
@@ -376,32 +376,32 @@ sptr_t<Term> share(AstPtr nakedPtr) {
         return share<Identifier>(nakedPtr);
     }
 
-    sptr_t<AnnotatedTerm> option6 = dynamic_pointer_cast<AnnotatedTerm>(smtlib_nodemap[nakedPtr]);
+    AnnotatedTermPtr option6 = dynamic_pointer_cast<AnnotatedTerm>(smtlib_nodemap[nakedPtr]);
     if (option6) {
         return option6->shared_from_this();
     }
 
-    sptr_t<ExistsTerm> option7 = dynamic_pointer_cast<ExistsTerm>(smtlib_nodemap[nakedPtr]);
+    ExistsTermPtr option7 = dynamic_pointer_cast<ExistsTerm>(smtlib_nodemap[nakedPtr]);
     if (option7) {
         return option7->shared_from_this();
     }
 
-    sptr_t<ForallTerm> option8 = dynamic_pointer_cast<ForallTerm>(smtlib_nodemap[nakedPtr]);
+    ForallTermPtr option8 = dynamic_pointer_cast<ForallTerm>(smtlib_nodemap[nakedPtr]);
     if (option8) {
         return option8->shared_from_this();
     }
 
-    sptr_t<LetTerm> option9 = dynamic_pointer_cast<LetTerm>(smtlib_nodemap[nakedPtr]);
+    LetTermPtr option9 = dynamic_pointer_cast<LetTerm>(smtlib_nodemap[nakedPtr]);
     if (option9) {
         return option9->shared_from_this();
     }
 
-    sptr_t<QualifiedTerm> option10 = dynamic_pointer_cast<QualifiedTerm>(smtlib_nodemap[nakedPtr]);
+    QualifiedTermPtr option10 = dynamic_pointer_cast<QualifiedTerm>(smtlib_nodemap[nakedPtr]);
     if (option10) {
         return option10->shared_from_this();
     }
 
-    sptr_t<MatchTerm> option11 = dynamic_pointer_cast<MatchTerm>(smtlib_nodemap[nakedPtr]);
+    MatchTermPtr option11 = dynamic_pointer_cast<MatchTerm>(smtlib_nodemap[nakedPtr]);
     if (option11) {
         return option11->shared_from_this();
     }
@@ -410,13 +410,13 @@ sptr_t<Term> share(AstPtr nakedPtr) {
 }
 
 template<>
-sptr_t<Index> share(AstPtr nakedPtr) {
-    sptr_t<NumeralLiteral> option1 = dynamic_pointer_cast<NumeralLiteral>(smtlib_nodemap[nakedPtr]);
+IndexPtr share(AstPtr nakedPtr) {
+    NumeralLiteralPtr option1 = dynamic_pointer_cast<NumeralLiteral>(smtlib_nodemap[nakedPtr]);
     if (option1) {
         return option1->shared_from_this();
     }
 
-    sptr_t<Symbol> option2 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
+    SymbolPtr option2 = dynamic_pointer_cast<Symbol>(smtlib_nodemap[nakedPtr]);
     if (option2) {
         return option2->shared_from_this();
     }
@@ -432,10 +432,10 @@ private:
     vector<AstPtr> v;
 public:
     template<class T>
-    vector<sptr_t<T>> unwrap() {
-        vector<sptr_t<T>> result;
+    vector<shared_ptr<T>> unwrap() {
+        vector<shared_ptr<T>> result;
         for (unsigned long i = 0, n = v.size(); i < n; ++i) {
-            sptr_t<T> ptr = share<T>(v[i]);
+            shared_ptr<T> ptr = share<T>(v[i]);
             result.push_back(ptr);
         }
         v.clear();
@@ -488,7 +488,7 @@ void ast_setLocation(SmtPrsr parser, AstPtr ptr, int rowLeft, int colLeft, int r
 }
 
 int ast_bool_value(AstPtr ptr) {
-    sptr_t<BooleanValue> val = share<BooleanValue>(ptr);
+    BooleanValuePtr val = share<BooleanValue>(ptr);
     if (val) {
         return val->value;
     } else {
@@ -498,86 +498,85 @@ int ast_bool_value(AstPtr ptr) {
 
 // ast_attribute.h
 AstPtr ast_newAttribute1(AstPtr keyword) {
-    sptr_t<Attribute> ptr = make_shared<Attribute>(share<Keyword>(keyword));
+    AttributePtr ptr = make_shared<Attribute>(share<Keyword>(keyword));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newAttribute2(AstPtr keyword, AstPtr attr_value) {
-    sptr_t<Attribute> ptr = make_shared<Attribute>(share<Keyword>(keyword),
-                                                       share<AttributeValue>(attr_value));
+    AttributePtr ptr = make_shared<Attribute>(share<Keyword>(keyword), share<AttributeValue>(attr_value));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newCompAttributeValue(AstList values) {
-    vector<sptr_t<AttributeValue>> v = values->unwrap<AttributeValue>();
-    sptr_t<CompAttributeValue> ptr = make_shared<CompAttributeValue>(v);
+    vector<AttributeValuePtr> v = values->unwrap<AttributeValue>();
+    CompAttributeValuePtr ptr = make_shared<CompAttributeValue>(v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_basic.h
 AstPtr ast_newSymbol(char const* value) {
-    sptr_t<Symbol> ptr = make_shared<Symbol>(value);
+    SymbolPtr ptr = make_shared<Symbol>(value);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newKeyword(char const* value) {
-    sptr_t<Keyword> ptr = make_shared<Keyword>(value);
+    KeywordPtr ptr = make_shared<Keyword>(value);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newMetaSpecConstant(int value) {
-    sptr_t<MetaSpecConstant> ptr = make_shared<MetaSpecConstant>(
+    MetaSpecConstantPtr ptr = make_shared<MetaSpecConstant>(
             static_cast<MetaSpecConstant::Type>(value));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newBooleanValue(int value) {
-    sptr_t<BooleanValue> ptr = make_shared<BooleanValue>((bool) value);
+    BooleanValuePtr ptr = make_shared<BooleanValue>((bool) value);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newPropLiteral(AstPtr symbol, int negated) {
-    sptr_t<PropLiteral> ptr = make_shared<PropLiteral>(share<Symbol>(symbol), (bool) negated);
+    PropLiteralPtr ptr = make_shared<PropLiteral>(share<Symbol>(symbol), (bool) negated);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_command.h
 AstPtr ast_newAssertCommand(AstPtr term) {
-    sptr_t<AssertCommand> ptr = make_shared<AssertCommand>(share<Term>(term));
+    AssertCommandPtr ptr = make_shared<AssertCommand>(share<Term>(term));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newCheckSatCommand() {
-    sptr_t<CheckSatCommand> ptr = make_shared<CheckSatCommand>();
+    CheckSatCommandPtr ptr = make_shared<CheckSatCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newCheckSatAssumCommand(AstList assumptions) {
-    vector<sptr_t<PropLiteral>> v = assumptions->unwrap<PropLiteral>();
-    sptr_t<CheckSatAssumCommand> ptr = make_shared<CheckSatAssumCommand>(v);
+    vector<PropLiteralPtr> v = assumptions->unwrap<PropLiteral>();
+    CheckSatAssumCommandPtr ptr = make_shared<CheckSatAssumCommand>(v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDeclareConstCommand(AstPtr symbol, AstPtr sort) {
-    sptr_t<DeclareConstCommand> ptr =
+    DeclareConstCommandPtr ptr =
             make_shared<DeclareConstCommand>(share<Symbol>(symbol), share<Sort>(sort));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDeclareDatatypeCommand(AstPtr symbol, AstPtr declaration) {
-    sptr_t<DeclareDatatypeCommand> ptr =
+    DeclareDatatypeCommandPtr ptr =
             make_shared<DeclareDatatypeCommand>(share<Symbol>(symbol),
                                                 share<DatatypeDeclaration>(declaration));
     smtlib_nodemap[ptr.get()] = ptr;
@@ -585,215 +584,213 @@ AstPtr ast_newDeclareDatatypeCommand(AstPtr symbol, AstPtr declaration) {
 }
 
 AstPtr ast_newDeclareDatatypesCommand(AstList sorts, AstList declarations) {
-    vector<sptr_t<SortDeclaration>> v1 = sorts->unwrap<SortDeclaration>();
-    vector<sptr_t<DatatypeDeclaration>> v2 = declarations->unwrap<DatatypeDeclaration>();
-    sptr_t<DeclareDatatypesCommand> ptr = make_shared<DeclareDatatypesCommand>(v1, v2);
+    vector<SortDeclarationPtr> v1 = sorts->unwrap<SortDeclaration>();
+    vector<DatatypeDeclarationPtr> v2 = declarations->unwrap<DatatypeDeclaration>();
+    DeclareDatatypesCommandPtr ptr = make_shared<DeclareDatatypesCommand>(v1, v2);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDeclareFunCommand(AstPtr symbol, AstList params, AstPtr sort) {
-    vector<sptr_t<Sort>> v = params->unwrap<Sort>();
-    sptr_t<DeclareFunCommand> ptr =
-            make_shared<DeclareFunCommand>(share<Symbol>(symbol), v, share<Sort>(sort));
+    vector<SortPtr> v = params->unwrap<Sort>();
+    DeclareFunCommandPtr ptr = make_shared<DeclareFunCommand>(share<Symbol>(symbol), v, share<Sort>(sort));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDeclareSortCommand(AstPtr symbol, AstPtr arity) {
-    sptr_t<DeclareSortCommand> ptr =
+    DeclareSortCommandPtr ptr =
             make_shared<DeclareSortCommand>(share<Symbol>(symbol), share<NumeralLiteral>(arity));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDefineFunCommand(AstPtr definition) {
-    sptr_t<DefineFunCommand> ptr =
+    DefineFunCommandPtr ptr =
             make_shared<DefineFunCommand>(share<FunctionDefinition>(definition));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDefineFunRecCommand(AstPtr definition) {
-    sptr_t<DefineFunRecCommand> ptr = make_shared<DefineFunRecCommand>(
-            share<FunctionDefinition>(definition));
+    DefineFunRecCommandPtr ptr = make_shared<DefineFunRecCommand>(share<FunctionDefinition>(definition));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDefineFunsRecCommand(AstList declarations, AstList bodies) {
-    vector<sptr_t<FunctionDeclaration>> v1 = declarations->unwrap<FunctionDeclaration>();
-    vector<sptr_t<Term>> v2 = bodies->unwrap<Term>();
-    sptr_t<DefineFunsRecCommand> ptr = make_shared<DefineFunsRecCommand>(v1, v2);
+    vector<FunctionDeclarationPtr> v1 = declarations->unwrap<FunctionDeclaration>();
+    vector<TermPtr> v2 = bodies->unwrap<Term>();
+    DefineFunsRecCommandPtr ptr = make_shared<DefineFunsRecCommand>(v1, v2);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDefineSortCommand(AstPtr symbol, AstList params, AstPtr sort) {
-    vector<sptr_t<Symbol>> v1 = params->unwrap<Symbol>();
-    sptr_t<DefineSortCommand> ptr =
+    vector<SymbolPtr> v1 = params->unwrap<Symbol>();
+    DefineSortCommandPtr ptr =
             make_shared<DefineSortCommand>(share<Symbol>(symbol), v1, share<Sort>(sort));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newEchoCommand(AstPtr msg) {
-    sptr_t<EchoCommand> ptr = make_shared<EchoCommand>(share<StringLiteral>(msg)->value);
+    EchoCommandPtr ptr = make_shared<EchoCommand>(share<StringLiteral>(msg)->value);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newExitCommand() {
-    sptr_t<ExitCommand> ptr = make_shared<ExitCommand>();
+    ExitCommandPtr ptr = make_shared<ExitCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newGetAssertsCommand() {
-    sptr_t<GetAssertsCommand> ptr = make_shared<GetAssertsCommand>();
+    GetAssertsCommandPtr ptr = make_shared<GetAssertsCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newGetAssignsCommand() {
-    sptr_t<GetAssignsCommand> ptr = make_shared<GetAssignsCommand>();
+    GetAssignsCommandPtr ptr = make_shared<GetAssignsCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newGetInfoCommand(AstPtr keyword) {
-    sptr_t<GetInfoCommand> ptr = make_shared<GetInfoCommand>(share<Keyword>(keyword));
+    GetInfoCommandPtr ptr = make_shared<GetInfoCommand>(share<Keyword>(keyword));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newGetModelCommand() {
-    sptr_t<GetModelCommand> ptr = make_shared<GetModelCommand>();
+    GetModelCommandPtr ptr = make_shared<GetModelCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newGetOptionCommand(AstPtr keyword) {
-    sptr_t<GetOptionCommand> ptr = make_shared<GetOptionCommand>(share<Keyword>(keyword));
+    GetOptionCommandPtr ptr = make_shared<GetOptionCommand>(share<Keyword>(keyword));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newGetProofCommand() {
-    sptr_t<GetProofCommand> ptr = make_shared<GetProofCommand>();
+    GetProofCommandPtr ptr = make_shared<GetProofCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newGetUnsatAssumsCommand() {
-    sptr_t<GetUnsatAssumsCommand> ptr = make_shared<GetUnsatAssumsCommand>();
+    GetUnsatAssumsCommandPtr ptr = make_shared<GetUnsatAssumsCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newGetUnsatCoreCommand() {
-    sptr_t<GetUnsatCoreCommand> ptr = make_shared<GetUnsatCoreCommand>();
+    GetUnsatCoreCommandPtr ptr = make_shared<GetUnsatCoreCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newGetValueCommand(AstList terms) {
-    vector<sptr_t<Term>> v = terms->unwrap<Term>();
-    sptr_t<GetValueCommand> ptr = make_shared<GetValueCommand>(v);
+    vector<TermPtr> v = terms->unwrap<Term>();
+    GetValueCommandPtr ptr = make_shared<GetValueCommand>(v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newPopCommand(AstPtr numeral) {
-    sptr_t<PopCommand> ptr = make_shared<PopCommand>(share<NumeralLiteral>(numeral));
+    PopCommandPtr ptr = make_shared<PopCommand>(share<NumeralLiteral>(numeral));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newPushCommand(AstPtr numeral) {
-    sptr_t<PushCommand> ptr = make_shared<PushCommand>(share<NumeralLiteral>(numeral));
+    PushCommandPtr ptr = make_shared<PushCommand>(share<NumeralLiteral>(numeral));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newResetCommand() {
-    sptr_t<ResetCommand> ptr = make_shared<ResetCommand>();
+    ResetCommandPtr ptr = make_shared<ResetCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newResetAssertsCommand() {
-    sptr_t<ResetAssertsCommand> ptr = make_shared<ResetAssertsCommand>();
+    ResetAssertsCommandPtr ptr = make_shared<ResetAssertsCommand>();
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSetInfoCommand(AstPtr info) {
-    sptr_t<SetInfoCommand> ptr = make_shared<SetInfoCommand>(share<Attribute>(info));
+    SetInfoCommandPtr ptr = make_shared<SetInfoCommand>(share<Attribute>(info));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSetLogicCommand(AstPtr logic) {
-    sptr_t<SetLogicCommand> ptr = make_shared<SetLogicCommand>(share<Symbol>(logic));
+    SetLogicCommandPtr ptr = make_shared<SetLogicCommand>(share<Symbol>(logic));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSetOptionCommand(AstPtr option) {
-    sptr_t<SetOptionCommand> ptr = make_shared<SetOptionCommand>(share<Attribute>(option));
+    SetOptionCommandPtr ptr = make_shared<SetOptionCommand>(share<Attribute>(option));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 //ast_datatype.h
 AstPtr ast_newSortDeclaration(AstPtr symbol, AstPtr numeral) {
-    sptr_t<SortDeclaration> ptr =
+    SortDeclarationPtr ptr =
             make_shared<SortDeclaration>(share<Symbol>(symbol), share<NumeralLiteral>(numeral));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSelectorDeclaration(AstPtr symbol, AstPtr sort) {
-    sptr_t<SelectorDeclaration> ptr =
+    SelectorDeclarationPtr ptr =
             make_shared<SelectorDeclaration>(share<Symbol>(symbol), share<Sort>(sort));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newConstructorDeclaration(AstPtr symbol, AstList selectors) {
-    vector<sptr_t<SelectorDeclaration>> v = selectors->unwrap<SelectorDeclaration>();
-    sptr_t<ConstructorDeclaration> ptr = make_shared<ConstructorDeclaration>(share<Symbol>(symbol), v);
+    vector<SelectorDeclarationPtr> v = selectors->unwrap<SelectorDeclaration>();
+    ConstructorDeclarationPtr ptr = make_shared<ConstructorDeclaration>(share<Symbol>(symbol), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSimpleDatatypeDeclaration(AstList constructors) {
-    vector<sptr_t<ConstructorDeclaration>> v = constructors->unwrap<ConstructorDeclaration>();
-    sptr_t<SimpleDatatypeDeclaration> ptr = make_shared<SimpleDatatypeDeclaration>(v);
+    vector<ConstructorDeclarationPtr> v = constructors->unwrap<ConstructorDeclaration>();
+    SimpleDatatypeDeclarationPtr ptr = make_shared<SimpleDatatypeDeclaration>(v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newParametricDatatypeDeclaration(AstList params, AstList constructors) {
-    vector<sptr_t<Symbol>> v1 = params->unwrap<Symbol>();
-    vector<sptr_t<ConstructorDeclaration>> v2 = constructors->unwrap<ConstructorDeclaration>();
-    sptr_t<ParametricDatatypeDeclaration> ptr = make_shared<ParametricDatatypeDeclaration>(v1, v2);
+    vector<SymbolPtr> v1 = params->unwrap<Symbol>();
+    vector<ConstructorDeclarationPtr> v2 = constructors->unwrap<ConstructorDeclaration>();
+    ParametricDatatypeDeclarationPtr ptr = make_shared<ParametricDatatypeDeclaration>(v1, v2);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_fun.h
 AstPtr ast_newFunctionDeclaration(AstPtr symbol, AstList params, AstPtr sort) {
-    vector<sptr_t<SortedVariable>> v = params->unwrap<SortedVariable>();
-    sptr_t<FunctionDeclaration> ptr =
+    vector<SortedVariablePtr> v = params->unwrap<SortedVariable>();
+    FunctionDeclarationPtr ptr =
             make_shared<FunctionDeclaration>(share<Symbol>(symbol), v, share<Sort>(sort));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newFunctionDefinition(AstPtr signature, AstPtr body) {
-    sptr_t<FunctionDefinition> ptr = make_shared<FunctionDefinition>(
+    FunctionDefinitionPtr ptr = make_shared<FunctionDefinition>(
             share<FunctionDeclaration>(signature), share<Term>(body));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
@@ -801,21 +798,21 @@ AstPtr ast_newFunctionDefinition(AstPtr signature, AstPtr body) {
 
 // ast_identifier.h
 AstPtr ast_newSimpleIdentifier1(AstPtr symbol) {
-    sptr_t<SimpleIdentifier> ptr = make_shared<SimpleIdentifier>(share<Symbol>(symbol));
+    SimpleIdentifierPtr ptr = make_shared<SimpleIdentifier>(share<Symbol>(symbol));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSimpleIdentifier2(AstPtr symbol, AstList indices) {
-    vector<sptr_t<Index>> v = indices->unwrap<Index>();
-    sptr_t<SimpleIdentifier> ptr =
+    vector<IndexPtr> v = indices->unwrap<Index>();
+    SimpleIdentifierPtr ptr =
             make_shared<SimpleIdentifier>(share<Symbol>(symbol), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newQualifiedIdentifier(AstPtr identifier, AstPtr sort) {
-    sptr_t<QualifiedIdentifier> ptr =
+    QualifiedIdentifierPtr ptr =
             make_shared<QualifiedIdentifier>(share<SimpleIdentifier>(identifier), share<Sort>(sort));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
@@ -823,87 +820,86 @@ AstPtr ast_newQualifiedIdentifier(AstPtr identifier, AstPtr sort) {
 
 // ast_literal.h
 AstPtr ast_newNumeralLiteral(long value, unsigned int base) {
-    sptr_t<NumeralLiteral> ptr = make_shared<NumeralLiteral>(value, base);
+    NumeralLiteralPtr ptr = make_shared<NumeralLiteral>(value, base);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDecimalLiteral(double value) {
-    sptr_t<DecimalLiteral> ptr = make_shared<DecimalLiteral>(value);
+    DecimalLiteralPtr ptr = make_shared<DecimalLiteral>(value);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newStringLiteral(char const* value) {
-    sptr_t<StringLiteral> ptr = make_shared<StringLiteral>(value);
+    StringLiteralPtr ptr = make_shared<StringLiteral>(value);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_logic.h
 AstPtr ast_newLogic(AstPtr name, AstList attributes) {
-    vector<sptr_t<Attribute>> v = attributes->unwrap<Attribute>();
-    sptr_t<Logic> ptr = make_shared<Logic>(share<Symbol>(name), v);
+    vector<AttributePtr> v = attributes->unwrap<Attribute>();
+    LogicPtr ptr = make_shared<Logic>(share<Symbol>(name), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_match.h
 AstPtr ast_newQualifiedConstructor(AstPtr symbol, AstPtr sort) {
-    sptr_t<QualifiedConstructor> ptr =
+    QualifiedConstructorPtr ptr =
             make_shared<QualifiedConstructor>(share<Symbol>(symbol), share<Sort>(sort));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newQualifiedPattern(AstPtr constructor, AstList symbols) {
-    vector<sptr_t<Symbol>> v = symbols->unwrap<Symbol>();
-    sptr_t<QualifiedPattern> ptr = make_shared<QualifiedPattern>(share<Constructor>(constructor), v);
+    vector<SymbolPtr> v = symbols->unwrap<Symbol>();
+    QualifiedPatternPtr ptr = make_shared<QualifiedPattern>(share<Constructor>(constructor), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newMatchCase(AstPtr pattern, AstPtr term) {
-    sptr_t<MatchCase> ptr =
-            make_shared<MatchCase>(share<Pattern>(pattern), share<Term>(term));
+    MatchCasePtr ptr = make_shared<MatchCase>(share<Pattern>(pattern), share<Term>(term));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_s_expr.h
 AstPtr ast_newCompSExpression(AstList exprs) {
-    vector<sptr_t<SExpression>> v = exprs->unwrap<SExpression>();
-    sptr_t<CompSExpression> ptr = make_shared<CompSExpression>(v);
+    vector<SExpressionPtr> v = exprs->unwrap<SExpression>();
+    CompSExpressionPtr ptr = make_shared<CompSExpression>(v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_script.h
 AstPtr ast_newScript(AstList cmds) {
-    vector<sptr_t<Command>> v = cmds->unwrap<Command>();
-    sptr_t<Script> ptr = make_shared<Script>(v);
+    vector<CommandPtr> v = cmds->unwrap<Command>();
+    ScriptPtr ptr = make_shared<Script>(v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_sort.h
 AstPtr ast_newSort1(AstPtr identifier) {
-    sptr_t<Sort> ptr = make_shared<Sort>(share<SimpleIdentifier>(identifier));
+    SortPtr ptr = make_shared<Sort>(share<SimpleIdentifier>(identifier));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSort2(AstPtr identifier, AstList params) {
-    vector<sptr_t<Sort>> v = params->unwrap<Sort>();
-    sptr_t<Sort> ptr = make_shared<Sort>(share<SimpleIdentifier>(identifier), v);
+    vector<SortPtr> v = params->unwrap<Sort>();
+    SortPtr ptr = make_shared<Sort>(share<SimpleIdentifier>(identifier), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_symbol_decl.h
 AstPtr ast_newSortSymbolDeclaration(AstPtr identifier, AstPtr arity, AstList attributes) {
-    vector<sptr_t<Attribute>> v = attributes->unwrap<Attribute>();
-    sptr_t<SortSymbolDeclaration> ptr =
+    vector<AttributePtr> v = attributes->unwrap<Attribute>();
+    SortSymbolDeclarationPtr ptr =
             make_shared<SortSymbolDeclaration>(share<SimpleIdentifier>(identifier),
                                                share<NumeralLiteral>(arity), v);
     smtlib_nodemap[ptr.get()] = ptr;
@@ -911,35 +907,35 @@ AstPtr ast_newSortSymbolDeclaration(AstPtr identifier, AstPtr arity, AstList att
 }
 
 AstPtr ast_newSpecConstFunDeclaration(AstPtr constant, AstPtr sort, AstList attributes) {
-    vector<sptr_t<Attribute>> v = attributes->unwrap<Attribute>();
-    sptr_t<SpecConstFunDeclaration> ptr =
+    vector<AttributePtr> v = attributes->unwrap<Attribute>();
+    SpecConstFunDeclarationPtr ptr =
             make_shared<SpecConstFunDeclaration>(share<SpecConstant>(constant), share<Sort>(sort), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newMetaSpecConstFunDeclaration(AstPtr constant, AstPtr sort, AstList attributes) {
-    vector<sptr_t<Attribute>> v = attributes->unwrap<Attribute>();
-    sptr_t<MetaSpecConstFunDeclaration> ptr =
+    vector<AttributePtr> v = attributes->unwrap<Attribute>();
+    MetaSpecConstFunDeclarationPtr ptr =
             make_shared<MetaSpecConstFunDeclaration>(share<MetaSpecConstant>(constant), share<Sort>(sort), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSimpleFunDeclaration(AstPtr identifier, AstList signature, AstList attributes) {
-    vector<sptr_t<Sort>> v1 = signature->unwrap<Sort>();
-    vector<sptr_t<Attribute>> v2 = attributes->unwrap<Attribute>();
-    sptr_t<SimpleFunDeclaration> ptr =
+    vector<SortPtr> v1 = signature->unwrap<Sort>();
+    vector<AttributePtr> v2 = attributes->unwrap<Attribute>();
+    SimpleFunDeclarationPtr ptr =
             make_shared<SimpleFunDeclaration>(share<SimpleIdentifier>(identifier), v1, v2);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newParametricFunDeclaration(AstList params, AstPtr identifier, AstList signature, AstList attributes) {
-    vector<sptr_t<Symbol>> v1 = params->unwrap<Symbol>();
-    vector<sptr_t<Sort>> v2 = signature->unwrap<Sort>();
-    vector<sptr_t<Attribute>> v3 = attributes->unwrap<Attribute>();
-    sptr_t<ParametricFunDeclaration> ptr =
+    vector<SymbolPtr> v1 = params->unwrap<Symbol>();
+    vector<SortPtr> v2 = signature->unwrap<Sort>();
+    vector<AttributePtr> v3 = attributes->unwrap<Attribute>();
+    ParametricFunDeclarationPtr ptr =
             make_shared<ParametricFunDeclaration>(v1, share<SimpleIdentifier>(identifier), v2, v3);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
@@ -947,67 +943,64 @@ AstPtr ast_newParametricFunDeclaration(AstList params, AstPtr identifier, AstLis
 
 // ast_term.h
 AstPtr ast_newQualifiedTerm(AstPtr identifier, AstList terms) {
-    vector<sptr_t<Term>> v = terms->unwrap<Term>();
-    sptr_t<QualifiedTerm> ptr = make_shared<QualifiedTerm>(share<Identifier>(identifier), v);
+    vector<TermPtr> v = terms->unwrap<Term>();
+    QualifiedTermPtr ptr = make_shared<QualifiedTerm>(share<Identifier>(identifier), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newLetTerm(AstList bindings, AstPtr term) {
-    vector<sptr_t<VariableBinding>> v = bindings->unwrap<VariableBinding>();
-    sptr_t<LetTerm> ptr = make_shared<LetTerm>(v, share<Term>(term));
+    vector<VariableBindingPtr> v = bindings->unwrap<VariableBinding>();
+    LetTermPtr ptr = make_shared<LetTerm>(v, share<Term>(term));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newForallTerm(AstList bindings, AstPtr term) {
-    vector<sptr_t<SortedVariable>> v = bindings->unwrap<SortedVariable>();
-    sptr_t<ForallTerm> ptr = make_shared<ForallTerm>(v, share<Term>(term));
+    vector<SortedVariablePtr> v = bindings->unwrap<SortedVariable>();
+    ForallTermPtr ptr = make_shared<ForallTerm>(v, share<Term>(term));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newExistsTerm(AstList bindings, AstPtr term) {
-    vector<sptr_t<SortedVariable>> v = bindings->unwrap<SortedVariable>();
-    sptr_t<ExistsTerm> ptr = make_shared<ExistsTerm>(v, share<Term>(term));
+    vector<SortedVariablePtr> v = bindings->unwrap<SortedVariable>();
+    ExistsTermPtr ptr = make_shared<ExistsTerm>(v, share<Term>(term));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newMatchTerm(AstPtr term, AstList cases) {
-    vector<sptr_t<MatchCase>> v = cases->unwrap<MatchCase>();
-    sptr_t<MatchTerm> ptr = make_shared<MatchTerm>(share<Term>(term), v);
+    vector<MatchCasePtr> v = cases->unwrap<MatchCase>();
+    MatchTermPtr ptr = make_shared<MatchTerm>(share<Term>(term), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newAnnotatedTerm(AstPtr term, AstList attrs) {
-    vector<sptr_t<Attribute>> v = attrs->unwrap<Attribute>();
-    sptr_t<AnnotatedTerm> ptr = make_shared<AnnotatedTerm>(share<Term>(term), v);
+    vector<AttributePtr> v = attrs->unwrap<Attribute>();
+    AnnotatedTermPtr ptr = make_shared<AnnotatedTerm>(share<Term>(term), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_theory.h
 AstPtr ast_newTheory(AstPtr name, AstList attributes) {
-    vector<sptr_t<Attribute>> v = attributes->unwrap<Attribute>();
-    sptr_t<Theory> ptr =
-            make_shared<Theory>(share<Symbol>(name), v);
+    vector<AttributePtr> v = attributes->unwrap<Attribute>();
+    TheoryPtr ptr = make_shared<Theory>(share<Symbol>(name), v);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_variable.h
 AstPtr ast_newSortedVariable(AstPtr symbol, AstPtr sort) {
-    sptr_t<SortedVariable> ptr =
-            make_shared<SortedVariable>(share<Symbol>(symbol), share<Sort>(sort));
+    SortedVariablePtr ptr = make_shared<SortedVariable>(share<Symbol>(symbol), share<Sort>(sort));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newVariableBinding(AstPtr symbol, AstPtr term) {
-    sptr_t<VariableBinding> ptr =
-            make_shared<VariableBinding>(share<Symbol>(symbol), share<Term>(term));
+    VariableBindingPtr ptr = make_shared<VariableBinding>(share<Symbol>(symbol), share<Term>(term));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }

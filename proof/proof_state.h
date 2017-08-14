@@ -63,6 +63,8 @@ namespace proof {
         void substitute(sptr_um2<std::string, smtlib::sep::Term> subst);
 
         bool isEmp();
+
+        bool isCallsOnly();
     };
 
     struct Pair {
@@ -105,8 +107,6 @@ namespace proof {
 
     /** Check whether two vectors of states are equivalent */
     bool equivs(sptr_v<State> &v1, sptr_v<State> &v2);
-
-
 }
 
 #endif //INDUCTOR_PROOF_STATE_H

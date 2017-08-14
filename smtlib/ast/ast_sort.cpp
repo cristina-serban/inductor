@@ -5,13 +5,13 @@
 using namespace std;
 using namespace smtlib::ast;
 
-Sort::Sort(sptr_t<SimpleIdentifier> identifier,
-           sptr_v<Sort>& args) : identifier(identifier) {
-    this->args.insert(this->args.end(), args.begin(), args.end());
+Sort::Sort(const SimpleIdentifierPtr& identifier, const vector<SortPtr>& arguments)
+        : identifier(identifier) {
+    this->arguments.insert(this->arguments.end(), arguments.begin(), arguments.end());
 }
 
 bool Sort::hasArgs() {
-    return !args.empty();
+    return !arguments.empty();
 }
 
 void Sort::accept(Visitor0* visitor) {
@@ -21,17 +21,18 @@ void Sort::accept(Visitor0* visitor) {
 string Sort::toString() {
     if(!hasArgs()) {
         return identifier->toString();
-    } else {
-        stringstream ss;
-        ss << "(" << identifier->toString() << " ";
-
-        for (auto argIt = args.begin(); argIt != args.end(); argIt++) {
-            if(argIt != args.begin())
-                ss << " ";
-            ss << (*argIt)->toString();
-        }
-
-        ss << ")";
-        return ss.str();
     }
+
+    stringstream ss;
+    ss << "(" << identifier->toString() << " ";
+
+    for (size_t i = 0, sz = arguments.size(); i < sz; i++) {
+        if (i != 0)
+            ss << " ";
+
+        ss << arguments[i]->toString();
+    }
+
+    ss << ")";
+    return ss.str();
 }

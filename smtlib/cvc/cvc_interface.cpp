@@ -125,8 +125,8 @@ Datatype CVC4Interface::translate(string name, sptr_t<sep::ParametricDatatypeDec
         datatype.addConstructor(datatypeCons);
     }
 
-    for(size_t i = 0, n = decl->params.size(); i < n; i++) {
-        sorts.erase(decl->params[i]);
+    for(size_t i = 0, n = decl->parameters.size(); i < n; i++) {
+        sorts.erase(decl->parameters[i]);
     }
 
     return datatype;
@@ -366,13 +366,13 @@ void CVC4Interface::loadDatatypes(sptr_v<sep::SortDeclaration> sorts,
 
 /* ==================================== Functions ===================================== */
 void CVC4Interface::loadFun(sptr_t<sep::DeclareFunCommand> cmd) {
-    loadFun(cmd->name, cmd->params, cmd->sort);
+    loadFun(cmd->name, cmd->parameters, cmd->sort);
 }
 
 void CVC4Interface::loadFun(sptr_t<sep::DefineFunCommand> cmd) {
     // Get all parts of the definition
     string name = cmd->definition->signature->name;
-    sptr_v<sep::SortedVariable> params = cmd->definition->signature->params;
+    sptr_v<sep::SortedVariable> params = cmd->definition->signature->parameters;
     sptr_t<sep::Sort> sort = cmd->definition->signature->sort;
     sptr_t<sep::Term> body = cmd->definition->body;
 
@@ -382,7 +382,7 @@ void CVC4Interface::loadFun(sptr_t<sep::DefineFunCommand> cmd) {
 void CVC4Interface::loadFun(sptr_t<sep::DefineFunRecCommand> cmd) {
     // Get all parts of the definition
     string name = cmd->definition->signature->name;
-    sptr_v<sep::SortedVariable> params = cmd->definition->signature->params;
+    sptr_v<sep::SortedVariable> params = cmd->definition->signature->parameters;
     sptr_t<sep::Sort> sort = cmd->definition->signature->sort;
     sptr_t<sep::Term> body = cmd->definition->body;
 
@@ -425,7 +425,7 @@ void CVC4Interface::loadFuns(sptr_v<sep::FunctionDeclaration> decls, sptr_v<sep:
     for(size_t i = 0, n = decls.size(); i < n; i++) {
         // Get needed parts of the declaration
         string name = decls[i]->name;
-        sptr_v<sep::SortedVariable> params = decls[i]->params;
+        sptr_v<sep::SortedVariable> params = decls[i]->parameters;
         sptr_t<sep::Sort> retSort = decls[i]->sort;
 
         // Translate function symbol and add to symbol table
@@ -436,7 +436,7 @@ void CVC4Interface::loadFuns(sptr_v<sep::FunctionDeclaration> decls, sptr_v<sep:
 
     for(size_t i = 0, n = decls.size(); i < n; i++) {
         // Get needed parts of the definition
-        sptr_v<sep::SortedVariable> params = decls[i]->params;
+        sptr_v<sep::SortedVariable> params = decls[i]->parameters;
         sptr_t<sep::Term> body = bodies[i];
 
         // Translate parameters
@@ -476,15 +476,15 @@ Type CVC4Interface::translateSort(sptr_t<sep::Sort> sort) {
         return sorts[name];
     }
 
-    if(sort->args.size() == 0) {
+    if(sort->arguments.size() == 0) {
         sorts[name] = manager->mkSort(sort->name.c_str());
         return sorts[name];
     } else {
-        SortConstructorType cons = manager->mkSortConstructor(sort->name, sort->args.size());
+        SortConstructorType cons = manager->mkSortConstructor(sort->name, sort->arguments.size());
 
         vector<Type> args;
-        for(size_t i = 0, n = sort->args.size(); i < n; i++) {
-            args.push_back(translateSort(sort->args[i]));
+        for(size_t i = 0, n = sort->arguments.size(); i < n; i++) {
+            args.push_back(translateSort(sort->arguments[i]));
         }
 
         sorts[name] = cons.instantiate(args);

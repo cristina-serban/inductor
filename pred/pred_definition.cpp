@@ -9,11 +9,11 @@ using namespace std;
 using namespace pred;
 using namespace smtlib::sep;
 
-sptr_t<Term> replace(sptr_t<Term> term, sptr_um2<string, Term> args) {
-    for(auto it = args.begin(); it != args.end(); it++) {
-        sptr_t<TermReplacerContext> ctx = make_shared<TermReplacerContext>(
-            make_shared<SimpleIdentifier>((*it).first), (*it).second);
-        sptr_t<TermReplacer> replacer = make_shared<TermReplacer>(ctx);
+TermPtr replace(TermPtr& term, const unordered_map<string, TermPtr> arguments) {
+    for (const auto& arg : arguments) {
+        TermReplacerContextPtr ctx = make_shared<TermReplacerContext>(
+                make_shared<SimpleIdentifier>(arg.first), arg.second);
+        TermReplacerPtr replacer = make_shared<TermReplacer>(ctx);
 
         term = replacer->run(term);
     }
@@ -21,38 +21,39 @@ sptr_t<Term> replace(sptr_t<Term> term, sptr_um2<string, Term> args) {
     return term;
 }
 
-sptr_um2<string, Term> getRenaming(string index, sptr_v<SortedVariable> bindings) {
-    sptr_um2<string, Term> result;
-    for(size_t i = 0, n = bindings.size(); i < n; i++) {
-        string name = bindings[i]->name;
-
+unordered_map<string, TermPtr> getRenaming(const string& index,
+                                           const vector<SortedVariablePtr>& bindings) {
+    unordered_map<string, TermPtr> result;
+    for (const auto& bind : bindings) {
         stringstream ss;
-        ss << name << index;
-
-        result[name] = make_shared<SimpleIdentifier>(ss.str());
+        ss << bind->name << index;
+        result[bind->name] = make_shared<SimpleIdentifier>(ss.str());
     }
 
     return result;
 }
 
 /* ================================ InductivePredicate ================================ */
-InductivePredicate::InductivePredicate(string name, sptr_v<SortedVariable> &params)
-    : name(name), sort(make_shared<Sort>(SORT_BOOL)) {
-    this->params.insert(this->params.begin(), params.begin(), params.end());
+InductivePredicate::InductivePredicate(const string& name,
+                                       const vector<SortedVariablePtr>& parameters)
+        : name(name), sort(make_shared<Sort>(SORT_BOOL)) {
+    this->parameters.insert(this->parameters.begin(), parameters.begin(), parameters.end());
 }
 
-InductivePredicate::InductivePredicate(string name, sptr_v<SortedVariable> &params,
-                                       sptr_v<BaseCase> baseCases, sptr_v<InductiveCase> indCases)
-    : name(name), sort(make_shared<Sort>(SORT_BOOL))  {
-    this->params.insert(this->params.begin(), params.begin(), params.end());
+InductivePredicate::InductivePredicate(const string& name,
+                                       const vector<SortedVariablePtr>& parameters,
+                                       const vector<BaseCasePtr>& baseCases,
+                                       const vector<InductiveCasePtr>& indCases)
+        : name(name), sort(make_shared<Sort>(SORT_BOOL)) {
+    this->parameters.insert(this->parameters.begin(), parameters.begin(), parameters.end());
     this->baseCases.insert(this->baseCases.begin(), baseCases.begin(), baseCases.end());
     this->indCases.insert(this->indCases.begin(), indCases.begin(), indCases.end());
 }
 
 bool InductivePredicate::isOnlySelfRecursive() {
-    for (auto caseIt = indCases.begin(); caseIt != indCases.end(); caseIt++) {
-        for (auto callIt = (*caseIt)->calls.begin(); callIt != (*caseIt)->calls.end(); callIt++) {
-            if (this->name != (*callIt)->pred) {
+    for (const auto& icase : indCases) {
+        for (const auto& call : icase->calls) {
+            if (this->name != call->predicate) {
                 return false;
             }
         }
@@ -61,229 +62,254 @@ bool InductivePredicate::isOnlySelfRecursive() {
     return true;
 }
 
-sptr_t<InductivePredicate> InductivePredicate::clone() {
-    sptr_v<SortedVariable> newParams;
-    sptr_v<BaseCase> newBaseCases;
-    sptr_v<InductiveCase> newIndCases;
+InductivePredicatePtr InductivePredicate::clone() {
+    vector<SortedVariablePtr> newParameters;
+    vector<BaseCasePtr> newBaseCases;
+    vector<InductiveCasePtr> newIndCases;
 
     shared_ptr<Duplicator> duplicator = make_shared<Duplicator>();
 
-    for (size_t i = 0, n = params.size(); i < n; i++) {
-        newParams.push_back(dynamic_pointer_cast<SortedVariable>(duplicator->run(params[i])));
+    for (const auto& param : parameters) {
+        newParameters.push_back(dynamic_pointer_cast<SortedVariable>(duplicator->run(param)));
     }
 
-    for (size_t i = 0, n = baseCases.size(); i < n; i++) {
-        newBaseCases.push_back(baseCases[i]->clone());
+    for (const auto& bcase : baseCases) {
+        newBaseCases.push_back(bcase->clone());
     }
 
-    for (size_t i = 0, n = indCases.size(); i < n; i++) {
-        newIndCases.push_back(indCases[i]->clone());
+    for (const auto& icase : indCases) {
+        newIndCases.push_back(icase->clone());
     }
 
-    sptr_t<InductivePredicate> newPred = make_shared<InductivePredicate>(name, newParams);
-    newPred->baseCases = newBaseCases;
-    newPred->indCases = newIndCases;
-
-    return newPred;
+    return make_shared<InductivePredicate>(name, newParameters, newBaseCases, newIndCases);
 }
 
-void InductivePredicate::replace(sptr_um2<string, Term> args) {
-    for (size_t i = 0, n = baseCases.size(); i < n; i++) {
-        baseCases[i]->replace(args);
+void InductivePredicate::replace(const unordered_map<string, TermPtr>& arguments) {
+    for (auto& bcase : baseCases) {
+        bcase->replace(arguments);
     }
 
-    for (size_t i = 0, n = indCases.size(); i < n; i++) {
-        indCases[i]->replace(args);
+    for (auto& icase : indCases) {
+        icase->replace(arguments);
     }
 }
 
-void InductivePredicate::renameBindings(string index) {
-    for (size_t i = 0, n = baseCases.size(); i < n; i++) {
-        baseCases[i]->renameBindings(index);
+void InductivePredicate::renameBindings(const string& index) {
+    for (auto& bcase : baseCases) {
+        bcase->renameBindings(index);
     }
 
-    for (size_t i = 0, n = indCases.size(); i < n; i++) {
-        indCases[i]->renameBindings(index);
+    for (auto& icase : indCases) {
+        icase->renameBindings(index);
     }
 }
 
 /* ==================================== Constraint ==================================== */
-void Constraint::merge(sptr_t<Constraint> constr) {
+void Constraint::merge(const ConstraintPtr& constr) {
     this->pure.insert(this->pure.begin(), constr->pure.begin(), constr->pure.end());
     this->spatial.insert(this->spatial.begin(), constr->spatial.begin(), constr->spatial.end());
 }
 
-sptr_t<Term> Constraint::toTerm() {
+TermPtr Constraint::toTerm() {
     if (pure.empty() && spatial.empty()) {
         // [] + [] => (emp)
         return make_shared<EmpTerm>();
-    } else if (!pure.empty() && spatial.empty()) {
+    }
+
+    if (!pure.empty() && spatial.empty()) {
         if (pure.size() == 1) {
             // [pure] + [] => (pure)
             return pure[0];
-        } else {
-            // [pure1, pure2, ...] + [] => (and pure1 pure2 ...)
-            return make_shared<AndTerm>(pure);
         }
-    } else if (pure.empty() && !spatial.empty()) {
+
+        // [pure1, pure2, ...] + [] => (and pure1 pure2 ...)
+        return make_shared<AndTerm>(pure);
+    }
+
+    if (pure.empty() && !spatial.empty()) {
         if (spatial.size() == 1) {
             // [] + [sp] => (sp)
             return spatial[0];
-        } else {
-            // [] + [sp1, sp2, ...] => (sep sp1 sp2 ...)
-            return make_shared<SepTerm>(spatial);
-        }
-    } else {
-        sptr_t<Term> spatialTerm;
-        if (spatial.size() == 1) {
-            // [sp] => (sp)
-            spatialTerm = spatial[0];
-        } else {
-            // [sp1, sp2, ...] => (sep sp1 sp2 ...)
-            spatialTerm = make_shared<SepTerm>(spatial);
         }
 
-        // [pure1, pure2, ...] + (sep sp1 sp2 ...) => (and pure1 pure2 ... (sep sp1 sp2 ...))
-        sptr_t<AndTerm> result = make_shared<AndTerm>(pure);
-        result->terms.push_back(spatialTerm);
-        return result;
+        // [] + [sp1, sp2, ...] => (sep sp1 sp2 ...)
+        return make_shared<SepTerm>(spatial);
     }
+
+
+    TermPtr spatialTerm;
+    if (spatial.size() == 1) {
+        // [sp] => (sp)
+        spatialTerm = spatial[0];
+    } else {
+        // [sp1, sp2, ...] => (sep sp1 sp2 ...)
+        spatialTerm = make_shared<SepTerm>(spatial);
+    }
+
+    // [pure1, pure2, ...] + (sep sp1 sp2 ...) => (and pure1 pure2 ... (sep sp1 sp2 ...))
+    AndTermPtr result = make_shared<AndTerm>(pure);
+    result->terms.push_back(spatialTerm);
+    return result;
+
 }
 
-sptr_t<Constraint> Constraint::clone() {
+ConstraintPtr Constraint::clone() {
     shared_ptr<Duplicator> duplicator = make_shared<Duplicator>();
-    sptr_t<Constraint> newExpr = make_shared<Constraint>();
+    ConstraintPtr newExpr = make_shared<Constraint>();
 
-    for (size_t i = 0, n = this->pure.size(); i < n; i++) {
-        newExpr->pure.push_back(dynamic_pointer_cast<Term>(duplicator->run(this->pure[i])));
+    for (const auto& pformula : pure) {
+        newExpr->pure.push_back(dynamic_pointer_cast<Term>(duplicator->run(pformula)));
     }
 
-    for (size_t i = 0, n = this->spatial.size(); i < n; i++) {
-        newExpr->spatial.push_back(dynamic_pointer_cast<Term>(duplicator->run(this->spatial[i])));
+    for (const auto& sformula : spatial) {
+        newExpr->spatial.push_back(dynamic_pointer_cast<Term>(duplicator->run(sformula)));
     }
 
     return newExpr;
 }
 
-void Constraint::replace(sptr_um2<string, Term> args) {
-    for (size_t i = 0, n = pure.size(); i < n; i++) {
-        pure[i] = ::replace(pure[i], args);
+void Constraint::replace(const unordered_map<string, TermPtr>& arguments) {
+    for (size_t i = 0, sz = pure.size(); i < sz; i++) {
+        pure[i] = ::replace(pure[i], arguments);
     }
 
-    for (size_t i = 0, n = spatial.size(); i < n; i++) {
-        spatial[i] = ::replace(spatial[i], args);
+    for (size_t i = 0, sz = spatial.size(); i < sz; i++) {
+        spatial[i] = ::replace(spatial[i], arguments);
     }
 }
 
 /* ===================================== BaseCase ===================================== */
-BaseCase::BaseCase(sptr_v<SortedVariable> bindings, sptr_t<Constraint> constr) : constr(constr) {
+BaseCase::BaseCase(const vector<SortedVariablePtr>& bindings,
+                   const ConstraintPtr& constr) : constraint(constr) {
     this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
 }
 
-sptr_t<Term> BaseCase::toTerm() {
-    if (bindings.empty()) {
-        return constr->toTerm();
-    } else {
-        return make_shared<ExistsTerm>(bindings, constr->toTerm());
-    }
-}
-
-sptr_t<BaseCase> BaseCase::clone() {
-    sptr_v<SortedVariable> newBindings;
-    sptr_t<Constraint> newExpr;
+BaseCasePtr BaseCase::clone() {
+    vector<SortedVariablePtr> newBindings;
+    ConstraintPtr newExpr;
 
     shared_ptr<Duplicator> duplicator = make_shared<Duplicator>();
 
-    for (size_t i = 0, n = bindings.size(); i < n; i++) {
-        newBindings.push_back(dynamic_pointer_cast<SortedVariable>(duplicator->run(bindings[i])));
+    for (const auto& bind : bindings) {
+        newBindings.push_back(dynamic_pointer_cast<SortedVariable>(duplicator->run(bind)));
     }
 
-    if (constr) {
-        newExpr = constr->clone();
+    if (constraint) {
+        newExpr = constraint->clone();
     }
 
     return make_shared<BaseCase>(newBindings, newExpr);
 }
 
-void BaseCase::replace(sptr_um2<string, Term> args) {
-    constr->replace(args);
+TermPtr BaseCase::toTerm() {
+    if (bindings.empty()) {
+        return constraint->toTerm();
+    }
+
+    return make_shared<ExistsTerm>(bindings, constraint->toTerm());
 }
 
-void BaseCase::renameBindings(string index) {
-    if(bindings.empty())
+void BaseCase::replace(const unordered_map<string, TermPtr>& arguments) {
+    constraint->replace(arguments);
+}
+
+void BaseCase::renameBindings(const string& index) {
+    if (bindings.empty())
         return;
 
-    sptr_um2<string, Term> renaming = getRenaming(index, bindings);
+    unordered_map<string, TermPtr> renaming = getRenaming(index, bindings);
     this->replace(renaming);
 
-    for(size_t i = 0, n = bindings.size(); i < n; i++) {
-        bindings[i]->name = renaming[bindings[i]->name]->toString();
+    for (auto& binding : bindings) {
+        binding->name = renaming[binding->name]->toString();
     }
 }
 
 /* ================================== InductiveCase =================================== */
-InductiveCase::InductiveCase(sptr_v<SortedVariable> bindings,
-                             sptr_t<Constraint> expr)
-    : expr(expr) {
+InductiveCase::InductiveCase(const vector<SortedVariablePtr>& bindings,
+                             const ConstraintPtr& constraint)
+        : constraint(constraint) {
     this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
 }
 
-InductiveCase::InductiveCase(sptr_t<Constraint> expr,
-                             sptr_v<PredicateCall> calls)
-    : expr(expr) {
+InductiveCase::InductiveCase(const ConstraintPtr& constraint,
+                             const vector<PredicateCallPtr>& calls)
+        : constraint(constraint) {
     this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
 }
 
-InductiveCase::InductiveCase(sptr_v<SortedVariable> bindings,
-                             sptr_t<Constraint> expr,
-                             sptr_v<PredicateCall> calls)
-    : expr(expr) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
-
-InductiveCase::InductiveCase(sptr_v<PredicateCall> calls) {
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
-
-InductiveCase::InductiveCase(sptr_v<SortedVariable> bindings,
-                             sptr_v<PredicateCall> calls) {
+InductiveCase::InductiveCase(const vector<SortedVariablePtr>& bindings,
+                             const ConstraintPtr& constraint,
+                             const vector<PredicateCallPtr>& calls)
+        : constraint(constraint) {
     this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
     this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
 }
 
-sptr_t<Term> InductiveCase::toTerm() {
-    sptr_t<Term> caseTerm;
+InductiveCase::InductiveCase(const vector<PredicateCallPtr>& calls) {
+    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
+}
 
-    if (!expr) {
+InductiveCase::InductiveCase(const vector<SortedVariablePtr>& bindings,
+                             const vector<PredicateCallPtr>& calls) {
+    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
+    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
+}
+
+InductiveCasePtr InductiveCase::clone() {
+    vector<SortedVariablePtr> newBindings;
+    vector<PredicateCallPtr> newCalls;
+    ConstraintPtr newExpr;
+
+    shared_ptr<Duplicator> duplicator = make_shared<Duplicator>();
+
+    for (const auto& bind : bindings) {
+        newBindings.push_back(dynamic_pointer_cast<SortedVariable>(duplicator->run(bind)));
+    }
+
+    if (constraint) {
+        newExpr = constraint->clone();
+    }
+
+    for (const auto& call : calls) {
+        newCalls.push_back(call->clone());
+    }
+
+    return make_shared<InductiveCase>(newBindings, newExpr, newCalls);
+}
+
+TermPtr InductiveCase::toTerm() {
+    TermPtr caseTerm;
+
+    if (!constraint) {
         if (calls.size() == 1) {
             caseTerm = calls[0]->toTerm();
         } else {
-            sptr_t<SepTerm> sepTerm = make_shared<SepTerm>();
-            for (auto it = calls.begin(); it != calls.end(); it++) {
-                sepTerm->terms.push_back((*it)->toTerm());
+            SepTermPtr sepTerm = make_shared<SepTerm>();
+            for (const auto& call : calls) {
+                sepTerm->terms.push_back(call->toTerm());
             }
             caseTerm = sepTerm;
         }
     } else {
-        sptr_t<Term> exprTerm = expr->toTerm();
+        TermPtr exprTerm = constraint->toTerm();
 
         // (sep sp1 sp2 ... )
-        sptr_t<SepTerm> sepExprTerm = dynamic_pointer_cast<SepTerm>(exprTerm);
+        SepTermPtr sepExprTerm = dynamic_pointer_cast<SepTerm>(exprTerm);
         if (sepExprTerm) {
             // (sep sp1 sp2 ... ) + (p1 ...) (p2 ...) ... =>
             // (sep sp1 sp2 ... (p1 ...) (p2 ...) ...)
-            for (auto it = calls.begin(); it != calls.end(); it++) {
-                sepExprTerm->terms.push_back((*it)->toTerm());
+            for (const auto& call : calls) {
+                sepExprTerm->terms.push_back(call->toTerm());
             }
             caseTerm = sepExprTerm;
         }
 
         // (and pure1 pure2 ... ) or (and pure1 pure2 ... (sep sp1 sp2 ... ))
-        sptr_t<AndTerm> andExprTerm = dynamic_pointer_cast<AndTerm>(exprTerm);
+        AndTermPtr andExprTerm = dynamic_pointer_cast<AndTerm>(exprTerm);
         if (andExprTerm) {
             unsigned long size = andExprTerm->terms.size();
-            sptr_t<SepTerm> sepLastTerm = dynamic_pointer_cast<SepTerm>(andExprTerm->terms[size - 1]);
+            SepTermPtr sepLastTerm = dynamic_pointer_cast<SepTerm>(andExprTerm->terms[size - 1]);
 
             if (calls.size() == 1 && !sepLastTerm) {
                 // (and pure1 pure2 ...) + (p ...) => (and pure1 pure2 ... (p ...))
@@ -297,26 +323,26 @@ sptr_t<Term> InductiveCase::toTerm() {
 
                 // (and pure1 pure2 ... (sep ...)) + (p1 ...) (p2 ...) ... =>
                 // (and pure1 pure2 ... (sep ... (p1 ...) (p2 ...) ...))
-                for (auto it = calls.begin(); it != calls.end(); it++) {
-                    sepLastTerm->terms.push_back((*it)->toTerm());
+                for (const auto& call : calls) {
+                    sepLastTerm->terms.push_back(call->toTerm());
                 }
             }
             caseTerm = andExprTerm;
         }
 
         // (spatial)
-        if (expr->pure.empty() && expr->spatial.size() == 1) {
+        if (constraint->pure.empty() && constraint->spatial.size() == 1) {
             // (sep spatial (p1 ...) (p2 ...) ...)
-            sptr_t<SepTerm> sepTerm = make_shared<SepTerm>();
-            for (auto it = calls.begin(); it != calls.end(); it++) {
-                sepTerm->terms.push_back((*it)->toTerm());
+            SepTermPtr sepTerm = make_shared<SepTerm>();
+            for (const auto& call : calls) {
+                sepTerm->terms.push_back(call->toTerm());
             }
             caseTerm = sepTerm;
         }
 
         // (pure)
-        if (expr->pure.size() == 1 && expr->spatial.empty()) {
-            sptr_t<AndTerm> andTerm = make_shared<AndTerm>();
+        if (constraint->pure.size() == 1 && constraint->spatial.empty()) {
+            AndTermPtr andTerm = make_shared<AndTerm>();
             andTerm->terms.push_back(exprTerm);
 
             if (calls.size() == 1) {
@@ -324,9 +350,9 @@ sptr_t<Term> InductiveCase::toTerm() {
                 andTerm->terms.push_back(calls[0]->toTerm());
             } else {
                 // (pure) => (and pure (sep (p1 ...) (p2 ...) ...))
-                sptr_t<SepTerm> sepTerm = make_shared<SepTerm>();
-                for (auto it = calls.begin(); it != calls.end(); it++) {
-                    sepTerm->terms.push_back((*it)->toTerm());
+                SepTermPtr sepTerm = make_shared<SepTerm>();
+                for (const auto& call : calls) {
+                    sepTerm->terms.push_back(call->toTerm());
                 }
                 andTerm->terms.push_back(sepTerm);
             }
@@ -337,71 +363,50 @@ sptr_t<Term> InductiveCase::toTerm() {
 
     if (bindings.empty()) {
         return caseTerm;
-    } else {
-        return make_shared<ExistsTerm>(bindings, caseTerm);
+    }
+
+    return make_shared<ExistsTerm>(bindings, caseTerm);
+}
+
+void InductiveCase::replace(const unordered_map<string, TermPtr>& arguments) {
+    if (constraint) {
+        constraint->replace(arguments);
+    }
+
+    for (auto& call : calls) {
+        call->replace(arguments);
     }
 }
 
-sptr_t<InductiveCase> InductiveCase::clone() {
-    sptr_v<SortedVariable> newBindings;
-    sptr_v<PredicateCall> newCalls;
-    sptr_t<Constraint> newExpr;
-
-    shared_ptr<Duplicator> duplicator = make_shared<Duplicator>();
-
-    if (!bindings.empty()) {
-        for (size_t i = 0, n = bindings.size(); i < n; i++) {
-            newBindings.push_back(dynamic_pointer_cast<SortedVariable>(duplicator->run(bindings[i])));
-        }
-    }
-
-    if (expr) {
-        newExpr = expr->clone();
-    }
-
-    if (!calls.empty()) {
-        for (size_t i = 0, n = calls.size(); i < n; i++) {
-            newCalls.push_back(calls[i]->clone());
-        }
-    }
-
-    return make_shared<InductiveCase>(newBindings, newExpr, newCalls);
-}
-
-void InductiveCase::replace(sptr_um2<string, Term> args) {
-    if(expr) {
-        expr->replace(args);
-    }
-
-    for(size_t i = 0, n = calls.size(); i < n; i++) {
-        calls[i]->replace(args);
-    }
-}
-
-void InductiveCase::renameBindings(string index) {
-    if(bindings.empty())
+void InductiveCase::renameBindings(const string& index) {
+    if (bindings.empty())
         return;
 
-    sptr_um2<string, Term> renaming = getRenaming(index, bindings);
+    unordered_map<string, TermPtr> renaming = getRenaming(index, bindings);
     this->replace(renaming);
 
-    for(size_t i = 0, n = bindings.size(); i < n; i++) {
+    for (size_t i = 0, n = bindings.size(); i < n; i++) {
         bindings[i]->name = renaming[bindings[i]->name]->toString();
     }
 }
 
 /* ================================== PredicateCall =================================== */
 
-PredicateCall::PredicateCall(string pred, sptr_v<Term> args) : pred(pred) {
-    this->args.insert(this->args.begin(), args.begin(), args.end());
+PredicateCall::PredicateCall(const string& predicate,
+                             const vector<TermPtr>& arguments) : predicate(predicate) {
+    this->arguments.insert(this->arguments.begin(), arguments.begin(), arguments.end());
+}
+
+TermPtr PredicateCall::toTerm() {
+    return make_shared<QualifiedTerm>(make_shared<SimpleIdentifier>(predicate), arguments);
 }
 
 string PredicateCall::toString() {
     stringstream ss;
-    ss << "(" << pred;
+    ss << "(" << predicate;
 
-    for (auto it = args.begin(); it != args.end(); it++) {
-        ss << " " << (*it)->toString();
+    for (const auto& argument : arguments) {
+        ss << " " << argument->toString();
     }
 
     ss << ")";
@@ -409,23 +414,19 @@ string PredicateCall::toString() {
     return ss.str();
 }
 
-sptr_t<Term> PredicateCall::toTerm() {
-    return make_shared<QualifiedTerm>(make_shared<SimpleIdentifier>(pred), args);
-}
+PredicateCallPtr PredicateCall::clone() {
+    vector<TermPtr> newArgs;
+    DuplicatorPtr dupl = make_shared<Duplicator>();
 
-sptr_t<PredicateCall> PredicateCall::clone() {
-    sptr_v<Term> newArgs;
-    sptr_t<Duplicator> dupl = make_shared<Duplicator>();
-
-    for (auto it = args.begin(); it != args.end(); it++) {
-        newArgs.push_back(dynamic_pointer_cast<Term>(dupl->run(*it)));
+    for (const auto& arg : arguments) {
+        newArgs.push_back(dynamic_pointer_cast<Term>(dupl->run(arg)));
     }
 
-    return make_shared<PredicateCall>(pred, newArgs);
+    return make_shared<PredicateCall>(predicate, newArgs);
 }
 
-void PredicateCall::replace(sptr_um2<string, Term> args) {
-    for(size_t i = 0, n = this->args.size(); i < n; i++) {
-        this->args[i] = ::replace(this->args[i], args);
+void PredicateCall::replace(const unordered_map<string, TermPtr>& arguments) {
+    for (size_t i = 0, sz = this->arguments.size(); i < sz; i++) {
+        this->arguments[i] = ::replace(this->arguments[i], arguments);
     }
 }

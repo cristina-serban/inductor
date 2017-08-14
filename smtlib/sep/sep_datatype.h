@@ -25,12 +25,12 @@ namespace smtlib {
              * \param symbol    Datatype (sort) name
              * \param arity     Arity
              */
-            inline SortDeclaration(std::string name, long arity)
-                : name(name), arity(arity) { }
+            inline SortDeclaration(const std::string& name, long arity)
+                    : name(name), arity(arity) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== SelectorDeclaration ================================ */
@@ -39,18 +39,18 @@ namespace smtlib {
                                     public std::enable_shared_from_this<SelectorDeclaration> {
         public:
             std::string name;
-            sptr_t<Sort> sort;
+            SortPtr sort;
 
             /**
              * \param symbol    Selector name
              * \param sort      Selector sort
              */
-            inline SelectorDeclaration(std::string name, sptr_t<Sort> sort)
-                : name(name), sort(sort) { }
+            inline SelectorDeclaration(const std::string& name, const SortPtr& sort)
+                    : name(name), sort(sort) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== ConstructorDeclaration ============================== */
@@ -59,39 +59,40 @@ namespace smtlib {
                                        public std::enable_shared_from_this<ConstructorDeclaration> {
         public:
             std::string name;
-            sptr_v<SelectorDeclaration> selectors;
+            std::vector<SelectorDeclarationPtr> selectors;
 
             /**
              * \param symbol        Constructor name
              * \param selectors     Selectors for the constructor
              */
-            ConstructorDeclaration(std::string name,
-                                   sptr_v<SelectorDeclaration> &selectors);
+            ConstructorDeclaration(const std::string& name,
+                                   const std::vector<SelectorDeclarationPtr>& selectors);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ DatatypeDeclaration =============================== */
         /** A datatype declaration (used by the declare-datatype and declare-datatypes commands). */
-        class DatatypeDeclaration : public Node { };
+        class DatatypeDeclaration : public Node {
+        };
 
         /* ============================= SimpleDatatypeDeclaration ============================ */
         /** A simple (non-parametric) datatype declaration. */
         class SimpleDatatypeDeclaration : public DatatypeDeclaration,
                                           public std::enable_shared_from_this<SimpleDatatypeDeclaration> {
         public:
-            sptr_v<ConstructorDeclaration> constructors;
+            std::vector<ConstructorDeclarationPtr> constructors;
 
             /**
              * \param constructors  Constructors for this datatype
              */
-            SimpleDatatypeDeclaration(sptr_v<ConstructorDeclaration> &constructors);
+            explicit SimpleDatatypeDeclaration(const std::vector<ConstructorDeclarationPtr>& constructors);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =========================== ParametricDatatypeDeclaration ========================== */
@@ -99,19 +100,19 @@ namespace smtlib {
         class ParametricDatatypeDeclaration : public DatatypeDeclaration,
                                               public std::enable_shared_from_this<ParametricDatatypeDeclaration> {
         public:
-            std::vector<std::string> params;
-            sptr_v<ConstructorDeclaration> constructors;
+            std::vector<std::string> parameters;
+            std::vector<ConstructorDeclarationPtr> constructors;
 
             /**
              * \param params        Parameters for the declaration
              * \param constructors  Constructors for this datatype
              */
-            ParametricDatatypeDeclaration(std::vector<std::string> &params,
-                                          sptr_v<ConstructorDeclaration> &constructors);
+            ParametricDatatypeDeclaration(const std::vector<std::string>& parameters,
+                                          const std::vector<ConstructorDeclarationPtr>& constructors);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

@@ -14,29 +14,32 @@
 
 namespace smtlib {
     namespace sep {
-        /** Represents the contents of a logic file. */
+        /**
+         * SMT-LIB+SEPLOG logic.
+         * Represents the contents of a logic file.
+         */
         class Logic : public Root,
                       public std::enable_shared_from_this<Logic> {
         public:
             std::string name;
-            sptr_v<Attribute> attributes;
+            std::vector<AttributePtr> attributes;
 
             /**
              * Constructs logic without attributes.
              * \param name          Logic name
              */
-            inline Logic(std::string name) : name(name) {}
+            inline explicit Logic(const std::string& name) : name(name) {}
 
             /**
              * Constructs logic with attributes.
              * \param name          Logic name
              * \param attributes    Logic attributes
              */
-            Logic(std::string name, sptr_v<Attribute> &attributes);
+            Logic(const std::string& name, const std::vector<AttributePtr>& attributes);
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

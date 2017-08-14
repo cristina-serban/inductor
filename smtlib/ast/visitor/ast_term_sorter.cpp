@@ -194,7 +194,7 @@ void TermSorter::visit(sptr_t<QualifiedTerm> node) {
         }
 
         // Check that the arguments respect the signature
-        if (argSorts.size() == funSig.size() - 1) { continue; }
+        if (argSorts.size() != funSig.size() - 1) { continue; }
         bool fits = true;
         if (info->params.empty()) { // Function is not parametric
             for (size_t i = 0; i < funSig.size() - 1; i++) {
@@ -567,7 +567,7 @@ bool TermSorter::unify(sptr_t<Sort> sort1, sptr_t<Sort> sort2,
             return true;
         }
     } else {
-        if (sort1->args.size() != sort2->args.size()) {
+        if (sort1->arguments.size() != sort2->arguments.size()) {
             return false;
         } else {
             if (sort1Name != sort2Name) {
@@ -575,8 +575,8 @@ bool TermSorter::unify(sptr_t<Sort> sort1, sptr_t<Sort> sort2,
             }
 
             bool fits = true;
-            for (unsigned long i = 0; i < sort1->args.size(); i++) {
-                fits = fits && unify(sort1->args[i], sort2->args[i], params, mapping);
+            for (unsigned long i = 0; i < sort1->arguments.size(); i++) {
+                fits = fits && unify(sort1->arguments[i], sort2->arguments[i], params, mapping);
             }
 
             return fits;

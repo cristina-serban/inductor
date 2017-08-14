@@ -127,7 +127,7 @@ sptr_t<Sort> SymbolStack::replace(sptr_t<Sort> sort,
     } else {
         sptr_v<Sort> newargs;
         bool changed = false;
-        sptr_v<Sort> argSorts = sort->args;
+        sptr_v<Sort> argSorts = sort->arguments;
         for (auto argIt = argSorts.begin(); argIt != argSorts.end(); argIt++) {
             sptr_t<Sort> result = replace(*argIt, mapping);
 
@@ -155,7 +155,7 @@ sptr_t<Sort> SymbolStack::expand(sptr_t<Sort> sort) {
         if (info && info->definition) {
             if (info->definition->params.empty()) {
                 sptr_t<Sort> newsort = make_shared<Sort>(info->definition->sort->identifier,
-                                                         info->definition->sort->args);
+                                                         info->definition->sort->arguments);
                 newsort->rowLeft = sort->rowLeft;
                 newsort->colLeft = sort->colLeft;
                 newsort->rowRight = sort->rowRight;
@@ -171,10 +171,10 @@ sptr_t<Sort> SymbolStack::expand(sptr_t<Sort> sort) {
         }
     } else {
         if (info && info->definition) {
-            if (info->definition->params.size() == sort->args.size()) {
+            if (info->definition->params.size() == sort->arguments.size()) {
                 unordered_map<string, sptr_t<Sort>> mapping;
                 for (int i = 0; i < info->definition->params.size(); i++) {
-                    mapping[info->definition->params[i]->toString()] = sort->args[i];
+                    mapping[info->definition->params[i]->toString()] = sort->arguments[i];
                 }
 
                 sptr_t<Sort> newsort = replace(info->definition->sort, mapping);
@@ -190,12 +190,12 @@ sptr_t<Sort> SymbolStack::expand(sptr_t<Sort> sort) {
                 return null;
             }
         } else {
-            if (info && info->arity != sort->args.size())
+            if (info && info->arity != sort->arguments.size())
                 return null;
 
             sptr_v<Sort> newargs;
             bool changed = false;
-            sptr_v<Sort> argSorts = sort->args;
+            sptr_v<Sort> argSorts = sort->arguments;
             for (auto argIt = argSorts.begin(); argIt != argSorts.end(); argIt++) {
                 sptr_t<Sort> result = expand(*argIt);
                 if (!result)
@@ -240,10 +240,10 @@ bool SymbolStack::equal(sptr_v<Symbol> &params1,
         return false;
     }
 
-    if (sort1->args.size() != sort2->args.size())
+    if (sort1->arguments.size() != sort2->arguments.size())
         return false;
 
-    if (sort1->args.size() == 0) {
+    if (sort1->arguments.size() == 0) {
         bool isParam1 = false;
         bool isParam2 = false;
 
@@ -273,8 +273,8 @@ bool SymbolStack::equal(sptr_v<Symbol> &params1,
         if (sort1->identifier->toString() != sort2->identifier->toString())
             return false;
 
-        for (unsigned long k = 0; k < sort1->args.size(); k++) {
-            if (!equal(params1, sort1->args[k], params2, sort2->args[k], mapping))
+        for (unsigned long k = 0; k < sort1->arguments.size(); k++) {
+            if (!equal(params1, sort1->arguments[k], params2, sort2->arguments[k], mapping))
                 return false;
         }
 

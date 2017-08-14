@@ -1,0 +1,21 @@
+Rules LU RU RD SP ID AX
+
+Automaton Strat
+States q1 q2 q3 q4 q5 q6
+Initial state q1
+Final states q6
+
+Transitions
+(q1, LU) -> q2
+(q2, RU) -> q2
+(q2, RD) -> q1
+(q2, RD) -> q3
+(q2, RD) -> q4
+(q2, RD) -> q5
+(q3, SP) -> q1
+(q3, SP) -> q4
+(q3, SP) -> q5
+(q4, LU) -> q5
+(q5, RU) -> q5
+(q5, ID) -> q6
+(q5, AX) -> q6

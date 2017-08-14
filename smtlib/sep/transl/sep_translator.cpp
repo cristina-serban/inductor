@@ -326,7 +326,7 @@ sptr_t<sep::DeclareDatatypesCommand> Translator::translate(sptr_t<ast::DeclareDa
 }
 
 sptr_t<sep::DeclareFunCommand> Translator::translate(sptr_t<ast::DeclareFunCommand> cmd) {
-    auto newParams = translateToSmt<ast::Sort, sep::Sort>(cmd->params);
+    auto newParams = translateToSmt<ast::Sort, sep::Sort>(cmd->parameters);
     return make_shared<sep::DeclareFunCommand>(cmd->symbol->value,
                                                newParams,
                                                translate(cmd->sort));
@@ -353,7 +353,7 @@ sptr_t<sep::DefineFunsRecCommand> Translator::translate(sptr_t<ast::DefineFunsRe
 }
 
 sptr_t<sep::DefineSortCommand> Translator::translate(sptr_t<ast::DefineSortCommand> cmd) {
-    sptr_v<ast::Symbol> params = cmd->params;
+    sptr_v<ast::Symbol> params = cmd->parameters;
     vector<string> newParams;
 
     for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
@@ -617,7 +617,7 @@ sptr_t<sep::QualifiedIdentifier> Translator::translate(sptr_t<ast::QualifiedIden
 }
 
 sptr_t<sep::Sort> Translator::translate(sptr_t<ast::Sort> sort) {
-    auto newArgs = translateToSmt<ast::Sort, sep::Sort>(sort->args);
+    auto newArgs = translateToSmt<ast::Sort, sep::Sort>(sort->arguments);
     return make_shared<sep::Sort>(sort->identifier->toString(), newArgs);
 }
 
@@ -637,7 +637,7 @@ sptr_t<sep::FunctionDefinition> Translator::translate(sptr_t<ast::FunctionDefini
 }
 
 sptr_t<sep::FunctionDeclaration> Translator::translate(sptr_t<ast::FunctionDeclaration> decl) {
-    auto newParams = translateToSmt<ast::SortedVariable, sep::SortedVariable>(decl->params);
+    auto newParams = translateToSmt<ast::SortedVariable, sep::SortedVariable>(decl->parameters);
     return make_shared<sep::FunctionDeclaration>(decl->symbol->value,
                                                  newParams, translate(decl->sort));
 }
@@ -694,7 +694,7 @@ sptr_t<sep::SExpression> Translator::translate(sptr_t<ast::SExpression> exp) {
 }
 
 sptr_t<sep::CompSExpression> Translator::translate(sptr_t<ast::CompSExpression> exp) {
-    auto newExps = translateToSmt<ast::SExpression, sep::SExpression>(exp->exprs);
+    auto newExps = translateToSmt<ast::SExpression, sep::SExpression>(exp->expressions);
     return make_shared<sep::CompSExpression>(newExps);
 }
 
@@ -736,7 +736,7 @@ sptr_t<sep::SimpleDatatypeDeclaration> Translator::translate(sptr_t<ast::SimpleD
 
 sptr_t<sep::ParametricDatatypeDeclaration> Translator::translate(
     sptr_t<ast::ParametricDatatypeDeclaration> decl) {
-    sptr_v<ast::Symbol> params = decl->params;
+    sptr_v<ast::Symbol> params = decl->parameters;
     vector<string> newParams;
 
     for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
@@ -801,7 +801,7 @@ sptr_t<sep::SimpleFunDeclaration> Translator::translate(sptr_t<ast::SimpleFunDec
 }
 
 sptr_t<sep::ParametricFunDeclaration> Translator::translate(sptr_t<ast::ParametricFunDeclaration> decl) {
-    sptr_v<ast::Symbol> params = decl->params;
+    sptr_v<ast::Symbol> params = decl->parameters;
     vector<string> newParams;
 
     for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {

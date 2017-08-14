@@ -5,6 +5,8 @@
 #ifndef INDUCTOR_SEP_ABSTRACT_H
 #define INDUCTOR_SEP_ABSTRACT_H
 
+#include "sep_classes.h"
+
 #include "visitor/sep_visitor.h"
 
 #include <memory>
@@ -15,7 +17,7 @@ namespace smtlib {
         /** Node of the SMT-LIB+SEPLOG hierarchy */
         class Node {
         public:
-            Node() { }
+            Node() = default;
 
             /** Accept a visitor */
             virtual void accept(class Visitor0* visitor) = 0;
@@ -25,7 +27,8 @@ namespace smtlib {
         };
 
         /** Root of the SMT-LIB+SEPLOG hierarchy */
-        class Root : public Node { };
+        class Root : public Node {
+        };
     }
 }
 

@@ -5,18 +5,25 @@
 using namespace std;
 using namespace smtlib::sep;
 
-void CompSExpression::accept(Visitor0* visitor){
+CompSExpression::CompSExpression(const vector<SExpressionPtr>& exprs) {
+    this->expressions.insert(this->expressions.end(), exprs.begin(), exprs.end());
+}
+
+void CompSExpression::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
 string CompSExpression::toString() {
     stringstream ss;
     ss << "(";
-    for (auto exprIt = exprs.begin(); exprIt != exprs.end(); exprIt++) {
-        if(exprIt != exprs.begin())
+
+    for (size_t i = 0, sz = expressions.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*exprIt)->toString();
+
+        ss << expressions[i];
     }
-    ss <<")";
+
+    ss << ")";
     return ss.str();
 }

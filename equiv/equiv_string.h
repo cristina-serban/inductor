@@ -13,78 +13,87 @@
 #include <string>
 
 namespace equiv {
+    /* ======================================= Node ======================================= */
+    struct Node;
     struct Set;
+
+    typedef std::shared_ptr<Node> NodePtr;
+    typedef std::shared_ptr<Set> SetPtr;
 
     /** Node for an equivalence set */
     struct Node : public std::enable_shared_from_this<Node> {
         std::string data;
-        sptr_t<Node> next;
-        sptr_t<Set> parent;
+        NodePtr next;
+        SetPtr parent;
 
-        Node(std::string data, sptr_t<Node> next, sptr_t<Set> parent)
-            : data(data), next(next), parent(parent) { }
+        Node(const std::string& data, const NodePtr& next, const SetPtr& parent)
+                : data(data), next(next), parent(parent) {}
     };
 
+    /* ======================================= Set ======================================== */
     /** Equivalence set */
     struct Set : public std::enable_shared_from_this<Set> {
-        sptr_t<Node> head;
-        sptr_t<Node> tail;
-        unsigned long length;
+        NodePtr head;
+        NodePtr tail;
+        unsigned long length{0};
 
-        Set() : length(0) { }
+        Set() = default;
 
         /** Create a first node with the given string */
-        void init (std::string data);
+        void init(const std::string& data);
 
         /** Textual representation of the set */
         std::string toString();
     };
 
+    /* ================================ StringEquivalence ================================= */
     /** Equivalence relation for strings */
     class StringEquivalence {
     private:
-        sptr_um2<std::string, Node> map;
+        std::unordered_map<std::string, NodePtr> map;
 
     public:
         /**
          * Make a set consisting of a single node with the given string
          * \return Head of the new set
          */
-        sptr_t<Node> makeSet(std::string data);
+        NodePtr makeSet(const std::string& data);
 
         /**
          * Find the set in which node x belongs
          * \return Head of the set
          */
-        sptr_t<Node> findSet(sptr_t<Node> x);
+        NodePtr findSet(const NodePtr& x);
 
         /**
          * Union of the sets for nodes x and y
          * \return Head of the new set
          */
-        sptr_t<Node> unionSet(sptr_t<Node> x, sptr_t<Node> y);
+        NodePtr unionSet(const NodePtr& x, const NodePtr& y);
 
         /**
          * Add a new node with the given string
          * \return Whether the addition was successful
          */
-        bool add(std::string data);
+        bool add(const std::string& data);
 
         /** Find the node for string x */
-        sptr_t<Node> find(std::string x);
+        NodePtr find(const std::string& x);
 
         /**
          * Union of the nodes for strings x and y
          * \return Whether the union was successful
          */
-        bool unite(std::string x, std::string y);
+        bool unite(const std::string& x, const std::string& y);
 
         /** Textual representation of the union-find structure */
         std::string toString();
 
         /** Transform the structure into one for index equivalence, based on a given order */
-        sptr_t<IndexEquivalence> toIndexEquivalence(umap<std::string, unsigned long> params);
+        IndexEquivalencePtr toIndexEquivalence(const std::unordered_map<std::string, unsigned long>& params);
     };
+
+    typedef std::shared_ptr<StringEquivalence> StringEquivalencePtr;
 }
 
 #endif //INDUCTOR_EQUIV_DATA_H

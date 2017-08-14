@@ -30,16 +30,16 @@ namespace smtlib {
         class AssertCommand : public Command,
                               public std::enable_shared_from_this<AssertCommand> {
         public:
-            sptr_t<Term> term;
+            TermPtr term;
 
             /**
              * \param term  Asserted term
              */
-            inline AssertCommand(sptr_t<Term> term) : term(term) { }
+            inline explicit AssertCommand(const TermPtr& term) : term(term) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= CheckSatCommand ================================== */
@@ -47,11 +47,11 @@ namespace smtlib {
         class CheckSatCommand : public Command,
                                 public std::enable_shared_from_this<CheckSatCommand> {
         public:
-            inline CheckSatCommand() { }
+            inline CheckSatCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== CheckSatAssumCommand =============================== */
@@ -59,16 +59,16 @@ namespace smtlib {
         class CheckSatAssumCommand : public Command,
                                      public std::enable_shared_from_this<CheckSatAssumCommand> {
         public:
-            sptr_v<PropLiteral> assumptions;
+            std::vector<PropLiteralPtr> assumptions;
 
             /**
              * \param assumptions   List of assumptions
              */
-            CheckSatAssumCommand(sptr_v<PropLiteral> &assumptions);
+            explicit CheckSatAssumCommand(const std::vector<PropLiteralPtr>& assumptions);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== DeclareConstCommand ================================ */
@@ -77,19 +77,18 @@ namespace smtlib {
                                     public std::enable_shared_from_this<DeclareConstCommand> {
         public:
             std::string name;
-            sptr_t<Sort> sort;
+            SortPtr sort;
 
             /**
              * \param name  Name of the constant
              * \param sort  Sort of the constant
              */
-            inline DeclareConstCommand(std::string name,
-                                       sptr_t<Sort> sort)
-                : name(name), sort(sort) { }
+            inline DeclareConstCommand(const std::string& name, const SortPtr& sort)
+                    : name(name), sort(sort) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ============================== DeclareDatatypeCommand ============================== */
@@ -98,19 +97,19 @@ namespace smtlib {
                                        public std::enable_shared_from_this<DeclareDatatypeCommand> {
         public:
             std::string name;
-            sptr_t<DatatypeDeclaration> declaration;
+            DatatypeDeclarationPtr declaration;
 
             /**
              * \param symbol        Datatype name
              * \param declaration   Datatype declaration
              */
-            inline DeclareDatatypeCommand(std::string name,
-                                          sptr_t<DatatypeDeclaration> declaration)
-                : name(name), declaration(declaration) { }
+            inline DeclareDatatypeCommand(const std::string& name,
+                                          const DatatypeDeclarationPtr& declaration)
+                    : name(name), declaration(declaration) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ============================= DeclareDatatypesCommand ============================== */
@@ -118,19 +117,19 @@ namespace smtlib {
         class DeclareDatatypesCommand : public Command,
                                         public std::enable_shared_from_this<DeclareDatatypesCommand> {
         public:
-            sptr_v<SortDeclaration> sorts;
-            sptr_v<DatatypeDeclaration> declarations;
+            std::vector<SortDeclarationPtr> sorts;
+            std::vector<DatatypeDeclarationPtr> declarations;
 
             /**
              * \param sorts         Names and arities of the new datatypes
              * \param declarations  Declarations of the new datatypes
              */
-            DeclareDatatypesCommand(sptr_v<SortDeclaration> &sorts,
-                                    sptr_v<DatatypeDeclaration> &declarations);
+            DeclareDatatypesCommand(const std::vector<SortDeclarationPtr>& sorts,
+                                    const std::vector<DatatypeDeclarationPtr>& declarations);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ DeclareFunCommand ================================= */
@@ -139,21 +138,21 @@ namespace smtlib {
                                   public std::enable_shared_from_this<DeclareFunCommand> {
         public:
             std::string name;
-            sptr_v<Sort> params;
-            sptr_t<Sort> sort;
+            std::vector<SortPtr> parameters;
+            SortPtr sort;
 
             /**
              * \param name      Name of the function
              * \param params    Sorts of the parameters
              * \param sort      Sort of the return value
              */
-            DeclareFunCommand(std::string name,
-                              sptr_v<Sort> &params,
-                              sptr_t<Sort> sort);
+            DeclareFunCommand(const std::string& name,
+                              const std::vector<SortPtr>& parameters,
+                              const SortPtr& sort);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ DeclareSortCommand ================================ */
@@ -168,13 +167,12 @@ namespace smtlib {
              * \param name      Name of the sort
              * \param arity     Arity of the sort
              */
-            inline DeclareSortCommand(std::string name,
-                                      unsigned int arity)
-                : name(name), arity(arity) { }
+            inline DeclareSortCommand(const std::string& name, unsigned int arity)
+                    : name(name), arity(arity) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= DefineFunCommand ================================= */
@@ -182,20 +180,19 @@ namespace smtlib {
         class DefineFunCommand : public Command,
                                  public std::enable_shared_from_this<DefineFunCommand> {
         public:
-            sptr_t<FunctionDefinition> definition;
+            FunctionDefinitionPtr definition;
 
             /**
              * \param definition    Function definition
              */
-            inline DefineFunCommand(sptr_t<FunctionDefinition> definition)
-                : definition(definition) { }
+            inline explicit DefineFunCommand(const FunctionDefinitionPtr& definition)
+                    : definition(definition) {}
 
             /**
              * \param signature    Function signature
              * \param body         Function body
              */
-            inline DefineFunCommand(sptr_t<FunctionDeclaration> signature,
-                                    sptr_t<Term> body);
+            inline DefineFunCommand(const FunctionDeclarationPtr& signature, const TermPtr& body);
 
             /**
              * \param symbol    Name of the function
@@ -203,14 +200,14 @@ namespace smtlib {
              * \param type      Sort of the return value
              * \param body      Function body
              */
-            DefineFunCommand(std::string name,
-                             sptr_v<SortedVariable> &params,
-                             sptr_t<Sort> sort,
-                             sptr_t<Term> body);
+            DefineFunCommand(const std::string& name,
+                             const std::vector<SortedVariablePtr>& params,
+                             const SortPtr& sort,
+                             const TermPtr& body);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ DefineFunRecCommand =============================== */
@@ -218,20 +215,20 @@ namespace smtlib {
         class DefineFunRecCommand : public Command,
                                     public std::enable_shared_from_this<DefineFunRecCommand> {
         public:
-            sptr_t<FunctionDefinition> definition;
+            FunctionDefinitionPtr definition;
 
             /**
              * \param definition    Function definition
              */
-            inline DefineFunRecCommand(sptr_t<FunctionDefinition> definition)
-                    : definition(definition) { }
+            inline explicit DefineFunRecCommand(const FunctionDefinitionPtr& definition)
+                    : definition(definition) {}
 
             /**
              * \param signature    Function signature
              * \param body         Function body
              */
-            DefineFunRecCommand(sptr_t<FunctionDeclaration> signature,
-                                sptr_t<Term> body);
+            DefineFunRecCommand(const FunctionDeclarationPtr& signature,
+                                const TermPtr& body);
 
             /**
              * \param symbol    Name of the function
@@ -239,14 +236,14 @@ namespace smtlib {
              * \param type      Sort of the return value
              * \param body      Function body
              */
-            DefineFunRecCommand(std::string name,
-                                sptr_v<SortedVariable> &params,
-                                sptr_t<Sort> sort,
-                                sptr_t<Term> body);
+            DefineFunRecCommand(const std::string& name,
+                                const std::vector<SortedVariablePtr>& params,
+                                const SortPtr& sort,
+                                const TermPtr& body);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== DefineFunsRecCommand =============================== */
@@ -254,19 +251,19 @@ namespace smtlib {
         class DefineFunsRecCommand : public Command,
                                      public std::enable_shared_from_this<DefineFunsRecCommand> {
         public:
-            sptr_v<FunctionDeclaration> declarations;
-            sptr_v<Term> bodies;
+            std::vector<FunctionDeclarationPtr> declarations;
+            std::vector<TermPtr> bodies;
 
             /**
              * \param declarations    Function declarations
              * \param bodies          Function bodies
              */
-            DefineFunsRecCommand(sptr_v<FunctionDeclaration> &declarations,
-                                 sptr_v<Term> &bodies);
+            DefineFunsRecCommand(const std::vector<FunctionDeclarationPtr>& declarations,
+                                 const std::vector<TermPtr>& bodies);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ DefineSortCommand ================================= */
@@ -275,21 +272,21 @@ namespace smtlib {
                                   public std::enable_shared_from_this<DefineSortCommand> {
         public:
             std::string name;
-            std::vector<std::string> params;
-            sptr_t<Sort> sort;
+            std::vector<std::string> parameters;
+            SortPtr sort;
 
             /**
              * \param symbol    Name of the sort
              * \param params    Sort parameters
              * \param sort      Definition of the new sort
              */
-            DefineSortCommand(std::string name,
-                              std::vector<std::string> &params,
-                              sptr_t<Sort> sort);
+            DefineSortCommand(const std::string& name,
+                              const std::vector<std::string>& parameters,
+                              const SortPtr& sort);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =================================== EchoCommand ==================================== */
@@ -302,15 +299,12 @@ namespace smtlib {
             /**
              * \param   Message to print
              */
-            inline EchoCommand(std::string message) : message(message) { }
+            inline explicit EchoCommand(const std::string& message)
+                    : message(message) {}
 
-            inline std::string &getMessage() { return message; }
+            void accept(Visitor0* visitor) override;
 
-            inline void setMessage(std::string message) { this->message = message; }
-
-            virtual void accept(Visitor0* visitor);
-
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =================================== ExitCommand ==================================== */
@@ -318,11 +312,11 @@ namespace smtlib {
         class ExitCommand : public Command,
                             public std::enable_shared_from_this<ExitCommand> {
         public:
-            inline ExitCommand() { }
+            inline ExitCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ GetAssertsCommand ================================= */
@@ -330,11 +324,11 @@ namespace smtlib {
         class GetAssertsCommand : public Command,
                                   public std::enable_shared_from_this<GetAssertsCommand> {
         public:
-            inline GetAssertsCommand() { }
+            inline GetAssertsCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ GetAssignsCommand ================================= */
@@ -342,11 +336,11 @@ namespace smtlib {
         class GetAssignsCommand : public Command,
                                   public std::enable_shared_from_this<GetAssignsCommand> {
         public:
-            inline GetAssignsCommand() { }
+            inline GetAssignsCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================== GetInfoCommand ================================== */
@@ -359,11 +353,12 @@ namespace smtlib {
             /**
              * \param flag  Flag name
              */
-            inline GetInfoCommand(std::string flag) : flag(flag) { }
+            inline explicit GetInfoCommand(const std::string& flag)
+                    : flag(flag) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= GetModelCommand ================================== */
@@ -371,11 +366,11 @@ namespace smtlib {
         class GetModelCommand : public Command,
                                 public std::enable_shared_from_this<GetModelCommand> {
         public:
-            inline GetModelCommand() { }
+            inline GetModelCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= GetOptionCommand ================================= */
@@ -388,11 +383,12 @@ namespace smtlib {
             /**
              * \param option    Option name
              */
-            inline GetOptionCommand(std::string option) : option(option) { }
+            inline explicit GetOptionCommand(const std::string& option)
+                    : option(option) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= GetProofCommand ================================== */
@@ -400,11 +396,11 @@ namespace smtlib {
         class GetProofCommand : public Command,
                                 public std::enable_shared_from_this<GetProofCommand> {
         public:
-            inline GetProofCommand() { }
+            inline GetProofCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ============================== GetUnsatAssumsCommand =============================== */
@@ -412,11 +408,11 @@ namespace smtlib {
         class GetUnsatAssumsCommand : public Command,
                                       public std::enable_shared_from_this<GetUnsatAssumsCommand> {
         public:
-            inline GetUnsatAssumsCommand() { }
+            inline GetUnsatAssumsCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== GetUnsatCoreCommand ================================ */
@@ -424,11 +420,11 @@ namespace smtlib {
         class GetUnsatCoreCommand : public Command,
                                     public std::enable_shared_from_this<GetUnsatCoreCommand> {
         public:
-            inline GetUnsatCoreCommand() { }
+            inline GetUnsatCoreCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= GetValueCommand ================================== */
@@ -436,16 +432,16 @@ namespace smtlib {
         class GetValueCommand : public Command,
                                 public std::enable_shared_from_this<GetValueCommand> {
         public:
-            sptr_v<Term> terms;
+            std::vector<TermPtr> terms;
 
             /**
              * \param terms Terms to evaluate
              */
-            GetValueCommand(sptr_v<Term> &terms);
+            explicit GetValueCommand(const std::vector<TermPtr>& terms);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ==================================== PopCommand ==================================== */
@@ -458,11 +454,12 @@ namespace smtlib {
             /**
              * \param numeral   Number of levels to pop
              */
-            inline PopCommand(long levelCount) : levelCount(levelCount) { }
+            inline explicit PopCommand(long levelCount)
+                    : levelCount(levelCount) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =================================== PushCommand ==================================== */
@@ -475,11 +472,12 @@ namespace smtlib {
             /**
              * \param numeral   Number of levels to push
              */
-            inline PushCommand(long levelCount) : levelCount(levelCount) { }
+            inline explicit PushCommand(long levelCount)
+                    : levelCount(levelCount) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =================================== ResetCommand =================================== */
@@ -487,11 +485,11 @@ namespace smtlib {
         class ResetCommand : public Command,
                              public std::enable_shared_from_this<ResetCommand> {
         public:
-            inline ResetCommand() { }
+            inline ResetCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== ResetAssertsCommand ================================ */
@@ -499,11 +497,11 @@ namespace smtlib {
         class ResetAssertsCommand : public Command,
                                     public std::enable_shared_from_this<ResetAssertsCommand> {
         public:
-            inline ResetAssertsCommand() { }
+            inline ResetAssertsCommand() = default;
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================== SetInfoCommand ================================== */
@@ -511,16 +509,17 @@ namespace smtlib {
         class SetInfoCommand : public Command,
                                public std::enable_shared_from_this<SetInfoCommand> {
         public:
-            sptr_t<Attribute> info;
+            AttributePtr info;
 
             /**
              * \param info    Info to set
              */
-            inline SetInfoCommand(sptr_t<Attribute> info) : info(info) { }
+            inline explicit SetInfoCommand(const AttributePtr& info)
+                    : info(info) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= SetLogicCommand ================================== */
@@ -533,11 +532,12 @@ namespace smtlib {
             /**
              * \param name  Name of the logic to set
              */
-            inline SetLogicCommand(std::string logic) : logic(logic) { }
+            inline explicit SetLogicCommand(const std::string& logic)
+                    : logic(logic) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================= SetOptionCommand ================================= */
@@ -545,16 +545,17 @@ namespace smtlib {
         class SetOptionCommand : public Command,
                                  public std::enable_shared_from_this<SetOptionCommand> {
         public:
-            sptr_t<Attribute> option;
+            AttributePtr option;
 
             /**
              * \param option    Option to set
              */
-            inline SetOptionCommand(sptr_t<Attribute> option) : option(option) { }
+            inline explicit SetOptionCommand(const AttributePtr& option)
+                    : option(option) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

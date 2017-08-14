@@ -7,7 +7,6 @@
 #define INDUCTOR_SMT_PARSER_H
 
 #include "ast/ast_abstract.h"
-#include "util/global_typedef.h"
 
 #include <memory>
 #include <string>
@@ -16,23 +15,23 @@ namespace smtlib {
     /** SMT-LIB parser */
     class Parser {
     private:
-        sptr_t<ast::Node> ast;
-        sptr_t<std::string> filename;
+        ast::NodePtr ast;
+        std::shared_ptr<std::string> filename;
     public:
-        sptr_t<ast::Node> parse(std::string filename);
+        ast::NodePtr parse(std::string filename);
 
         /** Get input file */
-        sptr_t<std::string> getFilename();
+        std::shared_ptr<std::string> getFilename();
 
         /** Get the resulting AST */
-        sptr_t<ast::Node> getAst();
+        ast::NodePtr getAst();
 
         /** Set the resulting AST */
-        void setAst(sptr_t<ast::Node> ast);
+        void setAst(ast::NodePtr ast);
 
         /** Report a parsing error */
         void reportError(unsigned int lineLeft, unsigned int colLeft,
-                         unsigned int lineRight, unsigned int colRight, const char *msg);
+                         unsigned int lineRight, unsigned int colRight, const char* msg);
     };
 }
 

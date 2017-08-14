@@ -6,8 +6,9 @@
 #ifndef INDUCTOR_EQUIV_INDEX_H
 #define INDUCTOR_EQUIV_INDEX_H
 
-#include <vector>
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace equiv {
     /** Equivalence relation for indices (i.e. sequence of 0, 1, 2, etc.) */
@@ -35,6 +36,8 @@ namespace equiv {
         /** Textual representation of the union-find structure */
         std::string toString();
     };
+
+    typedef std::shared_ptr<IndexEquivalence> IndexEquivalencePtr;
 }
 
 #endif //INDUCTOR_EQUIV_INDEX_H

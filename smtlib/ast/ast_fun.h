@@ -8,7 +8,6 @@
 
 #include "ast_abstract.h"
 #include "ast_basic.h"
-#include "ast_classes.h"
 #include "ast_interfaces.h"
 #include "ast_sort.h"
 #include "ast_variable.h"
@@ -25,22 +24,22 @@ namespace smtlib {
         class FunctionDeclaration : public Node,
                                     public std::enable_shared_from_this<FunctionDeclaration> {
         public:
-            sptr_t<Symbol> symbol;
-            sptr_v<SortedVariable> params;
-            sptr_t<Sort> sort;
+            SymbolPtr symbol;
+            std::vector<SortedVariablePtr> parameters;
+            SortPtr sort;
 
             /**
-             * \param symbol    Name of the function
-             * \param params    List of parameters
-             * \param sort      Sort of the return value
+             * \param symbol        Name of the function
+             * \param parameters    List of parameters
+             * \param sort          Sort of the return value
              */
-            FunctionDeclaration(sptr_t<Symbol> symbol,
-                                const sptr_v<SortedVariable>& params,
-                                sptr_t<Sort> sort);
+            FunctionDeclaration(const SymbolPtr& symbol,
+                                const std::vector<SortedVariablePtr>& parameters,
+                                const SortPtr& sort);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================ FunctionDefinition ================================ */
@@ -48,31 +47,30 @@ namespace smtlib {
         class FunctionDefinition : public Node,
                                    public std::enable_shared_from_this<FunctionDefinition> {
         public:
-            sptr_t<FunctionDeclaration> signature;
-            sptr_t<Term> body;
+            FunctionDeclarationPtr signature;
+            TermPtr body;
 
             /**
              * \param signature    Function signature
              * \param body         Function body
              */
-            FunctionDefinition(sptr_t<FunctionDeclaration> signature,
-                               sptr_t<Term> body)
+            FunctionDefinition(const FunctionDeclarationPtr& signature, const TermPtr& body)
                     : signature(signature), body(body) { }
 
             /**
-             * \param symbol    Name of the function
-             * \param params    List of parameters
-             * \param type      Sort of the return value
-             * \param body      Function body
+             * \param symbol        Name of the function
+             * \param parameters    List of parameters
+             * \param type          Sort of the return value
+             * \param body          Function body
              */
-            FunctionDefinition(sptr_t<Symbol> symbol,
-                               const sptr_v<SortedVariable>& params,
-                               sptr_t<Sort> sort,
-                               sptr_t<Term> body);
+            FunctionDefinition(const SymbolPtr& symbol,
+                               const std::vector<SortedVariablePtr>& parameters,
+                               const SortPtr& sort,
+                               const TermPtr& body);
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

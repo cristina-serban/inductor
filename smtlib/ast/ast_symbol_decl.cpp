@@ -7,9 +7,9 @@ using namespace smtlib::ast;
 
 /* =============================== SortSymbolDeclaration ============================== */
 
-SortSymbolDeclaration::SortSymbolDeclaration(sptr_t<SimpleIdentifier> identifier,
-                                             sptr_t<NumeralLiteral> arity,
-                                             sptr_v<Attribute> &attributes)
+SortSymbolDeclaration::SortSymbolDeclaration(const SimpleIdentifierPtr& identifier,
+                                             const NumeralLiteralPtr& arity,
+                                             const vector<AttributePtr>& attributes)
         : identifier(identifier), arity(arity) {
     this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
 }
@@ -22,19 +22,19 @@ string SortSymbolDeclaration::toString() {
     stringstream ss;
     ss << "(" << identifier->toString() << " " << arity->toString();
 
-    for (auto attrIt = attributes.begin(); attrIt != attributes.end(); attrIt++) {
-        ss << " " << (*attrIt)->toString();
+    for (const auto& attr : attributes) {
+        ss << " " << attr->toString();
     }
 
     ss << ")";
-
     return ss.str();
 }
 
 /* ============================= SpecConstFunDeclaration ============================== */
-SpecConstFunDeclaration::SpecConstFunDeclaration(sptr_t<SpecConstant> constant,
-                                                 sptr_t<Sort> sort,
-                                                 sptr_v<Attribute> &attributes)
+
+SpecConstFunDeclaration::SpecConstFunDeclaration(const SpecConstantPtr& constant,
+                                                 const SortPtr& sort,
+                                                 const vector<AttributePtr>& attributes)
         : constant(constant), sort(sort) {
     this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
 }
@@ -47,20 +47,19 @@ string SpecConstFunDeclaration::toString() {
     stringstream ss;
     ss << "(" << constant->toString() << " " << sort->toString();
 
-    for (auto attrIt = attributes.begin(); attrIt != attributes.end(); attrIt++) {
-        ss << " " << (*attrIt)->toString();
+    for (const auto& attr : attributes) {
+        ss << " " << attr->toString();
     }
 
     ss << ")";
-
     return ss.str();
 }
 
 /* ========================== MetaSpecConstFunDeclaration =========================== */
 
-MetaSpecConstFunDeclaration::MetaSpecConstFunDeclaration(sptr_t<MetaSpecConstant> constant,
-                                                         sptr_t<Sort> sort,
-                                                         sptr_v<Attribute> &attributes)
+MetaSpecConstFunDeclaration::MetaSpecConstFunDeclaration(const MetaSpecConstantPtr constant,
+                                                         const SortPtr& sort,
+                                                         const vector<AttributePtr>& attributes)
         : constant(constant), sort(sort) {
     this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
 }
@@ -73,26 +72,25 @@ string MetaSpecConstFunDeclaration::toString() {
     stringstream ss;
     ss << "(" << constant->toString() << " " << sort->toString();
 
-    for (auto attrIt = attributes.begin(); attrIt != attributes.end(); attrIt++) {
-        ss << " " << (*attrIt)->toString();
+    for (const auto& attr : attributes) {
+        ss << " " << attr->toString();
     }
 
     ss << ")";
-
     return ss.str();
 }
 
 /* ============================== SimpleFunDeclaration =============================== */
 
-SimpleFunDeclaration::SimpleFunDeclaration(sptr_t<SimpleIdentifier> identifier,
-                                           sptr_v<Sort> &signature)
+SimpleFunDeclaration::SimpleFunDeclaration(const SimpleIdentifierPtr& identifier,
+                                           const vector<SortPtr>& signature)
         : identifier(identifier) {
     this->signature.insert(this->signature.end(), signature.begin(), signature.end());
 }
 
-SimpleFunDeclaration::SimpleFunDeclaration(sptr_t<SimpleIdentifier> identifier,
-                                           sptr_v<Sort> &signature,
-                                           sptr_v<Attribute> &attributes)
+SimpleFunDeclaration::SimpleFunDeclaration(const SimpleIdentifierPtr& identifier,
+                                           const vector<SortPtr>& signature,
+                                           const vector<AttributePtr>& attributes)
         : identifier(identifier) {
     this->signature.insert(this->signature.end(), signature.begin(), signature.end());
     this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
@@ -107,35 +105,34 @@ string SimpleFunDeclaration::toString() {
     stringstream ss;
     ss << "(" << identifier->toString();
 
-    for (auto sigIt = signature.begin(); sigIt != signature.end(); sigIt++) {
-        ss << " " << (*sigIt)->toString();
+    for (const auto& sig : signature) {
+        ss << " " << sig->toString();
     }
 
-    for (auto attrIt = attributes.begin(); attrIt != attributes.end(); attrIt++) {
-        ss << " " << (*attrIt)->toString();
+    for (const auto& attr : attributes) {
+        ss << " " << attr->toString();
     }
 
     ss << ")";
-
     return ss.str();
 }
 
 /* =============================== ParametricFunDeclaration ================================ */
 
-ParametricFunDeclaration::ParametricFunDeclaration(sptr_v<Symbol> &params,
-                                                   sptr_t<SimpleIdentifier> identifier,
-                                                   sptr_v<Sort> &signature)
+ParametricFunDeclaration::ParametricFunDeclaration(const vector<SymbolPtr>& parameters,
+                                                   const SimpleIdentifierPtr& identifier,
+                                                   const vector<SortPtr>& signature)
         : identifier(identifier) {
-    this->params.insert(this->params.end(), params.begin(), params.end());
+    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
     this->signature.insert(this->signature.end(), signature.begin(), signature.end());
 }
 
-ParametricFunDeclaration::ParametricFunDeclaration(sptr_v<Symbol> &params,
-                                                   sptr_t<SimpleIdentifier> identifier,
-                                                   sptr_v<Sort> &signature,
-                                                   sptr_v<Attribute> &attributes)
+ParametricFunDeclaration::ParametricFunDeclaration(const vector<SymbolPtr>& parameters,
+                                                   const SimpleIdentifierPtr& identifier,
+                                                   const vector<SortPtr>& signature,
+                                                   const vector<AttributePtr>& attributes)
         : identifier(identifier) {
-    this->params.insert(this->params.end(), params.begin(), params.end());
+    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
     this->signature.insert(this->signature.end(), signature.begin(), signature.end());
     this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
 }
@@ -147,22 +144,24 @@ void ParametricFunDeclaration::accept(Visitor0 *visitor) {
 string ParametricFunDeclaration::toString() {
     stringstream ss;
     ss << "(par (";
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        if (paramIt != params.begin())
+
+    for (size_t i = 0, sz = parameters.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*paramIt)->toString();
+
+        ss << parameters[i]->toString();
     }
 
     ss << ") (" << identifier->toString();
-    for (auto sigIt = signature.begin(); sigIt != signature.end(); sigIt++) {
-        ss << " " << (*sigIt)->toString();
+
+    for (const auto& sig : signature) {
+        ss << " " << sig->toString();
     }
 
-    for (auto attrIt = attributes.begin(); attrIt != attributes.end(); attrIt++) {
-        ss << " " << (*attrIt)->toString();
+    for (const auto& attr : attributes) {
+        ss << " " << attr->toString();
     }
 
     ss << "))";
-
     return ss.str();
 }

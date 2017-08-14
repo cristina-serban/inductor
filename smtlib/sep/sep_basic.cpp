@@ -9,7 +9,7 @@ using namespace smtlib::sep;
 
 /* ====================================== Symbol ====================================== */
 
-void Symbol::accept(Visitor0 *visitor) {
+void Symbol::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -19,7 +19,7 @@ string Symbol::toString() {
 
 /* ====================================== Keyword ===================================== */
 
-void Keyword::accept(Visitor0 *visitor) {
+void Keyword::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -29,7 +29,7 @@ string Keyword::toString() {
 
 /* ================================= MetaSpecConstant ================================= */
 
-void MetaSpecConstant::accept(Visitor0 *visitor) {
+void MetaSpecConstant::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -41,20 +41,17 @@ string MetaSpecConstant::toString() {
 
 /* =================================== BooleanValue =================================== */
 
-void BooleanValue::accept(Visitor0 *visitor) {
+void BooleanValue::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
 string BooleanValue::toString() {
-    if (value)
-        return CONST_TRUE;
-    else
-        return CONST_FALSE;
+    return value ? CONST_TRUE : CONST_FALSE;
 }
 
 /* =================================== PropLiteral ==================================== */
 
-void PropLiteral::accept(Visitor0 *visitor) {
+void PropLiteral::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 

@@ -441,20 +441,20 @@ bool TermSorter::getParamMapping(vector<string> &params,
             return true;
         }
     } else {
-        if (sort1->args.size() != sort2->args.size()) {
+        if (sort1->arguments.size() != sort2->arguments.size()) {
             return false;
-        } else if (sort1->args.empty()) {
+        } else if (sort1->arguments.empty()) {
             return sort1Name == sort2->name;
         } else {
             string sort2Name = sort2->name;
 
-            if (sort1Name != sort2Name || sort1->args.size() != sort2->args.size()) {
+            if (sort1Name != sort2Name || sort1->arguments.size() != sort2->arguments.size()) {
                 return false;
             }
 
             bool fits = true;
-            for (unsigned long i = 0; i < sort1->args.size(); i++) {
-                fits = fits && getParamMapping(params, mapping, sort1->args[i], sort2->args[i]);
+            for (unsigned long i = 0; i < sort1->arguments.size(); i++) {
+                fits = fits && getParamMapping(params, mapping, sort1->arguments[i], sort2->arguments[i]);
             }
 
             return fits;

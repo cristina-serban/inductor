@@ -58,7 +58,5 @@ void StringLiteral::accept(Visitor0* visitor){
 }
 
 string StringLiteral::toString() {
-    stringstream ss;
-    ss << value;
-    return ss.str();
+    return value;
 }

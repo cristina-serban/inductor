@@ -13,9 +13,12 @@
 #include <utility>
 #include <vector>
 
-typedef std::map<std::string, std::vector<std::pair<proof::Rule, std::string>>> StratTransitionMap;
-
 namespace strat {
+    typedef std::vector<std::pair<proof::Rule, std::string>> TransitionList;
+    typedef std::map<std::string, TransitionList> TransitionMap;
+    typedef std::vector<std::string> StateList;
+    typedef std::unordered_map<proof::Rule, StateList, std::hash<int>> RuleTransitionMap;
+
     /** A proof strategy */
     class Strategy {
     public:
@@ -29,15 +32,19 @@ namespace strat {
         std::vector<std::string> final;
 
         /** Transitions */
-        StratTransitionMap transitions;
+        TransitionMap transitions;
 
         inline Strategy() { }
 
         inline Strategy(std::vector<std::string> states,
                         std::string init,
                         std::vector<std::string> final,
-                        StratTransitionMap transitions) :
+                        TransitionMap transitions) :
             states(states), init(init), final(final), transitions(transitions) { }
+
+        bool isFinal(const std::string& state);
+
+        void next(const StateList& states, RuleTransitionMap& nextStatesMap);
     };
 }
 

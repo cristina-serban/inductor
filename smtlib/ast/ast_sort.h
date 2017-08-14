@@ -6,8 +6,8 @@
 #ifndef INDUCTOR_AST_SORT_H
 #define INDUCTOR_AST_SORT_H
 
+#include "ast_abstract.h"
 #include "ast_basic.h"
-#include "ast_classes.h"
 #include "ast_identifier.h"
 
 #include <memory>
@@ -15,33 +15,33 @@
 
 namespace smtlib {
     namespace ast {
-        class SimpleIdentifier;
         /** An SMT-LIB sort. */
         class Sort : public Node,
                      public std::enable_shared_from_this<Sort> {
         public:
-            sptr_t<SimpleIdentifier> identifier;
-            sptr_v<Sort> args;
+            SimpleIdentifierPtr identifier;
+            std::vector<SortPtr> arguments;
 
             /**
              * Constructor for a simple sort
              * \param identifier    Sort name
              */
-            inline Sort(sptr_t<SimpleIdentifier> identifier) : identifier(identifier) { }
+            inline explicit Sort(const SimpleIdentifierPtr& identifier)
+                    : identifier(identifier) {}
 
             /**
              * Constructor for a sort with arguments
              * \param identifier    Sort name
-             * \param args          Sort arguments
+             * \param arguments     Sort arguments
              */
-            Sort(sptr_t<SimpleIdentifier> identifier, sptr_v<Sort>& args);
+            Sort(const SimpleIdentifierPtr& identifier, const std::vector<SortPtr>& arguments);
 
             /** Checks whether the sort has arguments */
             bool hasArgs();
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

@@ -6,6 +6,7 @@
 #ifndef INDUCTOR_SEP_IDENTIFIER_H
 #define INDUCTOR_SEP_IDENTIFIER_H
 
+#include "sep_abstract.h"
 #include "sep_basic.h"
 #include "sep_interfaces.h"
 #include "sep_sort.h"
@@ -23,26 +24,26 @@ namespace smtlib {
                                  public std::enable_shared_from_this<SimpleIdentifier> {
         public:
             std::string name;
-            sptr_v<Index> indices;
+            std::vector<IndexPtr> indices;
 
             /**
              * Constuctor for unindexed identifier.
              * \param symbol    Identifier symbol
              */
-            inline SimpleIdentifier(std::string name) : name(name) { }
+            inline explicit SimpleIdentifier(const std::string& name) : name(name) {}
 
             /**
              * Constuctor for indexed identifier.
              * \param symbol    Identifier symbol
              * \param indices   Identifier indices
              */
-            SimpleIdentifier(std::string name, sptr_v<Index> &indices);
+            SimpleIdentifier(const std::string& name, const std::vector<IndexPtr>& indices);
 
             inline bool isIndexed() { return !indices.empty(); }
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== QualifiedIdentifier ================================ */
@@ -50,19 +51,19 @@ namespace smtlib {
         class QualifiedIdentifier : public Identifier,
                                     public std::enable_shared_from_this<QualifiedIdentifier> {
         public:
-            sptr_t<SimpleIdentifier> identifier;
-            sptr_t<Sort> sort;
+            SimpleIdentifierPtr identifier;
+            SortPtr sort;
 
             /**
              * \param identifier    SimpleIdentifier
              * \param sort          Result sort
              */
-            inline QualifiedIdentifier(sptr_t<SimpleIdentifier> identifier, sptr_t<Sort> sort)
-                    : identifier(identifier), sort(sort) { }
+            inline QualifiedIdentifier(const SimpleIdentifierPtr& identifier, const SortPtr& sort)
+                    : identifier(identifier), sort(sort) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

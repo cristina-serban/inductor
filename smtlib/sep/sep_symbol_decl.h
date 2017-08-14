@@ -29,17 +29,17 @@ namespace smtlib {
                                       public AttributeValue,
                                       public std::enable_shared_from_this<SortSymbolDeclaration> {
         public:
-            sptr_t<SimpleIdentifier> identifier;
+            SimpleIdentifierPtr identifier;
             long arity;
-            sptr_v<Attribute> attributes;
+            std::vector<AttributePtr> attributes;
 
             /**
              * Constructs declaration without attributes.
              * \param identifier    Sort symbol identiier
              * \param arity         Sort arity
              */
-            inline SortSymbolDeclaration(sptr_t<SimpleIdentifier> identifier, long arity)
-                : identifier(identifier), arity(arity) { }
+            inline SortSymbolDeclaration(const SimpleIdentifierPtr& identifier, long arity)
+                    : identifier(identifier), arity(arity) {}
 
             /**
              * Constructs declaration with attributes.
@@ -47,13 +47,13 @@ namespace smtlib {
              * \param arity         Sort arity
              * \param attributes    Sort symbol declaration attributes
              */
-            SortSymbolDeclaration(sptr_t<SimpleIdentifier> identifier,
+            SortSymbolDeclaration(const SimpleIdentifierPtr& identifier,
                                   long arity,
-                                  sptr_v<Attribute> &attributes);
+                                  const std::vector<AttributePtr>& attributes);
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== FunSymbolDeclaration =============================== */
@@ -73,18 +73,18 @@ namespace smtlib {
         class SpecConstFunDeclaration : public FunSymbolDeclaration,
                                         public std::enable_shared_from_this<SpecConstFunDeclaration> {
         public:
-            sptr_t<SpecConstant> constant;
-            sptr_t<Sort> sort;
-            sptr_v<Attribute> attributes;
+            SpecConstantPtr constant;
+            SortPtr sort;
+            std::vector<AttributePtr> attributes;
 
             /**
             * Constructs declaration without attributes.
             * \param constant      Specification constant
             * \param sort          Function sort
             */
-            inline SpecConstFunDeclaration(sptr_t<SpecConstant> constant,
-                                           sptr_t<Sort> sort)
-                : constant(constant), sort(sort) { }
+            inline SpecConstFunDeclaration(const SpecConstantPtr& constant,
+                                           const SortPtr& sort)
+                    : constant(constant), sort(sort) {}
 
             /**
              * Constructs declaration with attributes.
@@ -92,13 +92,13 @@ namespace smtlib {
              * \param sort          Function sort
              * \param attributes    Function symbol declaration attributes
              */
-            SpecConstFunDeclaration(sptr_t<SpecConstant> constant,
-                                    sptr_t<Sort> sort,
-                                    sptr_v<Attribute> &attributes);
+            SpecConstFunDeclaration(const SpecConstantPtr& constant,
+                                    const SortPtr& sort,
+                                    const std::vector<AttributePtr>& attributes);
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ========================== MetaSpecConstFunDeclaration =========================== */
@@ -109,18 +109,18 @@ namespace smtlib {
         class MetaSpecConstFunDeclaration : public FunSymbolDeclaration,
                                             public std::enable_shared_from_this<MetaSpecConstFunDeclaration> {
         public:
-            sptr_t<MetaSpecConstant> constant;
-            sptr_t<Sort> sort;
-            sptr_v<Attribute> attributes;
+            MetaSpecConstantPtr constant;
+            SortPtr sort;
+            std::vector<AttributePtr> attributes;
 
             /**
             * Constructs declaration without attributes.
             * \param constant      Meta specification constant
             * \param sort          Function sort
             */
-            inline MetaSpecConstFunDeclaration(sptr_t<MetaSpecConstant> constant,
-                                               sptr_t<Sort> sort)
-                : constant(constant), sort(sort) { }
+            inline MetaSpecConstFunDeclaration(const MetaSpecConstantPtr& constant,
+                                               const SortPtr& sort)
+                    : constant(constant), sort(sort) {}
 
             /**
              * Constructs declaration with attributes.
@@ -128,25 +128,13 @@ namespace smtlib {
              * \param sort          Function sort
              * \param attributes    Function symbol declaration attributes
              */
-            MetaSpecConstFunDeclaration(sptr_t<MetaSpecConstant> constant,
-                                               sptr_t<Sort> sort,
-                                               sptr_v<Attribute> &attributes);
+            MetaSpecConstFunDeclaration(const MetaSpecConstantPtr& constant,
+                                        const SortPtr& sort,
+                                        const std::vector<AttributePtr>& attributes);
 
-            inline sptr_t<MetaSpecConstant> getConstant() { return constant; }
+            void accept(Visitor0* visitor) override;
 
-            inline void setConstant(sptr_t<MetaSpecConstant> constant) {
-                this->constant = constant;
-            }
-
-            inline void setSort(sptr_t<Sort> sort) { this->sort = sort; }
-
-            inline sptr_v<Attribute> &getAttributes() {
-                return attributes;
-            }
-
-            virtual void accept(Visitor0 *visitor);
-
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ============================== SimpleFunDeclaration =============================== */
@@ -157,12 +145,12 @@ namespace smtlib {
         class SimpleFunDeclaration : public FunSymbolDeclaration,
                                      public std::enable_shared_from_this<SimpleFunDeclaration> {
         public:
-            sptr_t<SimpleIdentifier> identifier;
-            sptr_v<Sort> signature;
-            sptr_v<Attribute> attributes;
+            SimpleIdentifierPtr identifier;
+            std::vector<SortPtr> signature;
+            std::vector<AttributePtr> attributes;
 
         protected:
-            SimpleFunDeclaration() { }
+            SimpleFunDeclaration() = default;
 
         public:
             /**
@@ -170,8 +158,8 @@ namespace smtlib {
              * \param identifier    Function identifier
              * \param signature     Function signature
              */
-            SimpleFunDeclaration(sptr_t<SimpleIdentifier> identifier,
-                                 sptr_v<Sort> &signature);
+            SimpleFunDeclaration(const SimpleIdentifierPtr& identifier,
+                                 const std::vector<SortPtr>& signature);
 
             /**
              * Constructs declaration with attributes.
@@ -179,13 +167,13 @@ namespace smtlib {
              * \param signature     Function signature
              * \param attributes    Function symbol declaration attributes
              */
-            SimpleFunDeclaration(sptr_t<SimpleIdentifier> identifier,
-                                 sptr_v<Sort> &signature,
-                                 sptr_v<Attribute> &attributes);
+            SimpleFunDeclaration(const SimpleIdentifierPtr& identifier,
+                                 const std::vector<SortPtr>& signature,
+                                 const std::vector<AttributePtr>& attributes);
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* =============================== ParametricFunDeclaration ================================ */
@@ -196,36 +184,36 @@ namespace smtlib {
         class ParametricFunDeclaration : public FunSymbolDeclaration,
                                          public std::enable_shared_from_this<ParametricFunDeclaration> {
         public:
-            std::vector<std::string> params;
-            sptr_t<SimpleIdentifier> identifier;
-            sptr_v<Sort> signature;
-            sptr_v<Attribute> attributes;
+            std::vector<std::string> parameters;
+            SimpleIdentifierPtr identifier;
+            std::vector<SortPtr> signature;
+            std::vector<AttributePtr> attributes;
 
             /**
              * Constructs declaration without attributes.
-             * \param params        Function parameters
+             * \param parameters    Function parameters
              * \param identifier    Function identifier
              * \param signature     Function signature
              */
-            ParametricFunDeclaration(std::vector<std::string> &params,
-                                     sptr_t<SimpleIdentifier> identifier,
-                                     sptr_v<Sort> &signature);
+            ParametricFunDeclaration(const std::vector<std::string>& parameters,
+                                     const SimpleIdentifierPtr& identifier,
+                                     const std::vector<SortPtr>& signature);
 
             /**
              * Constructs declaration with attributes.
-             * \param params        Function parameters
+             * \param parameters    Function parameters
              * \param identifier    Function identifier
              * \param signature     Function signature
              * \param attributes    Function symbol declaration attributes
              */
-            ParametricFunDeclaration(std::vector<std::string> &params,
-                                     sptr_t<SimpleIdentifier> identifier,
-                                     sptr_v<Sort> &signature,
-                                     sptr_v<Attribute> &attributes);
+            ParametricFunDeclaration(const std::vector<std::string>& parameters,
+                                     const SimpleIdentifierPtr& identifier,
+                                     const std::vector<SortPtr>& signature,
+                                     const std::vector<AttributePtr>& attributes);
 
-            virtual void accept(Visitor0 *visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

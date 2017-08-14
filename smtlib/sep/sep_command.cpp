@@ -7,7 +7,7 @@ using namespace smtlib::sep;
 
 /* ================================== AssertCommand =================================== */
 
-void AssertCommand::accept(Visitor0* visitor){
+void AssertCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -19,7 +19,7 @@ string AssertCommand::toString() {
 
 /* ================================= CheckSatCommand ================================== */
 
-void CheckSatCommand::accept(Visitor0* visitor){
+void CheckSatCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -31,11 +31,11 @@ string CheckSatCommand::toString() {
 
 /* =============================== CheckSatAssumCommand =============================== */
 
-CheckSatAssumCommand::CheckSatAssumCommand(sptr_v<PropLiteral> &assumptions) {
+CheckSatAssumCommand::CheckSatAssumCommand(const vector<PropLiteralPtr>& assumptions) {
     this->assumptions.insert(this->assumptions.end(), assumptions.begin(), assumptions.end());
 }
 
-void CheckSatAssumCommand::accept(Visitor0* visitor){
+void CheckSatAssumCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -43,20 +43,20 @@ string CheckSatAssumCommand::toString() {
     stringstream ss;
     ss << "(" << KW_CHK_SAT_ASSUM << " (";
 
-    for (auto assumIt = assumptions.begin(); assumIt != assumptions.end(); assumIt++) {
-        if (assumIt != assumptions.begin())
+    for (size_t i = 0, sz = assumptions.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*assumIt)->toString();
+
+        ss << assumptions[i]->toString();
     }
 
     ss << "))";
-
     return ss.str();
 }
 
 /* =============================== DeclareConstCommand ================================ */
 
-void DeclareConstCommand::accept(Visitor0* visitor){
+void DeclareConstCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -79,8 +79,9 @@ string DeclareDatatypeCommand::toString() {
 }
 
 /* ============================= DeclareDatatypesCommand ============================== */
-DeclareDatatypesCommand::DeclareDatatypesCommand(sptr_v<SortDeclaration> &sorts,
-                                                 sptr_v<DatatypeDeclaration> &declarations) {
+
+DeclareDatatypesCommand::DeclareDatatypesCommand(const vector<SortDeclarationPtr>& sorts,
+                                                 const vector<DatatypeDeclarationPtr>& declarations) {
     this->sorts.insert(this->sorts.begin(), sorts.begin(), sorts.end());
     this->declarations.insert(this->declarations.begin(), declarations.begin(), declarations.end());
 }
@@ -93,41 +94,36 @@ string DeclareDatatypesCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DECL_DATATYPES << " (";
 
-    bool first = true;
-    for (auto sortIt = sorts.begin(); sortIt != sorts.end(); sortIt++) {
-        if (first)
-            first = false;
-        else
+    for (size_t i = 0, sz = sorts.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*sortIt)->toString();
+
+        ss << sorts[i]->toString();
     }
 
     ss << ") (";
 
-    first = true;
-    for (auto declIt = declarations.begin(); declIt != declarations.end(); declIt++) {
-        if (first)
-            first = false;
-        else
+    for (size_t i = 0, sz = declarations.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*declIt)->toString();
+
+        ss << declarations[i]->toString();
     }
 
     ss << ")";
-
     return ss.str();
 }
 
 /* =============================== DeclareFunCommand ================================ */
 
-DeclareFunCommand::DeclareFunCommand(string name,
-                                     sptr_v<Sort> &params,
-                                     sptr_t<Sort> sort)
-    : name(name), sort(sort) {
-    this->params.insert(this->params.end(), params.begin(), params.end());
+DeclareFunCommand::DeclareFunCommand(const string& name,
+                                     const vector<SortPtr>& parameters,
+                                     const SortPtr& sort)
+        : name(name), sort(sort) {
+    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
 }
 
-void DeclareFunCommand::accept(Visitor0* visitor){
+void DeclareFunCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -135,10 +131,11 @@ string DeclareFunCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DECL_FUN << " " << name << " (";
 
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        if (paramIt != params.begin())
+    for (size_t i = 0, sz = parameters.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*paramIt)->toString();
+
+        ss << parameters[i]->toString();
     }
 
     ss << ") " << sort->toString() << ")";
@@ -148,7 +145,7 @@ string DeclareFunCommand::toString() {
 
 /* =============================== DeclareSortCommand ================================ */
 
-void DeclareSortCommand::accept(Visitor0* visitor){
+void DeclareSortCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -160,19 +157,19 @@ string DeclareSortCommand::toString() {
 
 /* ================================= DefineFunCommand ================================= */
 
-DefineFunCommand::DefineFunCommand(sptr_t<FunctionDeclaration> signature,
-                                   sptr_t<Term> body) {
+DefineFunCommand::DefineFunCommand(const FunctionDeclarationPtr& signature,
+                                   const TermPtr& body) {
     definition = std::make_shared<FunctionDefinition>(signature, body);
 }
 
-DefineFunCommand::DefineFunCommand(string name,
-                                   sptr_v<SortedVariable> &params,
-                                   sptr_t<Sort> sort,
-                                   sptr_t<Term> body) {
+DefineFunCommand::DefineFunCommand(const string& name,
+                                   const vector<SortedVariablePtr>& params,
+                                   const SortPtr& sort,
+                                   const TermPtr& body) {
     definition = make_shared<FunctionDefinition>(name, params, sort, body);
 }
 
-void DefineFunCommand::accept(Visitor0* visitor){
+void DefineFunCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -184,19 +181,19 @@ string DefineFunCommand::toString() {
 
 /* ================================ DefineFunRecCommand =============================== */
 
-DefineFunRecCommand::DefineFunRecCommand(string name,
-                                         sptr_v<SortedVariable> &params,
-                                         sptr_t<Sort> sort,
-                                         sptr_t<Term> body) {
+DefineFunRecCommand::DefineFunRecCommand(const string& name,
+                                         const vector<SortedVariablePtr>& params,
+                                         const SortPtr& sort,
+                                         const TermPtr& body) {
     definition = make_shared<FunctionDefinition>(name, params, sort, body);
 }
 
-DefineFunRecCommand::DefineFunRecCommand(sptr_t<FunctionDeclaration> signature,
-                                         sptr_t<Term> body) {
+DefineFunRecCommand::DefineFunRecCommand(const FunctionDeclarationPtr& signature,
+                                         const TermPtr& body) {
     definition = make_shared<FunctionDefinition>(signature, body);
 }
 
-void DefineFunRecCommand::accept(Visitor0* visitor){
+void DefineFunRecCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -208,30 +205,34 @@ string DefineFunRecCommand::toString() {
 
 /* =============================== DefineFunsRecCommand =============================== */
 
-DefineFunsRecCommand::DefineFunsRecCommand(sptr_v<FunctionDeclaration> &declarations,
-                                           sptr_v<Term> &bodies) {
+DefineFunsRecCommand::DefineFunsRecCommand(const vector<FunctionDeclarationPtr>& declarations,
+                                           const vector<TermPtr>& bodies) {
     this->declarations.insert(this->declarations.end(), declarations.begin(), declarations.end());
     this->bodies.insert(this->bodies.end(), bodies.begin(), bodies.end());
 }
 
-void DefineFunsRecCommand::accept(Visitor0* visitor){
+void DefineFunsRecCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
 string DefineFunsRecCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DEF_FUNS_REC << " (";
-    for (auto declIt = declarations.begin(); declIt != declarations.end(); declIt++) {
-        if (declIt != declarations.begin())
+
+    for (size_t i = 0, sz = declarations.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << "(" << (*declIt)->toString() << ")";
+
+        ss << declarations[i]->toString();
     }
 
     ss << ") (";
-    for (auto bodyIt = bodies.begin(); bodyIt != bodies.end(); bodyIt++) {
-        if (bodyIt != bodies.begin())
+
+    for (size_t i = 0, sz = bodies.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << "(" << (*bodyIt)->toString() << ")";
+
+        ss << bodies[i]->toString();
     }
 
     ss << "))";
@@ -240,24 +241,26 @@ string DefineFunsRecCommand::toString() {
 
 /* ================================ DefineSortCommand ================================= */
 
-DefineSortCommand::DefineSortCommand(string name,
-                                     vector<string> &params,
-                                     sptr_t<Sort> sort)
-    : name(name), sort(sort) {
-    this->params.insert(this->params.end(), params.begin(), params.end());
+DefineSortCommand::DefineSortCommand(const string& name,
+                                     const vector<string>& parameters,
+                                     const SortPtr& sort)
+        : name(name), sort(sort) {
+    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
 }
 
-void DefineSortCommand::accept(Visitor0* visitor){
+void DefineSortCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
 string DefineSortCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DEF_SORT << " " << name << " (";
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        if (paramIt != params.begin())
+
+    for (size_t i = 0, sz = parameters.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*paramIt);
+
+        ss << parameters[i];
     }
 
     ss << ") " << sort->toString() << ")";
@@ -266,7 +269,7 @@ string DefineSortCommand::toString() {
 
 /* =================================== EchoCommand ==================================== */
 
-void EchoCommand::accept(Visitor0* visitor){
+void EchoCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -278,7 +281,7 @@ string EchoCommand::toString() {
 
 /* =================================== ExitCommand ==================================== */
 
-void ExitCommand::accept(Visitor0* visitor){
+void ExitCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -290,7 +293,7 @@ string ExitCommand::toString() {
 
 /* ================================ GetAssertsCommand ================================= */
 
-void GetAssertsCommand::accept(Visitor0* visitor){
+void GetAssertsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -302,7 +305,7 @@ string GetAssertsCommand::toString() {
 
 /* ================================ GetAssignsCommand ================================= */
 
-void GetAssignsCommand::accept(Visitor0* visitor){
+void GetAssignsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -314,7 +317,7 @@ string GetAssignsCommand::toString() {
 
 /* ================================== GetInfoCommand ================================== */
 
-void GetInfoCommand::accept(Visitor0* visitor){
+void GetInfoCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -326,7 +329,7 @@ string GetInfoCommand::toString() {
 
 /* ================================= GetModelCommand ================================== */
 
-void GetModelCommand::accept(Visitor0* visitor){
+void GetModelCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -338,7 +341,7 @@ string GetModelCommand::toString() {
 
 /* ================================= GetOptionCommand ================================= */
 
-void GetOptionCommand::accept(Visitor0* visitor){
+void GetOptionCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -350,7 +353,7 @@ string GetOptionCommand::toString() {
 
 /* ================================= GetProofCommand ================================== */
 
-void GetProofCommand::accept(Visitor0* visitor){
+void GetProofCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -362,7 +365,7 @@ string GetProofCommand::toString() {
 
 /* ============================== GetUnsatAssumsCommand =============================== */
 
-void GetUnsatAssumsCommand::accept(Visitor0* visitor){
+void GetUnsatAssumsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -374,7 +377,7 @@ string GetUnsatAssumsCommand::toString() {
 
 /* =============================== GetUnsatCoreCommand ================================ */
 
-void GetUnsatCoreCommand::accept(Visitor0* visitor){
+void GetUnsatCoreCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -386,11 +389,11 @@ string GetUnsatCoreCommand::toString() {
 
 /* ================================= GetValueCommand ================================== */
 
-GetValueCommand::GetValueCommand(sptr_v<Term> &terms) {
+GetValueCommand::GetValueCommand(const vector<TermPtr>& terms) {
     this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
-void GetValueCommand::accept(Visitor0* visitor){
+void GetValueCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -398,10 +401,11 @@ string GetValueCommand::toString() {
     stringstream ss;
     ss << "(" << KW_GET_VALUE << " (";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if (termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << "))";
@@ -410,7 +414,7 @@ string GetValueCommand::toString() {
 
 /* =================================== PopCommand ==================================== */
 
-void PopCommand::accept(Visitor0* visitor){
+void PopCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -422,7 +426,7 @@ string PopCommand::toString() {
 
 /* =================================== PushCommand ==================================== */
 
-void PushCommand::accept(Visitor0* visitor){
+void PushCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -434,7 +438,7 @@ string PushCommand::toString() {
 
 /* =================================== ResetCommand =================================== */
 
-void ResetCommand::accept(Visitor0* visitor){
+void ResetCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -446,7 +450,7 @@ string ResetCommand::toString() {
 
 /* =============================== ResetAssertsCommand ================================ */
 
-void ResetAssertsCommand::accept(Visitor0* visitor){
+void ResetAssertsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -458,7 +462,7 @@ string ResetAssertsCommand::toString() {
 
 /* ================================== SetInfoCommand ================================== */
 
-void SetInfoCommand::accept(Visitor0* visitor){
+void SetInfoCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -470,7 +474,7 @@ string SetInfoCommand::toString() {
 
 /* ================================= SetLogicCommand ================================== */
 
-void SetLogicCommand::accept(Visitor0* visitor){
+void SetLogicCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -482,7 +486,7 @@ string SetLogicCommand::toString() {
 
 /* ================================= SetOptionCommand ================================= */
 
-void SetOptionCommand::accept(Visitor0* visitor){
+void SetOptionCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 

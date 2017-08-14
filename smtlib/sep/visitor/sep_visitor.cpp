@@ -84,7 +84,7 @@ void DummyVisitor0::visit(sptr_t<DeclareDatatypesCommand> node) {
 }
 
 void DummyVisitor0::visit(sptr_t<DeclareFunCommand> node) {
-    visit0(node->params);
+    visit0(node->parameters);
     visit0(node->sort);
 }
 
@@ -168,7 +168,7 @@ void DummyVisitor0::visit(sptr_t<ParametricDatatypeDeclaration> node) {
 }
 
 void DummyVisitor0::visit(sptr_t<FunctionDeclaration> node) {
-    visit0(node->params);
+    visit0(node->parameters);
     visit0(node->sort);
 }
 
@@ -218,11 +218,11 @@ void DummyVisitor0::visit(sptr_t<MatchCase> node) {
 }
 
 void DummyVisitor0::visit(sptr_t<CompSExpression> node) {
-    visit0(node->exprs);
+    visit0(node->expressions);
 }
 
 void DummyVisitor0::visit(sptr_t<Sort> node) {
-    visit0(node->args);
+    visit0(node->arguments);
 }
 
 void DummyVisitor0::visit(sptr_t<SortSymbolDeclaration> node) {

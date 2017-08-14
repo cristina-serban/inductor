@@ -1,7 +1,7 @@
 #ifndef INDUCTOR_PRED_ANALYSIS_H
 #define INDUCTOR_PRED_ANALYSIS_H
 
-#include "pred/pred_definition.h"
+#include "pred_definition.h"
 
 #include "equiv/equiv_string.h"
 #include "reach/reach_string.h"
@@ -17,125 +17,202 @@ namespace pred {
         ALWAYS = 0, MAYBE, NEVER
     };
 
+    /* ================================ IndexEquivAnalysis ================================ */
+    typedef std::unordered_map<BaseCasePtr, equiv::IndexEquivalencePtr> IndexEquivBaseMap;
+    typedef std::unordered_map<std::string, IndexEquivBaseMap> IndexEquivBaseTable;
+
+    typedef std::unordered_map<InductiveCasePtr, equiv::IndexEquivalencePtr> IndexEquivInductiveMap;
+    typedef std::unordered_map<std::string, IndexEquivInductiveMap> IndexEquivInductiveTable;
+
     struct IndexEquivAnalysis {
-        umap<std::string, sptr_um1<BaseCase, equiv::IndexEquivalence>> base;
-        umap<std::string, sptr_um1<InductiveCase, equiv::IndexEquivalence>> ind;
+        IndexEquivBaseTable base;
+        IndexEquivInductiveTable inductive;
 
         inline void clear() {
             base.clear();
-            ind.clear();
+            inductive.clear();
         };
     };
 
-    struct EquivAnalysis {
-        umap<std::string, sptr_um1<BaseCase, equiv::StringEquivalence>> base;
-        umap<std::string, sptr_um1<InductiveCase, equiv::StringEquivalence>> ind;
+    typedef std::shared_ptr<IndexEquivAnalysis> IndexEquivAnalysisPtr;
 
-        sptr_t<IndexEquivAnalysis> index;
+    /* ================================== EquivAnalysis =================================== */
+    typedef std::unordered_map<BaseCasePtr, equiv::StringEquivalencePtr> StringEquivBaseMap;
+    typedef std::unordered_map<std::string, StringEquivBaseMap> StringEquivBaseTable;
+
+    typedef std::unordered_map<InductiveCasePtr, equiv::StringEquivalencePtr> StringEquivInductiveMap;
+    typedef std::unordered_map<std::string, StringEquivInductiveMap> StringEquivInductiveTable;
+
+    struct EquivAnalysis {
+        StringEquivBaseTable base;
+        StringEquivInductiveTable inductive;
+        IndexEquivAnalysisPtr index;
 
         EquivAnalysis() : index(std::make_shared<IndexEquivAnalysis>()) {};
 
         inline void clear() {
             base.clear();
-            ind.clear();
+            inductive.clear();
             index->clear();
         };
     };
 
-    struct IndexAllocAnalysis {
-        umap<std::string, sptr_um3<BaseCase, std::vector<Allocated>>> base;
-        umap<std::string, sptr_um3<InductiveCase, std::vector<Allocated>>> ind;
+    typedef std::shared_ptr<EquivAnalysis> EquivAnalysisPtr;
 
-        umap<std::string, std::vector<Allocated>> pred;
+    /* ================================ IndexAllocAnalysis ================================ */
+    struct IndexAllocAnalysis;
+    typedef std::shared_ptr<IndexAllocAnalysis> IndexAllocAnalysisPtr;
+
+    typedef std::unordered_map<BaseCasePtr, std::vector<Allocated>> IndexAllocBaseMap;
+    typedef std::unordered_map<std::string, IndexAllocBaseMap> IndexAllocBaseTable;
+
+    typedef std::unordered_map<InductiveCasePtr, std::vector<Allocated>> IndexAllocInductiveMap;
+    typedef std::unordered_map<std::string, IndexAllocInductiveMap> IndexAllocInductiveTable;
+
+    struct IndexAllocAnalysis {
+        IndexAllocBaseTable base;
+        IndexAllocInductiveTable inductive;
+        std::unordered_map<std::string, std::vector<Allocated>> predicates;
 
         inline void clear() {
             base.clear();
-            ind.clear();
-            pred.clear();
+            inductive.clear();
+            predicates.clear();
         };
 
-        sptr_t<IndexAllocAnalysis> clone();
+        IndexAllocAnalysisPtr clone();
 
-        bool equals(sptr_t<IndexAllocAnalysis> other);
+        bool equals(const IndexAllocAnalysisPtr& other);
     };
 
-    struct AllocAnalysis {
-        umap<std::string, sptr_um3<BaseCase, umap<std::string, Allocated>>> base;
-        umap<std::string, sptr_um3<InductiveCase, umap<std::string, Allocated>>> ind;
+    /* ================================== AllocAnalysis =================================== */
+    typedef std::unordered_map<BaseCasePtr, std::unordered_map<std::string, Allocated>> AllocBaseMap;
+    typedef std::unordered_map<std::string, AllocBaseMap> AllocBaseTable;
 
-        sptr_t<IndexAllocAnalysis> index;
+    typedef std::unordered_map<InductiveCasePtr, std::unordered_map<std::string, Allocated>> AllocInductiveMap;
+    typedef std::unordered_map<std::string, AllocInductiveMap> AllocInductiveTable;
+
+    struct AllocAnalysis {
+        AllocBaseTable base;
+        AllocInductiveTable inductive;
+        IndexAllocAnalysisPtr index;
 
         AllocAnalysis() : index(std::make_shared<IndexAllocAnalysis>()) {};
 
         inline void clear() {
             base.clear();
-            ind.clear();
+            inductive.clear();
             index->clear();
         };
     };
 
-    struct IndexReachAnalysis {
-        umap<std::string, sptr_um1<BaseCase, reach::IndexReachability>> base;
-        umap<std::string, sptr_um1<InductiveCase, reach::IndexReachability>> ind;
+    typedef std::shared_ptr<AllocAnalysis> AllocAnalysisPtr;
 
-        sptr_um2<std::string, reach::IndexReachability> pred;
+    /* ================================ IndexReachAnalysis ================================ */
+    struct IndexReachAnalysis;
+    typedef std::shared_ptr<IndexReachAnalysis> IndexReachAnalysisPtr;
+
+    typedef std::unordered_map<BaseCasePtr, reach::IndexReachabilityPtr> IndexReachBaseMap;
+    typedef std::unordered_map<std::string, IndexReachBaseMap> IndexReachBaseTable;
+
+    typedef std::unordered_map<InductiveCasePtr, reach::IndexReachabilityPtr> IndexReachInductiveMap;
+    typedef std::unordered_map<std::string, IndexReachInductiveMap> IndexReachInductiveTable;
+
+    struct IndexReachAnalysis {
+        IndexReachBaseTable base;
+        IndexReachInductiveTable inductive;
+
+        std::unordered_map<std::string, reach::IndexReachabilityPtr> predicates;
 
         inline void clear() {
             base.clear();
-            ind.clear();
-            pred.clear();
+            inductive.clear();
+            predicates.clear();
         }
 
-        sptr_t<IndexReachAnalysis> clone();
+        IndexReachAnalysisPtr clone();
 
-        bool equals(sptr_t<IndexReachAnalysis> other);
+        bool equals(const IndexReachAnalysisPtr& other);
     };
 
-    struct ReachAnalysis {
-        umap<std::string, sptr_um1<BaseCase, reach::StringReachability>> base;
-        umap<std::string, sptr_um1<InductiveCase, reach::StringReachability>> ind;
+    /* ================================== ReachAnalysis =================================== */
+    typedef std::unordered_map<BaseCasePtr, reach::StringReachabilityPtr> ReachBaseMap;
+    typedef std::unordered_map<std::string, ReachBaseMap> ReachBaseTable;
 
-        sptr_t<IndexReachAnalysis> index;
+    typedef std::unordered_map<InductiveCasePtr, reach::StringReachabilityPtr> ReachInductiveMap;
+    typedef std::unordered_map<std::string, ReachInductiveMap> ReachInductiveTable;
+
+    struct ReachAnalysis {
+        ReachBaseTable base;
+        ReachInductiveTable inductive;
+        IndexReachAnalysisPtr index;
 
         ReachAnalysis() : index(std::make_shared<IndexReachAnalysis>()) {}
 
         inline void clear() {
             base.clear();
-            ind.clear();
+            inductive.clear();
             index->clear();
         }
     };
 
-    Allocated conj(Allocated a1, Allocated a2);
-    Allocated conj(std::vector<Allocated> vec);
-    std::vector<Allocated> conj(std::vector<Allocated> vec1, std::vector<Allocated> vec2);
-    std::vector<Allocated> conj(std::vector<std::vector<Allocated>> vec);
+    typedef std::shared_ptr<ReachAnalysis> ReachAnalysisPtr;
 
-    Allocated disj(Allocated a1, Allocated a2);
-    Allocated disj(std::vector<Allocated> vec);
-    std::vector<Allocated> disj(std::vector<Allocated> vec1, std::vector<Allocated> vec2);
-    std::vector<Allocated> disj(std::vector<std::vector<Allocated>> vec);
-
-    std::vector<std::vector<Allocated>> varToIndex(std::vector<umap<std::string, Allocated>> cases,
-                                                   sptr_v<smtlib::sep::SortedVariable> params);
-
+    /* ==================================== Utilities ===================================== */
+    /** String representation of an allocation value */
     std::string allocToString(Allocated a);
 
-    sptr_t<reach::IndexReachability> conj(sptr_t<reach::IndexReachability> r1,
-                                          sptr_t<reach::IndexReachability> r2);
+    /** Computes conjunction of two allocation values */
+    Allocated conj(Allocated a1, Allocated a2);
 
-    sptr_t<reach::IndexReachability> conj(sptr_v<reach::IndexReachability> vec);
+    /** Computes conjunction on a vector of allocation values */
+    Allocated conj(const std::vector<Allocated>& vec);
 
-    sptr_t<reach::IndexReachability> varToIndex(sptr_t<reach::StringReachability> reach,
-                                                sptr_v<smtlib::sep::SortedVariable> params);
+    /** Computes conjunction between two vectors of allocation values */
+    std::vector<Allocated> conj(const std::vector<Allocated>& vec1,
+                                const std::vector<Allocated>& vec2);
 
-    sptr_v<reach::IndexReachability> varToIndex(sptr_v<reach::StringReachability> cases,
-                                                sptr_v<smtlib::sep::SortedVariable> params);
+    /** Computes conjunction on several vectors of allocation values */
+    std::vector<Allocated> conj(const std::vector<std::vector<Allocated>>& vec);
 
-    sptr_t<reach::StringReachability> disj(sptr_t<reach::StringReachability> reach,
-                                           sptr_t<reach::IndexReachability> idxReach,
-                                           sptr_v<smtlib::sep::Term> args);
+    /** Computes conjunction between two index reachability objects */
+    reach::IndexReachabilityPtr conj(const reach::IndexReachabilityPtr& r1,
+                                     const reach::IndexReachabilityPtr& r2);
 
+    /** Computes conjunction on several index reachability objects */
+    reach::IndexReachabilityPtr conj(const std::vector<reach::IndexReachabilityPtr>& vec);
+
+
+    /** Computes disjunction of two allocation values */
+    Allocated disj(Allocated a1, Allocated a2);
+
+    /** Computes disjunction on a vector of allocation values */
+    Allocated disj(const std::vector<Allocated>& vec);
+
+    /** Computes disjunction between two vectors of allocation values */
+    std::vector<Allocated> disj(const std::vector<Allocated>& vec1,
+                                const std::vector<Allocated>& vec2);
+
+    /** Computes disjunction on several vectors of allocation values */
+    std::vector<Allocated> disj(const std::vector<std::vector<Allocated>>& vec);
+
+    /** Computes disjunction between a string reachability object and an index reachability object */
+    reach::StringReachabilityPtr disj(const reach::StringReachabilityPtr& reach,
+                                      const reach::IndexReachabilityPtr& idxReach,
+                                      const std::vector<smtlib::sep::TermPtr>& args);
+
+
+    /** Convert allocation maps based on parameter names to allocation vectors based on parameter indices */
+    std::vector<std::vector<Allocated>> varToIndex(const std::vector<std::unordered_map<std::string, Allocated>>& cases,
+                                                   const std::vector<smtlib::sep::SortedVariablePtr>& params);
+
+    /** Convert a string reachability object to an index reachability object */
+    reach::IndexReachabilityPtr varToIndex(const reach::StringReachabilityPtr& reach,
+                                           const std::vector<smtlib::sep::SortedVariablePtr>& params);
+
+    /** Convert several string reachability objects to their corresponding index reachability objects */
+    std::vector<reach::IndexReachabilityPtr> varToIndex(const std::vector<reach::StringReachabilityPtr>& cases,
+                                                        const std::vector<smtlib::sep::SortedVariablePtr>& params);
 }
 
 #endif //INDUCTOR_PRED_ANALYSIS_H

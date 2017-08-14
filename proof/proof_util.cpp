@@ -42,14 +42,14 @@ sptr_v<State> proof::toState(sptr_t<pred::InductivePredicate> pred) {
 sptr_t<State> proof::toState(sptr_t<pred::BaseCase> bcase) {
     sptr_t<State> state = make_shared<State>();
     state->bindings.insert(state->bindings.begin(), bcase->bindings.begin(), bcase->bindings.end());
-    state->expr = bcase->constr;
+    state->expr = bcase->constraint;
     return state;
 }
 
 sptr_t<State> proof::toState(sptr_t<pred::InductiveCase> icase) {
     sptr_t<State> state = make_shared<State>();
     state->bindings.insert(state->bindings.begin(), icase->bindings.begin(), icase->bindings.end());
-    state->expr = icase->expr;
+    state->expr = icase->constraint;
     state->calls.insert(state->calls.begin(), icase->calls.begin(), icase->calls.end());
     return state;
 }

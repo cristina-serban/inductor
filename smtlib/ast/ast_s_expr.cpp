@@ -4,6 +4,10 @@
 using namespace std;
 using namespace smtlib::ast;
 
+CompSExpression::CompSExpression(const vector<SExpressionPtr>& expressions) {
+    this->expressions.insert(this->expressions.end(), expressions.begin(), expressions.end());
+}
+
 void CompSExpression::accept(Visitor0* visitor){
     visitor->visit(shared_from_this());
 }
@@ -11,11 +15,14 @@ void CompSExpression::accept(Visitor0* visitor){
 string CompSExpression::toString() {
     stringstream ss;
     ss << "(";
-    for (auto exprIt = exprs.begin(); exprIt != exprs.end(); exprIt++) {
-        if(exprIt != exprs.begin())
+
+    for (size_t i = 0, sz = expressions.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*exprIt)->toString();
+
+        ss << expressions[i]->toString();
     }
+
     ss <<")";
     return ss.str();
 }

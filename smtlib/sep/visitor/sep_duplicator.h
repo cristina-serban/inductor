@@ -135,6 +135,8 @@ namespace smtlib {
             virtual void visit(sptr_t<SortedVariable> node);
             virtual void visit(sptr_t<VariableBinding> node);
         };
+
+        typedef std::shared_ptr<Duplicator> DuplicatorPtr;
     }
 }
 

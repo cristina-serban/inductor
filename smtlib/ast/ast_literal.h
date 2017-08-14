@@ -7,7 +7,6 @@
 #define INDUCTOR_AST_LITERAL_H
 
 #include "ast_abstract.h"
-#include "ast_classes.h"
 #include "ast_interfaces.h"
 
 #include <string>
@@ -22,7 +21,9 @@ namespace smtlib {
             T value;
 
         protected:
-            Literal() { }
+            Literal() = default;
+
+            explicit Literal(const T& value) : value(value) {}
         };
 
         /* ================================== NumeralLiteral ================================== */
@@ -38,11 +39,11 @@ namespace smtlib {
             unsigned int base;
         
             inline NumeralLiteral(long value, unsigned int base)
-                    : base(base) { this->value = value; }
+                    : Literal(value), base(base) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================== DecimalLiteral ================================== */
@@ -54,11 +55,11 @@ namespace smtlib {
                                public SpecConstant,
                                public std::enable_shared_from_this<DecimalLiteral> {
         public:
-            inline DecimalLiteral(double value) { this->value = value; }
+            inline explicit DecimalLiteral(double value) : Literal(value) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /* ================================== StringLiteral =================================== */
@@ -70,11 +71,11 @@ namespace smtlib {
                               public SpecConstant,
                               public std::enable_shared_from_this<StringLiteral> {
         public:
-            inline StringLiteral(std::string value) { this->value = value; }
+            inline explicit StringLiteral(const std::string& value) : Literal(value) {}
 
-            virtual void accept(Visitor0* visitor);
+            void accept(Visitor0* visitor) override;
 
-            virtual std::string toString();
+            std::string toString() override;
         };
     }
 }

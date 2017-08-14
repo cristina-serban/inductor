@@ -45,14 +45,14 @@ string CheckSatAssumCommand::toString() {
     stringstream ss;
     ss << "(" << KW_CHK_SAT_ASSUM << " (";
 
-    for (auto assumIt = assumptions.begin(); assumIt != assumptions.end(); assumIt++) {
-        if(assumIt != assumptions.begin())
+    for (size_t i = 0, sz = assumptions.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*assumIt)->toString();
+
+        ss << assumptions[i]->toString();
     }
 
     ss << "))";
-
     return ss.str();
 }
 
@@ -96,37 +96,32 @@ string DeclareDatatypesCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DECL_DATATYPES << " (";
 
-    bool first = true;
-    for (auto sortIt = sorts.begin(); sortIt != sorts.end(); sortIt++) {
-        if(first)
-            first = false;
-        else
+    for (size_t i = 0, sz = sorts.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*sortIt)->toString();
+
+        ss << sorts[i]->toString();
     }
 
     ss << ") (";
 
-    first = true;
-    for (auto declIt = declarations.begin(); declIt != declarations.end(); declIt++) {
-        if(first)
-            first = false;
-        else
+    for (size_t i = 0, sz = declarations.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*declIt)->toString();
+
+        ss << declarations[i]->toString();
     }
 
     ss << ")";
-
     return ss.str();
 }
 /* =============================== DeclareFunCommand ================================ */
 
 DeclareFunCommand::DeclareFunCommand(const SymbolPtr& symbol,
-                                     const vector<SortPtr>& params,
+                                     const vector<SortPtr>& parameters,
                                      const SortPtr& sort)
         : symbol(symbol), sort(sort) {
-    this->params.insert(this->params.end(), params.begin(), params.end());
+    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
 }
 
 void DeclareFunCommand::accept(Visitor0* visitor){
@@ -137,14 +132,14 @@ string DeclareFunCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DECL_FUN << " " << symbol->toString() << " (";
 
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        if(paramIt != params.begin())
+    for (size_t i = 0, sz = parameters.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*paramIt)->toString();
+
+        ss << parameters[i]->toString();
     }
 
     ss << ") " << sort->toString() << ")";
-
     return ss.str();
 }
 
@@ -218,17 +213,21 @@ void DefineFunsRecCommand::accept(Visitor0* visitor){
 string DefineFunsRecCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DEF_FUNS_REC << " (";
-    for (auto declIt = declarations.begin(); declIt != declarations.end(); declIt++) {
-        if(declIt != declarations.begin())
+
+    for (size_t i = 0, sz = declarations.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << "(" << (*declIt)->toString() << ")";
+
+        ss << declarations[i]->toString();
     }
 
     ss << ") (";
-    for (auto bodyIt = bodies.begin(); bodyIt != bodies.end(); bodyIt++) {
-        if(bodyIt != bodies.begin())
+
+    for (size_t i = 0, sz = bodies.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << "(" << (*bodyIt)->toString() << ")";
+
+        ss << bodies[i]->toString();
     }
 
     ss << "))";
@@ -238,10 +237,10 @@ string DefineFunsRecCommand::toString() {
 /* ================================ DefineSortCommand ================================= */
 
 DefineSortCommand::DefineSortCommand(const SymbolPtr& symbol,
-                                     const vector<SymbolPtr>& params,
+                                     const vector<SymbolPtr>& parameters,
                                      const SortPtr& sort)
         : symbol(symbol), sort(sort) {
-    this->params.insert(this->params.end(), params.begin(), params.end());
+    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
 }
 
 void DefineSortCommand::accept(Visitor0* visitor){
@@ -251,10 +250,12 @@ void DefineSortCommand::accept(Visitor0* visitor){
 string DefineSortCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DEF_SORT << " " << symbol->toString() << " (";
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        if(paramIt != params.begin())
+
+    for (size_t i = 0, sz = parameters.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*paramIt)->toString();
+
+        ss << parameters[i]->toString();
     }
 
     ss << ") " << sort->toString() << ")";
@@ -395,10 +396,11 @@ string GetValueCommand::toString() {
     stringstream ss;
     ss << "(" << KW_GET_VALUE << " (";
 
-    for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-        if(termIt != terms.begin())
+    for (size_t i = 0, sz = terms.size(); i < sz; i++) {
+        if (i != 0)
             ss << " ";
-        ss << (*termIt)->toString();
+
+        ss << terms[i]->toString();
     }
 
     ss << "))";

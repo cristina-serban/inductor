@@ -265,15 +265,15 @@ void State::merge(sptr_t<State> state, size_t origin) {
                              state->expr->spatial.begin(),
                              state->expr->spatial.end());
 
-        for(size_t i = 0, n = expr->spatial.size(); i < n; i++) {
-            if(dynamic_pointer_cast<EmpTerm>(expr->spatial[i])){
+        for (size_t i = 0, n = expr->spatial.size(); i < n; i++) {
+            if (dynamic_pointer_cast<EmpTerm>(expr->spatial[i])) {
                 expr->spatial.erase(expr->spatial.begin() + i);
                 i--;
                 n--;
             }
         }
 
-        if(expr->spatial.empty() && calls.empty() && !expr->pure.empty()) {
+        if (expr->spatial.empty() && calls.empty() && !expr->pure.empty()) {
             expr->spatial.push_back(make_shared<EmpTerm>());
         }
     }
@@ -282,11 +282,11 @@ void State::merge(sptr_t<State> state, size_t origin) {
 }
 
 void State::substitute(sptr_um2<string, Term> subst) {
-    for(size_t i = 0, n = bindings.size(); i < n; i++) {
+    for (size_t i = 0, n = bindings.size(); i < n; i++) {
         string name = bindings[i]->name;
         string replacement = subst[name]->toString();
 
-        if(subst.find(name) != subst.end()) {
+        if (subst.find(name) != subst.end()) {
             bool found = false;
             for (size_t j = 0; j < n; j++) {
                 if (bindings[j]->name == replacement) {
@@ -295,7 +295,7 @@ void State::substitute(sptr_um2<string, Term> subst) {
                 }
             }
 
-            if(!found) {
+            if (!found) {
                 variables.push_back(make_shared<SortedVariable>(replacement, bindings[i]->sort));
             }
 
@@ -305,23 +305,38 @@ void State::substitute(sptr_um2<string, Term> subst) {
         }
     }
 
-    if(expr)
+    if (expr)
         expr->replace(subst);
 
-    for(size_t i = 0, n = calls.size(); i < n; i++) {
+    for (size_t i = 0, n = calls.size(); i < n; i++) {
         calls[i]->replace(subst);
     }
 }
 
 bool State::isEmp() {
-    if(dynamic_pointer_cast<EmpTerm>(toTerm()))
+    if (dynamic_pointer_cast<EmpTerm>(toTerm()))
         return true;
 
-    if(!calls.empty())
+    if (!calls.empty())
         return false;
 
-    for(size_t i = 0, n = expr->spatial.size(); i < n; i++) {
-        if(!dynamic_pointer_cast<EmpTerm>(expr->spatial[i]))
+    for (size_t i = 0, n = expr->spatial.size(); i < n; i++) {
+        if (!dynamic_pointer_cast<EmpTerm>(expr->spatial[i]))
+            return false;
+    }
+
+    return true;
+}
+
+bool State::isCallsOnly() {
+    if (calls.empty())
+        return false;
+
+    if (!expr)
+        return true;
+
+    for (size_t i = 0, n = expr->spatial.size(); i < n; i++) {
+        if (!dynamic_pointer_cast<EmpTerm>(expr->spatial[i]))
             return false;
     }
 
@@ -336,7 +351,7 @@ sptr_t<Pair> Pair::clone() {
     sptr_t<Pair> newPair = make_shared<Pair>();
     newPair->left = left->clone();\
 
-    for(size_t i = 0, n = right.size(); i < n; i++) {
+    for (size_t i = 0, n = right.size(); i < n; i++) {
         newPair->right.push_back(right[i]->clone());
     }
 
@@ -362,44 +377,44 @@ string Pair::toString() {
 
 bool proof::equals(sptr_t<State> s1, sptr_t<State> s2) {
     // If one expression is empty or not allocated, the other should also be either empty or not allocated
-    if(s1->expr && !s2->expr && !(s1->expr->pure.empty() && s1->expr->spatial.empty())
-       || !s1->expr && s2->expr && !(s2->expr->pure.empty() && s2->expr->spatial.empty())) {
+    if (s1->expr && !s2->expr && !(s1->expr->pure.empty() && s1->expr->spatial.empty())
+        || !s1->expr && s2->expr && !(s2->expr->pure.empty() && s2->expr->spatial.empty())) {
         return false;
     }
 
     // If one expression has pure parts, the other should also have pure parts
-    if(s1->expr && !s1->expr->pure.empty() && s2->expr->pure.empty()
+    if (s1->expr && !s1->expr->pure.empty() && s2->expr->pure.empty()
         || s1->expr && s1->expr->pure.empty() && !s2->expr->pure.empty()) {
         return false;
     }
 
     // If there are pure parts, check whether they are equal
-    if(s1->expr && !s1->expr->pure.empty()) {
-        if(!equals(s1->expr->pure, s2->expr->pure)) {
+    if (s1->expr && !s1->expr->pure.empty()) {
+        if (!equals(s1->expr->pure, s2->expr->pure)) {
             return false;
         }
     }
 
     // If one expression has spatial parts, the other should also have spatial parts
-    if(s1->expr && !s1->expr->spatial.empty() && s2->expr->spatial.empty()
-       || s1->expr && s1->expr->spatial.empty() && !s2->expr->spatial.empty()) {
+    if (s1->expr && !s1->expr->spatial.empty() && s2->expr->spatial.empty()
+        || s1->expr && s1->expr->spatial.empty() && !s2->expr->spatial.empty()) {
         return false;
     }
 
     // If there are spatial parts, check whether they are equal
-    if(s1->expr && !s1->expr->spatial.empty()) {
-        if(!equals(s1->expr->spatial, s2->expr->spatial)) {
+    if (s1->expr && !s1->expr->spatial.empty()) {
+        if (!equals(s1->expr->spatial, s2->expr->spatial)) {
             return false;
         }
     }
 
     // Check whether there is an equal amount of calls in both states
-    if(s1->calls.size() != s2->calls.size()) {
+    if (s1->calls.size() != s2->calls.size()) {
         return false;
     }
 
     // If there are calls, check whether they are equal
-    if(!s1->calls.empty()) {
+    if (!s1->calls.empty()) {
         sptr_v<Term> calls1;
         for (size_t i = 0, n = s1->calls.size(); i < n; i++) {
             calls1.push_back(s1->calls[i]->toTerm());
@@ -410,7 +425,7 @@ bool proof::equals(sptr_t<State> s1, sptr_t<State> s2) {
             calls2.push_back(s2->calls[i]->toTerm());
         }
 
-        if(!equals(calls1, calls2)) {
+        if (!equals(calls1, calls2)) {
             return false;
         }
     }
@@ -418,7 +433,7 @@ bool proof::equals(sptr_t<State> s1, sptr_t<State> s2) {
     return true;
 }
 
-bool proof::equals(sptr_v<Term> &v1, sptr_v<Term> &v2) {
+bool proof::equals(sptr_v<Term>& v1, sptr_v<Term>& v2) {
     size_t size1 = v1.size();
     size_t size2 = v2.size();
 
@@ -446,7 +461,7 @@ bool proof::equals(sptr_v<Term> &v1, sptr_v<Term> &v2) {
     // Check that every element in one vector is equal to one in the other vector
     for (size_t i = 0, n = vstr1.size(); i < n; i++) {
         bool eq = vstr2.end() != find_if(vstr2.begin(), vstr2.end(),
-                                         [&](const string &str) { return (vstr1[i] == str); });
+                                         [&](const string& str) { return (vstr1[i] == str); });
         if (!eq) {
             return false;
         }
@@ -454,7 +469,7 @@ bool proof::equals(sptr_v<Term> &v1, sptr_v<Term> &v2) {
 
     for (size_t i = 0, n = vstr2.size(); i < n; i++) {
         bool eq = vstr1.end() != find_if(vstr1.begin(), vstr1.end(),
-                                         [&](const string &str) { return (vstr2[i] == str); });
+                                         [&](const string& str) { return (vstr2[i] == str); });
         if (!eq) {
             return false;
         }
@@ -467,7 +482,7 @@ bool proof::equals(sptr_t<Pair> p1, sptr_t<Pair> p2) {
     return equals(p1->left, p2->left) && equals(p1->right, p2->right);
 }
 
-bool proof::equals(sptr_v<State> &v1, sptr_v<State> &v2) {
+bool proof::equals(sptr_v<State>& v1, sptr_v<State>& v2) {
     size_t size1 = v1.size();
     size_t size2 = v2.size();
 
@@ -484,7 +499,7 @@ bool proof::equals(sptr_v<State> &v1, sptr_v<State> &v2) {
     // Check that every element in one vector is equal to one in the other vector
     for (size_t i = 0; i < size1; i++) {
         bool eq = v2.end() != find_if(v2.begin(), v2.end(),
-                                         [&](const sptr_t<State> &s) { return equals(v1[i], s); });
+                                      [&](const sptr_t<State>& s) { return equals(v1[i], s); });
         if (!eq) {
             return false;
         }
@@ -492,7 +507,7 @@ bool proof::equals(sptr_v<State> &v1, sptr_v<State> &v2) {
 
     for (size_t i = 0; i < size2; i++) {
         bool eq = v1.end() != find_if(v1.begin(), v1.end(),
-                                      [&](const sptr_t<State> &s) { return equals(v2[i], s); });
+                                      [&](const sptr_t<State>& s) { return equals(v2[i], s); });
         if (!eq) {
             return false;
         }
@@ -509,44 +524,44 @@ bool proof::equivs(sptr_t<State> state1, sptr_t<State> state2) {
     removeEmp(s2);
 
     // If one expression is empty or not allocated, the other should also be either empty or not allocated
-    if(s1->expr && !s2->expr && !(s1->expr->pure.empty() && s1->expr->spatial.empty())
-       || !s1->expr && s2->expr && !(s2->expr->pure.empty() && s2->expr->spatial.empty())) {
+    if (s1->expr && !s2->expr && !(s1->expr->pure.empty() && s1->expr->spatial.empty())
+        || !s1->expr && s2->expr && !(s2->expr->pure.empty() && s2->expr->spatial.empty())) {
         return false;
     }
 
     // If one expression has pure parts, the other should also have pure parts
-    if(s1->expr && !s1->expr->pure.empty() && s2->expr->pure.empty()
-       || s1->expr && s1->expr->pure.empty() && !s2->expr->pure.empty()) {
+    if (s1->expr && !s1->expr->pure.empty() && (!s2->expr || s2->expr->pure.empty())
+        || s1->expr && s1->expr->pure.empty() && s2->expr && !s2->expr->pure.empty()) {
         return false;
     }
 
     // If there are pure parts, check whether they are equivalent
-    if(s1->expr && !s1->expr->pure.empty()) {
-        if(!equivs(s1->expr->pure, s2->expr->pure)) {
+    if (s1->expr && !s1->expr->pure.empty()) {
+        if (!equivs(s1->expr->pure, s2->expr->pure)) {
             return false;
         }
     }
 
     // If one expression has spatial parts, the other should also have spatial parts
-    if(s1->expr && !s1->expr->spatial.empty() && s2->expr->spatial.empty()
-       || s1->expr && s1->expr->spatial.empty() && !s2->expr->spatial.empty()) {
+    if (s1->expr && !s1->expr->spatial.empty() && (!s2->expr || s2->expr->spatial.empty())
+        || s1->expr && s1->expr->spatial.empty() && s2->expr && !s2->expr->spatial.empty()) {
         return false;
     }
 
     // If there are spatial parts, check whether they are equal
-    if(s1->expr && !s1->expr->spatial.empty()) {
-        if(!equivs(s1->expr->spatial, s2->expr->spatial)) {
+    if (s1->expr && !s1->expr->spatial.empty()) {
+        if (!equivs(s1->expr->spatial, s2->expr->spatial)) {
             return false;
         }
     }
 
     // Check whether there is an equal amount of calls in both states
-    if(s1->calls.size() != s2->calls.size()) {
+    if (s1->calls.size() != s2->calls.size()) {
         return false;
     }
 
     // If there are calls, check whether they are equivalent
-    if(!s1->calls.empty()) {
+    if (!s1->calls.empty()) {
         sptr_v<Term> calls1;
         for (size_t i = 0, n = s1->calls.size(); i < n; i++) {
             calls1.push_back(s1->calls[i]->toTerm());
@@ -557,7 +572,7 @@ bool proof::equivs(sptr_t<State> state1, sptr_t<State> state2) {
             calls2.push_back(s2->calls[i]->toTerm());
         }
 
-        if(!equivs(calls1, calls2)) {
+        if (!equivs(calls1, calls2)) {
             return false;
         }
     }
@@ -565,7 +580,7 @@ bool proof::equivs(sptr_t<State> state1, sptr_t<State> state2) {
     return true;
 }
 
-bool proof::equivs(sptr_v<Term> &v1, sptr_v<Term> &v2) {
+bool proof::equivs(sptr_v<Term>& v1, sptr_v<Term>& v2) {
     size_t size1 = v1.size();
     size_t size2 = v2.size();
 
@@ -583,7 +598,7 @@ bool proof::equivs(sptr_v<Term> &v1, sptr_v<Term> &v2) {
     // Check that every element in one vector is equivalent to one in the other vector
     for (size_t i = 0, n = v1.size(); i < n; i++) {
         bool eq = v2.end() != find_if(v2.begin(), v2.end(),
-                                      [&](const sptr_t<Term> &t) { return equivs(v1[i], t); });
+                                      [&](const sptr_t<Term>& t) { return equivs(v1[i], t); });
         if (!eq) {
             return false;
         }
@@ -591,7 +606,7 @@ bool proof::equivs(sptr_v<Term> &v1, sptr_v<Term> &v2) {
 
     for (size_t i = 0, n = v2.size(); i < n; i++) {
         bool eq = v1.end() != find_if(v1.begin(), v1.end(),
-                                      [&](const sptr_t<Term> &t) { return equivs(v2[i], t); });
+                                      [&](const sptr_t<Term>& t) { return equivs(v2[i], t); });
         if (!eq) {
             return false;
         }
@@ -609,7 +624,7 @@ bool proof::equivs(shared_ptr<Pair> p1, shared_ptr<Pair> p2) {
     return equivs(p1->left, p2->left) && equivs(p1->right, p2->right);
 }
 
-bool proof::equivs(sptr_v<State> &v1, sptr_v<State> &v2) {
+bool proof::equivs(sptr_v<State>& v1, sptr_v<State>& v2) {
     size_t size1 = v1.size();
     size_t size2 = v2.size();
 
@@ -626,7 +641,7 @@ bool proof::equivs(sptr_v<State> &v1, sptr_v<State> &v2) {
     // Check that every element in one vector is equal to one in the other vector
     for (size_t i = 0; i < size1; i++) {
         bool eq = v2.end() != find_if(v2.begin(), v2.end(),
-                                      [&](const sptr_t<State> &s) { return equivs(v1[i], s); });
+                                      [&](const sptr_t<State>& s) { return equivs(v1[i], s); });
         if (!eq) {
             return false;
         }
@@ -634,7 +649,7 @@ bool proof::equivs(sptr_v<State> &v1, sptr_v<State> &v2) {
 
     for (size_t i = 0; i < size2; i++) {
         bool eq = v1.end() != find_if(v1.begin(), v1.end(),
-                                      [&](const sptr_t<State> &s) { return equivs(v2[i], s); });
+                                      [&](const sptr_t<State>& s) { return equivs(v2[i], s); });
         if (!eq) {
             return false;
         }

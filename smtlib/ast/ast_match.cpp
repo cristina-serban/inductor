@@ -19,8 +19,8 @@ string QualifiedConstructor::toString() {
 
 /* ================================= QualifiedPattern ================================= */
 
-QualifiedPattern::QualifiedPattern(sptr_t<Constructor> constructor,
-                                   sptr_v<Symbol>& symbols) : constructor(constructor) {
+QualifiedPattern::QualifiedPattern(const ConstructorPtr& constructor,
+                                   const vector<SymbolPtr>& symbols) {
     this->symbols.insert(this->symbols.begin(), symbols.begin(), symbols.end());
 }
 
@@ -31,9 +31,11 @@ void QualifiedPattern::accept(Visitor0* visitor) {
 string QualifiedPattern::toString() {
     stringstream ss;
     ss << "(" << constructor->toString();
-    for (auto symbolIt = symbols.begin(); symbolIt != symbols.end(); symbolIt++) {
-        ss << " " << (*symbolIt)->toString();
+
+    for (const auto& symbol : symbols) {
+        ss << " " << symbol->toString();
     }
+
     ss << ")";
     return ss.str();
 }

@@ -5,10 +5,9 @@
 using namespace std;
 using namespace smtlib::ast;
 
-/* ==================================== SimpleIdentifier ==================================== */
+/* ================================= SimpleIdentifier ================================= */
 
-SimpleIdentifier::SimpleIdentifier(sptr_t<Symbol> symbol,
-                                   sptr_v<Index> &indices)
+SimpleIdentifier::SimpleIdentifier(const SymbolPtr& symbol, const vector<IndexPtr>& indices)
         : symbol(symbol) {
     this->indices.insert(this->indices.end(), indices.begin(), indices.end());
 }
@@ -24,17 +23,19 @@ void SimpleIdentifier::accept(Visitor0 *visitor) {
 string SimpleIdentifier::toString() {
     if (!isIndexed())
         return symbol->toString();
-    else {
-        stringstream ss;
-        ss << "( _ " << symbol->toString() << " ";
-        for (auto indexIt = indices.begin(); indexIt != indices.end(); indexIt++) {
-            if (indexIt != indices.begin())
-                ss << " ";
-            ss << (*indexIt)->toString();
-        }
-        ss << ")";
-        return ss.str();
+
+    stringstream ss;
+    ss << "( _ " << symbol->toString() << " ";
+
+    for (size_t i = 0, sz = indices.size(); i < sz; i++) {
+        if (i != 0)
+            ss << " ";
+
+        ss << indices[i]->toString();
     }
+
+    ss << ")";
+    return ss.str();
 }
 
 /* =============================== QualifiedIdentifier ================================ */

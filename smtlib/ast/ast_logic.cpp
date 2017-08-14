@@ -5,7 +5,7 @@
 using namespace smtlib::ast;
 using namespace std;
 
-Logic::Logic(sptr_t<Symbol> name, sptr_v<Attribute> &attributes) : name(name) {
+Logic::Logic(const SymbolPtr& name, const vector<AttributePtr>& attributes) : name(name) {
     this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
 }
 
@@ -15,12 +15,10 @@ void Logic::accept(Visitor0 *visitor) {
 
 string Logic::toString() {
     stringstream ss;
-    ss << "(logic  " << name->toString() << " ";
+    ss << "(logic  " << name->toString();
 
-    for (auto attrIt = attributes.begin(); attrIt != attributes.end(); attrIt++) {
-        if (attrIt != attributes.begin())
-            ss << " ";
-        ss << (*attrIt)->toString();
+    for(const auto& attr : attributes) {
+        ss << " " << attr->toString();
     }
 
     ss << ")";

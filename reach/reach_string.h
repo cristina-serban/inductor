@@ -8,47 +8,51 @@
 
 #include "reach/reach_index.h"
 #include "util/global_typedef.h"
+
 #include <string>
 
 namespace reach {
+    class StringReachability;
+    typedef std::shared_ptr<StringReachability> StringReachabilityPtr;
+
     /** Reachability relation for strings */
     class StringReachability {
     private:
-        umap<std::string, std::vector<std::string>> map;
+        std::unordered_map<std::string, std::vector<std::string>> map;
 
-        umap<std::string, std::vector<std::string>> copyMap();
+        std::unordered_map<std::string, std::vector<std::string>> copyMap();
 
-        bool equalsMap(umap<std::string, std::vector<std::string>> other);
+        bool equalsMap(const std::unordered_map<std::string, std::vector<std::string>>& other);
     public:
         /**
         * Add a new string
         * \return Whether the addition was successful
         */
-        bool add(std::string x);
+        bool add(const std::string& x);
 
         /**
          * Link string x and y
          * \return Whether the linking was successful
          */
-        bool link(std::string x, std::string y);
+        bool link(const std::string& x, const std::string& y);
 
         /**
          * Unlink string x and y
          * \return Whether the unlinking was successful
          */
-        bool unlink(std::string x, std::string y);
+        bool unlink(const std::string& x, const std::string& y);
 
         /**
          * Link all strings to each other
          * \return Whether the linking was successful
          */
-        bool fill(std::vector<std::string> vec);
+        bool fill(const std::vector<std::string>& vec);
 
         /** \return Whether x and y are linked */
-        bool find(std::string x, std::string y);
+        bool find(const std::string& x, const std::string& y);
 
         /** \return Strings linked with x */
-        std::vector<std::string> find(std::string x);
+        std::vector<std::string> find(const std::string& x);
 
         /** \return List of all strings */
         std::vector<std::string> keys();
@@ -57,13 +61,13 @@ namespace reach {
         void close();
 
         /** Clone reachability relation */
-        sptr_t<StringReachability> clone();
+        StringReachabilityPtr clone();
 
         /** Textual representation of the reachability relation */
         std::string toString();
 
         /** Transform the structure into one for index reachability, based on a given order */
-        sptr_t<IndexReachability> toIndexReachability(umap<std::string, unsigned long> params);
+        IndexReachabilityPtr toIndexReachability(const std::unordered_map<std::string, unsigned long>& params);
     };
 }
 

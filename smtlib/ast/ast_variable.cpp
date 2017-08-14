@@ -23,6 +23,6 @@ void VariableBinding::accept(Visitor0* visitor){
 
 string VariableBinding::toString() {
     stringstream ss;
-    ss << symbol->toString() << " (" << term->toString() << ")";
+    ss << symbol->toString() << " " << term->toString();
     return ss.str();
 }

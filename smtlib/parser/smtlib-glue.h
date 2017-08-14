@@ -2,7 +2,9 @@
 #define INDUCTOR_SMTLIB_GLUE_H
 
 #ifdef __cplusplus
+
 #include "smtlib/ast/ast_abstract.h"
+
 namespace smtlib {
     namespace ast {
         class Node;
@@ -11,9 +13,9 @@ namespace smtlib {
 }
 class ParserInternalList;
 
-typedef class smtlib::ast::Node *AstPtr;
-typedef class ParserInternalList *AstList;
-typedef class smtlib::Parser *SmtPrsr;
+typedef class smtlib::ast::Node* AstPtr;
+typedef class ParserInternalList* AstList;
+typedef class smtlib::Parser* SmtPrsr;
 #else
 typedef void *AstPtr, *AstList, *SmtPrsr;
 #endif
@@ -22,7 +24,7 @@ typedef void *AstPtr, *AstList, *SmtPrsr;
 extern "C" {
 #endif
 
-int smt_yylex (void);
+int smt_yylex(void);
 int smt_yyparse(SmtPrsr);
 
 void ast_print(AstPtr ptr);
