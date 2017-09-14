@@ -220,6 +220,8 @@ namespace smtlib {
             virtual CVC4::Expr translateBinds(sptr_v<sep::SortedVariable> binds);
 
         };
+
+        typedef std::shared_ptr<CVC4Interface> CVC4InterfacePtr;
     }
 }
 

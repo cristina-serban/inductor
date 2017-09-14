@@ -101,6 +101,8 @@ namespace smtlib {
 
             bool unify(sptr_t<Term> node);
         };
+
+        typedef std::shared_ptr<Unifier> UnifierPtr;
     }
 }
 

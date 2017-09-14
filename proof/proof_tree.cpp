@@ -9,31 +9,32 @@ using namespace proof;
 using namespace smtlib;
 
 
-
 /* ===================================== ProofNode ===================================== */
-sptr_t<ProofNode> ProofNode::getRoot() {
-    if(!parent) {
+ProofNodePtr ProofNode::getRoot() {
+    if (!parent) {
         return shared_from_this();
-    } else {
-        sptr_t<ProofNode> root = parent;
-        while(root->parent) {
-            root = root->parent;
-        }
-        return root;
     }
+
+    ProofNodePtr root = parent;
+    while (root->parent) {
+        root = root->parent;
+    }
+    return root;
+
 }
 
 vector<size_t> ProofNode::getPath() {
     vector<size_t> path;
-    if(parent) {
-        sptr_t<ProofNode> current = shared_from_this();
-        sptr_t<ProofNode> par = dynamic_pointer_cast<PairNode>(parent);
 
-        while(par) {
-            sptr_t<PairNode> pnode = dynamic_pointer_cast<PairNode>(par);
+    if (parent) {
+        ProofNodePtr current = shared_from_this();
+        ProofNodePtr par = dynamic_pointer_cast<PairNode>(parent);
 
-            for(size_t i = 0, n = pnode->children.size(); i < n; i++) {
-                if(pnode->children[i] == current) {
+        while (par) {
+            PairNodePtr pnode = dynamic_pointer_cast<PairNode>(par);
+
+            for (size_t i = 0, n = pnode->children.size(); i < n; i++) {
+                if (pnode->children[i] == current) {
                     path.insert(path.begin(), i);
                     break;
                 }
@@ -48,7 +49,7 @@ vector<size_t> ProofNode::getPath() {
 }
 
 /* ===================================== TrueNode ===================================== */
-sptr_t<ProofNode> TrueLeaf::clone() {
+ProofNodePtr TrueLeaf::clone() {
     return make_shared<TrueLeaf>();
 }
 
@@ -59,13 +60,13 @@ string TrueLeaf::toString() {
 string TrueLeaf::toLatexString() {
     stringstream ss;
 
-    if(!parent) {
+    if (!parent) {
         ss << "\\[";
     }
 
     ss << "\\mathbf{" << PROOF_TRUE << "}";
 
-    if(!parent) {
+    if (!parent) {
         ss << "\\]";
     }
 
@@ -81,7 +82,7 @@ bool TrueLeaf::isProof() {
 }
 
 /* ===================================== FalseLeaf ==================================== */
-sptr_t<ProofNode> FalseLeaf::clone() {
+ProofNodePtr FalseLeaf::clone() {
     return make_shared<FalseLeaf>();
 }
 
@@ -92,13 +93,13 @@ string FalseLeaf::toString() {
 string FalseLeaf::toLatexString() {
     stringstream ss;
 
-    if(!parent) {
+    if (!parent) {
         ss << "\\[";
     }
 
     ss << "\\mathbf{" << PROOF_FALSE << "}";
 
-    if(!parent) {
+    if (!parent) {
         ss << "\\]";
     }
 
@@ -114,61 +115,61 @@ bool FalseLeaf::isProof() {
 }
 
 /* =================================== InductionLeaf ================================== */
-sptr_t<ProofNode> InductionLeaf::clone() {
-    return make_shared<InductionLeaf>();
+ProofNodePtr InfDescentLeaf::clone() {
+    return make_shared<InfDescentLeaf>();
 }
 
-string InductionLeaf::toString() {
+string InfDescentLeaf::toString() {
     return PROOF_IND;
 }
 
-string InductionLeaf::toLatexString() {
+string InfDescentLeaf::toLatexString() {
     stringstream ss;
 
-    if(!parent) {
+    if (!parent) {
         ss << "\\[";
     }
 
     ss << "\\mathbf{" << PROOF_IND << "}";
 
-    if(!parent) {
+    if (!parent) {
         ss << "\\]";
     }
 
     return ss.str();
 }
 
-bool InductionLeaf::isClosed() {
+bool InfDescentLeaf::isClosed() {
     return true;
 }
 
-bool InductionLeaf::isProof() {
+bool InfDescentLeaf::isProof() {
     return true;
 }
 
 /* ===================================== PairNode ===================================== */
-PairNode::PairNode(sptr_t<Pair> pair, Rule rule, sptr_v<ProofNode> children)
-    : pair(pair), rule(rule) {
+PairNode::PairNode(const PairPtr& pair, Rule rule, const vector<ProofNodePtr>& children)
+        : pair(pair), rule(rule) {
     this->children.insert(this->children.begin(), children.begin(), children.end());
 }
 
-void PairNode::add(sptr_t<ProofNode> child) {
+void PairNode::add(const ProofNodePtr& child) {
     child->parent = shared_from_this();
     children.push_back(child);
 }
 
-void PairNode::add(sptr_v<ProofNode> children) {
-    for(size_t i = 0, n = children.size(); i < n; i++) {
-        children[i]->parent = shared_from_this();
-        children.push_back(children[i]);
+void PairNode::add(const vector<ProofNodePtr>& children) {
+    for (const auto& child : children) {
+        child->parent = shared_from_this();
+        this->children.push_back(child);
     }
 }
 
-sptr_t<ProofNode> PairNode::clone() {
-    sptr_t<PairNode> newNode = make_shared<PairNode>(pair, rule);
+ProofNodePtr PairNode::clone() {
+    PairNodePtr newNode = make_shared<PairNode>(pair, rule);
 
-    for(auto it = children.begin(); it != children.end(); it++) {
-        sptr_t<ProofNode> newChild = (*it)->clone();
+    for (const auto& child : children) {
+        ProofNodePtr newChild = child->clone();
         newChild->parent = newNode;
         newNode->children.push_back(newChild);
     }
@@ -180,8 +181,8 @@ string PairNode::toString() {
     stringstream ss;
     ss << pair->toString() << endl;
 
-    for(auto it = children.begin(); it != children.end(); it++) {
-        ss << (*it)->toString() << endl;
+    for (const auto& child : children) {
+        ss << child->toString() << endl;
     }
 
     return ss.str();
@@ -190,21 +191,19 @@ string PairNode::toString() {
 string PairNode::toLatexString() {
     stringstream ss;
 
-    if(!parent) {
+    if (!parent) {
         ss << "\\[";
     }
 
     ss << "\\inferrule*[Left=" << proof::toString(rule) << ", rightskip=-1em]{";
 
     // Children
-    bool first = true;
-    for(auto it = children.begin(); it != children.end(); it++) {
-        if(first) {
-            first = false;
-        } else {
+    for (size_t i = 0, sz = children.size(); i < sz; i++) {
+        if (i != 0) {
             ss << " \\\\ ";
         }
-        ss << (*it)->toLatexString();
+
+        ss << children[i]->toLatexString();
     }
 
     ss << "} {";
@@ -212,39 +211,36 @@ string PairNode::toLatexString() {
     // Current pair
     ss << "\\texttt{" << pair->left->toString() << "} \\vdash ";
 
-    if(pair->right.empty())
+    if (pair->right.empty())
         ss << "\\{ \\}";
 
-    first = true;
-    for(auto it = pair->right.begin(); it != pair->right.end(); it++) {
-        if(first) {
-            first = false;
-        } else {
+    for (size_t i = 0, sz = pair->right.size(); i < sz; i++) {
+        if (i != 0) {
             ss << " \\lor ";
         }
-        ss << "\\texttt{" << (*it)->toString() << "}";
+        ss << "\\texttt{" << pair->right[i]->toString() << "}";
     }
 
     ss << "}";
 
-    if(!parent) {
+    if (!parent) {
         ss << "\\]";
     }
 
     return ss.str();
 }
 
-sptr_t<ProofNode> PairNode::getNode(vector<size_t> path) {
-    sptr_t<ProofNode> null;
-    sptr_t<ProofNode> result = shared_from_this();
+ProofNodePtr PairNode::getNodeFromPath(const vector<size_t>& path) {
+    ProofNodePtr null;
+    ProofNodePtr result = shared_from_this();
 
-    if(path.empty()) {
+    if (path.empty()) {
         return result;
     }
 
     size_t i = 0;
-    while(i < path.size()) {
-        sptr_t<PairNode> pairNode = dynamic_pointer_cast<PairNode>(result);
+    while (i < path.size()) {
+        PairNodePtr pairNode = dynamic_pointer_cast<PairNode>(result);
         if (path[i] >= pairNode->children.size())
             return null;
 
@@ -256,8 +252,8 @@ sptr_t<ProofNode> PairNode::getNode(vector<size_t> path) {
 }
 
 bool PairNode::isClosed() {
-    for(size_t i = 0, n = children.size(); i < n; i++) {
-        if(!children[i]->isClosed())
+    for (const auto& child : children) {
+        if (!child->isClosed())
             return false;
     }
 
@@ -265,12 +261,12 @@ bool PairNode::isClosed() {
 }
 
 bool PairNode::isProof() {
-    if(!isClosed()) {
+    if (!isClosed()) {
         return false;
     }
 
-    for(size_t i = 0, n = children.size(); i < n; i++) {
-        if(!children[i]->isProof())
+    for (const auto& child : children) {
+        if (!child->isProof())
             return false;
     }
 

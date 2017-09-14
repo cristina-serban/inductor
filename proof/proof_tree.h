@@ -15,14 +15,18 @@
 
 namespace proof {
     /* ===================================== ProofNode ===================================== */
-    struct ProofNode : public std::enable_shared_from_this<ProofNode> {
-        sptr_t<ProofNode> parent;
+    class ProofNode;
+    typedef std::shared_ptr<ProofNode> ProofNodePtr;
 
-        sptr_t<ProofNode> getRoot();
+    class ProofNode : public std::enable_shared_from_this<ProofNode> {
+    public:
+        ProofNodePtr parent;
+
+        ProofNodePtr getRoot();
 
         virtual std::vector<size_t> getPath();
 
-        virtual sptr_t<ProofNode> clone() = 0;
+        virtual ProofNodePtr clone() = 0;
 
         virtual bool isClosed() = 0;
 
@@ -35,81 +39,93 @@ namespace proof {
 
     /* ===================================== TrueLeaf ===================================== */
     /** Leaf node with 'True' value */
-    struct TrueLeaf : public ProofNode {
-        inline TrueLeaf() { }
+    class TrueLeaf : public ProofNode {
+    public:
+        inline TrueLeaf() = default;
 
-        virtual sptr_t<ProofNode> clone();
+        ProofNodePtr clone() override;
 
-        virtual bool isClosed();
+        bool isClosed() override;
 
-        virtual bool isProof();
+        bool isProof() override;
 
-        virtual std::string toString();
+        std::string toString() override;
 
-        virtual std::string toLatexString();
+        std::string toLatexString() override;
     };
+
+    typedef std::shared_ptr<TrueLeaf> TrueLeafPtr;
 
     /* ===================================== FalseLeaf ==================================== */
     /** Leaf node with 'False' value */
-    struct FalseLeaf : public ProofNode {
-        inline FalseLeaf() { }
+    class FalseLeaf : public ProofNode {
+    public:
+        inline FalseLeaf() = default;
 
-        virtual sptr_t<ProofNode> clone();
+        ProofNodePtr clone() override;
 
-        virtual bool isClosed();
+        bool isClosed() override;
 
-        virtual bool isProof();
+        bool isProof() override;
 
-        virtual std::string toString();
+        std::string toString() override;
 
-        virtual std::string toLatexString();
+        std::string toLatexString() override;
     };
 
-    /* =================================== InductionLeaf ================================== */
+    typedef std::shared_ptr<FalseLeaf> FalseLeafPtr;
+
+    /* ================================== InfDescentLeaf ================================== */
     /** Leaf node indicating induction */
-    struct InductionLeaf : public ProofNode {
-        inline InductionLeaf() { }
+    class InfDescentLeaf : public ProofNode {
+    public:
+        inline InfDescentLeaf() = default;
 
-        virtual sptr_t<ProofNode> clone();
+        ProofNodePtr clone() override;
 
-        virtual bool isClosed();
+        bool isClosed() override;
 
-        virtual bool isProof();
+        bool isProof() override;
 
-        virtual std::string toString();
+        std::string toString() override;
 
-        virtual std::string toLatexString();
+        std::string toLatexString() override;
     };
+
+    typedef std::shared_ptr<InfDescentLeaf> InfDescentLeafPtr;
 
     /* ===================================== PairNode ===================================== */
     /** Node containing an implication pair */
-    struct PairNode : public ProofNode {
-        sptr_t<Pair> pair;
+    class PairNode : public ProofNode {
+    public:
+        PairPtr pair;
         Rule rule;
-        sptr_v<ProofNode> children;
+        std::vector<ProofNodePtr> children;
 
-        inline PairNode(sptr_t<Pair> pair) : pair(pair), rule(NONE) { }
+        inline explicit PairNode(const PairPtr& pair) : pair(pair), rule(NONE) { }
 
-        inline PairNode(sptr_t<Pair> pair, Rule rule) : pair(pair), rule(rule) { }
+        inline PairNode(const PairPtr& pair, Rule rule) : pair(pair), rule(rule) { }
 
-        PairNode(sptr_t<Pair> pair, Rule rule, sptr_v<ProofNode> children);
+        PairNode(const PairPtr& pair, Rule rule, const std::vector<ProofNodePtr>& children);
 
-        void add(sptr_t<ProofNode> child);
+        void add(const ProofNodePtr& child);
 
-        void add(sptr_v<ProofNode> children);
+        void add(const std::vector<ProofNodePtr>& children);
 
-        virtual sptr_t<ProofNode> clone();
+        ProofNodePtr getNodeFromPath(const std::vector<size_t>& path);
 
-        sptr_t<ProofNode> getNode(std::vector<size_t> path);
+        ProofNodePtr clone() override;
 
-        virtual bool isClosed();
+        bool isClosed() override;
 
-        virtual bool isProof();
+        bool isProof() override;
 
-        virtual std::string toString();
+        std::string toString() override;
 
-        virtual std::string toLatexString();
+        std::string toLatexString() override;
     };
+
+    typedef std::shared_ptr<PairNode> PairNodePtr;
 }
 
 #endif //INDUCTOR_PROOF_SPLIT_TREE_H

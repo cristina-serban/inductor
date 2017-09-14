@@ -1,3 +1,8 @@
+/**
+ * \file proof_state.h
+ * \brief Proof states and proof pairs.
+ */
+
 #ifndef INDUCTOR_PROOF_STATE_H
 #define INDUCTOR_PROOF_STATE_H
 
@@ -5,108 +10,126 @@
 #include "sep/sep_abstract.h"
 
 namespace proof {
-    struct State {
+    /* ====================================== State ======================================= */
+    class State;
+
+    typedef std::shared_ptr<State> StatePtr;
+
+    class State {
+    public:
         /** Existential bindings */
-        sptr_v<smtlib::sep::SortedVariable> bindings;
+        std::vector<smtlib::sep::SortedVariablePtr> bindings;
+
         /** Free variables */
-        sptr_v<smtlib::sep::SortedVariable> variables;
+        std::vector<smtlib::sep::SortedVariablePtr> variables;
+
         /** Non-inductive expression */
-        sptr_t<pred::Constraint> expr;
+        pred::ConstraintPtr constraint;
+
         /** Predicate calls */
-        sptr_v<pred::PredicateCall> calls;
+        std::vector<pred::PredicateCallPtr> calls;
+
         /** State index */
         std::string index;
 
-        inline State() { }
+        inline State() = default;
 
-        State(sptr_v<smtlib::sep::SortedVariable> bindings,
-              sptr_t<pred::Constraint> expr,
-              sptr_v<pred::PredicateCall> calls);
+        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+              const pred::ConstraintPtr& constraint,
+              const std::vector<pred::PredicateCallPtr>& calls);
 
-        State(sptr_t<pred::Constraint> expr,
-              sptr_v<pred::PredicateCall> calls);
+        State(const pred::ConstraintPtr& constraint,
+              const std::vector<pred::PredicateCallPtr>& calls);
 
-        State(sptr_v<smtlib::sep::SortedVariable> bindings,
-              sptr_t<pred::Constraint> expr);
+        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+              const pred::ConstraintPtr& constraint);
 
-        State(sptr_t<pred::Constraint> expr);
+        explicit State(const pred::ConstraintPtr& constraint);
 
-        State(sptr_v<smtlib::sep::SortedVariable> bindings,
-              sptr_v<pred::PredicateCall> calls);
+        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+              const std::vector<pred::PredicateCallPtr>& calls);
 
-        State(sptr_v<pred::PredicateCall> calls);
+        explicit State(const std::vector<pred::PredicateCallPtr>& calls);
 
-        State(sptr_v<smtlib::sep::SortedVariable> bindings,
-              sptr_t<pred::Constraint> expr,
-              sptr_t<pred::PredicateCall> call);
+        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+              const pred::ConstraintPtr& constraint,
+              const pred::PredicateCallPtr& call);
 
-        State(sptr_t<pred::Constraint> expr,
-              sptr_t<pred::PredicateCall> call);
+        State(const pred::ConstraintPtr& constraint,
+              const pred::PredicateCallPtr& call);
 
-        State(sptr_v<smtlib::sep::SortedVariable> bindings,
-              sptr_t<pred::PredicateCall> call);
+        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
+              const pred::PredicateCallPtr& call);
 
-        State(sptr_t<pred::PredicateCall> call);
+        explicit State(const pred::PredicateCallPtr& call);
 
-        void addVars(sptr_v<smtlib::sep::SortedVariable> vars);
+        void addVariables(const std::vector<smtlib::sep::SortedVariablePtr>& variables);
 
-        void addBinds(sptr_v<smtlib::sep::SortedVariable> vars);
+        void addBindings(const std::vector<smtlib::sep::SortedVariablePtr>& bindings);
 
-        sptr_t<State> clone();
+        void merge(const StatePtr& state, size_t origin);
 
-        sptr_t<smtlib::sep::Term> toTerm();
-
-        std::string toString();
-
-        void merge(sptr_t<State> state, size_t origin);
-
-        void substitute(sptr_um2<std::string, smtlib::sep::Term> subst);
+        void substitute(const std::unordered_map<std::string, smtlib::sep::TermPtr>& subst);
 
         bool isEmp();
 
         bool isCallsOnly();
-    };
 
-    struct Pair {
-        sptr_t<State> left;
-        sptr_v<State> right;
+        StatePtr clone();
 
-        inline Pair() { }
-
-        Pair(sptr_t<State> left, sptr_v<State> right);
-
-        sptr_t<Pair> clone();
+        smtlib::sep::TermPtr toTerm();
 
         std::string toString();
     };
 
-    /** Check whether two states are equal */
-    bool equals(sptr_t<State> s1, sptr_t<State> s2);
+    /* ======================================= Pair ======================================= */
+    class Pair;
 
-    /** Check whether two vectors of terms are equal */
-    bool equals(sptr_v<smtlib::sep::Term> &v1, sptr_v<smtlib::sep::Term> &v2);
+    typedef std::shared_ptr<Pair> PairPtr;
 
+    class Pair {
+    public:
+        StatePtr left;
+        std::vector<StatePtr> right;
+
+        inline Pair() = default;
+
+        Pair(const StatePtr& left, const std::vector<StatePtr>& right);
+
+        PairPtr clone();
+
+        std::string toString();
+    };
+
+    /* ==================================== Utilities ===================================== */
     /** Check whether two pairs are equal */
-    bool equals(sptr_t<Pair> p1, sptr_t<Pair> p2);
+    bool equals(const PairPtr& p1, const PairPtr& p2);
+
+    /** Check whether two states are equal */
+    bool equals(const StatePtr& s1, const StatePtr& s2);
 
     /** Check whether two vectors of states are equal */
-    bool equals(sptr_v<State> &v1, sptr_v<State> &v2);
+    bool equals(const std::vector<StatePtr>& v1, const std::vector<StatePtr>& v2);
 
-
-    /** Check whether two states are equivalent */
-    bool equivs(sptr_t<State> s1, sptr_t<State> s2);
-
-    /** Check whether two vectors of terms are equivalent */
-    bool equivs(sptr_v<smtlib::sep::Term> &v1, sptr_v<smtlib::sep::Term> &v2);
-
-    /** Check whether two terms are equivalent */
-    bool equivs(sptr_t<smtlib::sep::Term> t1, sptr_t<smtlib::sep::Term> t2);
+    /** Check whether two vectors of terms are equal */
+    bool equals(const std::vector<smtlib::sep::TermPtr>& v1,
+                const std::vector<smtlib::sep::TermPtr>& v2);
 
     /** Check whether two pairs are equivalent */
-    bool equivs(sptr_t<Pair> p1, sptr_t<Pair> p2);
+    bool equivs(const PairPtr& p1, const PairPtr& p2);
+
+    /** Check whether two states are equivalent */
+    bool equivs(const StatePtr& s1, const StatePtr& s2);
 
     /** Check whether two vectors of states are equivalent */
-    bool equivs(sptr_v<State> &v1, sptr_v<State> &v2);
+    bool equivs(const std::vector<StatePtr>& v1, const std::vector<StatePtr>& v2);
+
+    /** Check whether two terms are equivalent */
+    bool equivs(const smtlib::sep::TermPtr& t1, const smtlib::sep::TermPtr& t2);
+
+    /** Check whether two vectors of terms are equivalent */
+    bool equivs(const std::vector<smtlib::sep::TermPtr>& v1,
+                const std::vector<smtlib::sep::TermPtr>& v2);
 }
 
 #endif //INDUCTOR_PROOF_STATE_H

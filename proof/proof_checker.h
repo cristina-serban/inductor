@@ -18,7 +18,7 @@ namespace proof {
     class EntailmentChecker;
 
     /** Callback for rule application */
-    typedef void (EntailmentChecker::*ApplyRuleCallback) (sptr_t<PairStmtNode>, sptr_t<RuleApplication>);
+    typedef void (EntailmentChecker::*ApplyRuleCallback)(const PairStmtNodePtr&, const RuleApplicationPtr&);
 
     // ApplyRuleCallback fPtr;
     // EntailmentChecker* obj;
@@ -27,63 +27,78 @@ namespace proof {
     /** Checker for entailment proofs */
     class EntailmentChecker {
     private:
-        sptr_t<pred::PredicateTable> table;
-        sptr_v<PairStmtNode> nodeQueue;
-        sptr_t<PairStmtNode> root;
-        sptr_t<strat::Strategy> strat;
+        pred::PredicateTablePtr table;
+        std::vector<PairStmtNodePtr> nodeQueue;
+        PairStmtNodePtr root;
+        strat::StrategyPtr strategy;
 
         std::unordered_map<Rule, ApplyRuleCallback, RuleHash> ruleMap;
 
+    public:
+        EntailmentChecker();
+
+        explicit EntailmentChecker(const pred::PredicateTablePtr& table);
+
+        /** Checks all entailments in a script */
+        bool check(const smtlib::sep::ScriptPtr& script);
+
+        /** Checks entailment for a pair */
+        bool check(PairPtr pair);
+
+    private:
         void initRuleMap();
+
         void initStrategy();
 
         bool check();
-        void check(sptr_t<PairStmtNode> node);
+
+        void check(const PairStmtNodePtr& node);
 
         /* =================================== Trying rules =================================== */
-        void tryRules(sptr_t<PairStmtNode> node, sptr_v<RuleApplication> &appls);
+        void tryRules(const PairStmtNodePtr& node, std::vector<RuleApplicationPtr>& appls);
 
-        bool tryAxiom(sptr_t<PairStmtNode> node);
-        bool tryInfDescent(sptr_t<PairStmtNode> node);
+        bool tryAxiom(const PairStmtNodePtr& node);
 
-        bool tryUnfoldLeft(sptr_t<PairStmtNode> node, sptr_t<LeftUnfoldApplication> appl);
-        bool tryUnfoldRight(sptr_t<PairStmtNode> node, sptr_t<RightUnfoldApplication> appl);
+        bool tryInfDescent(const PairStmtNodePtr& node);
 
-        bool tryReduce(sptr_t<PairStmtNode> node, sptr_t<ReduceApplication> appl);
-        bool trySplit(sptr_t<PairStmtNode> node, sptr_t<SplitApplication> appl);
+        bool tryUnfoldLeft(const PairStmtNodePtr& node, const LeftUnfoldApplicationPtr& appl);
+
+        bool tryUnfoldRight(const PairStmtNodePtr& node, const RightUnfoldApplicationPtr& appl);
+
+        bool tryReduce(const PairStmtNodePtr& node, const ReduceApplicationPtr& appl);
+
+        bool trySplit(const PairStmtNodePtr& node, const SplitApplicationPtr& appl);
 
         /* ================================== Applying rules ================================== */
-        void apply(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl);
+        void apply(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
 
-        void applyAxiom(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl);
-        void applyInfDescent(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl);
-        void applyUnfoldLeft(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl);
-        void applyUnfoldRight(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl);
-        void applyReduce(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl);
-        void applySplit(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl);
+        void applyAxiom(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
+
+        void applyInfDescent(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
+
+        void applyUnfoldLeft(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
+
+        void applyUnfoldRight(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
+
+        void applyReduce(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
+
+        void applySplit(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
 
         /* ==================================== Utilities ===================================== */
-        sptr_v<State> applyUnfold(sptr_t<State> state, size_t callIndex);
+        std::vector<StatePtr> applyUnfold(const StatePtr& state, size_t callIndex);
 
-        sptr_t<pred::InductivePredicate> unfold(sptr_t<pred::PredicateCall> call, std::string index);
+        pred::InductivePredicatePtr unfold(const pred::PredicateCallPtr& call,
+                                           const std::string& index);
 
-        void expandLeft(sptr_t<PairStmtNode> node, sptr_t<LeftUnfoldApplication> appl);
+        void expandLeft(const PairStmtNodePtr& node,
+                        const LeftUnfoldApplicationPtr& appl);
 
-        void expandRight(sptr_t<PairStmtNode> node, std::vector<sptr_v<State>> right,
-                         std::vector<size_t> origin, sptr_t<RightUnfoldApplication> appl, sptr_v<Pair> workset);
-
-    public:
-        inline EntailmentChecker()
-            : table(std::make_shared<pred::PredicateTable>()) { initRuleMap(); initStrategy(); }
-
-        inline EntailmentChecker(sptr_t<pred::PredicateTable> table)
-            : table(table) { initRuleMap(); initStrategy(); }
-
-        bool check(sptr_t<smtlib::sep::Script> script);
-
-        bool check(sptr_t<Pair> pair);
+        void expandRight(const PairStmtNodePtr& node,
+                         const std::vector<std::vector<StatePtr>>& right,
+                         const std::vector<size_t>& origin,
+                         const RightUnfoldApplicationPtr& appl,
+                         const std::vector<PairPtr>& workset);
     };
 }
 
 #endif //INDUCTOR_PROOF_ENT_CHECKER_H
-

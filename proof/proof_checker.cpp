@@ -16,6 +16,18 @@ using namespace strat;
 using namespace smtlib::sep;
 using namespace smtlib::cvc;
 
+EntailmentChecker::EntailmentChecker()
+        : table(std::make_shared<pred::PredicateTable>()) {
+    initRuleMap();
+    initStrategy();
+}
+
+EntailmentChecker::EntailmentChecker(const pred::PredicateTablePtr& table)
+        : table(table) {
+    initRuleMap();
+    initStrategy();
+}
+
 void EntailmentChecker::initRuleMap() {
     ruleMap[Rule::AXIOM] = &EntailmentChecker::applyAxiom;
     ruleMap[Rule::INFINITE_DESCENT] = &EntailmentChecker::applyInfDescent;
@@ -73,68 +85,68 @@ void EntailmentChecker::initStrategy() {
     transitions["q4"] = q4trans;
     transitions["q5"] = q5trans;
 
-    this->strat = make_shared<Strategy>(states, init, final, transitions);
+    this->strategy = make_shared<Strategy>(states, init, final, transitions);
 }
 
-bool EntailmentChecker::check(sptr_t<Script> script) {
+bool EntailmentChecker::check(const ScriptPtr& script) {
     table->load(script);
 
     bool hasEntAssertion = false;
 
-    sptr_v<Command> cmds = script->commands;
-    for (auto it = cmds.begin(); it != cmds.end(); it++) {
-
+    for (const auto& cmd : script->commands) {
         // We look only for assertions
-        sptr_t<AssertCommand> cmd = dynamic_pointer_cast<AssertCommand>(*it);
-        if (!cmd)
+        auto assrt = dynamic_pointer_cast<AssertCommand>(cmd);
+        if (!assrt)
             continue;
 
         // The entailment must be formatted as an implication
-        sptr_t<ImpliesTerm> impl = dynamic_pointer_cast<ImpliesTerm>(cmd->term);
-        if (impl && impl->terms.size() >= 2) {
-            // Build left-hand side
-            sptr_t<State> leftState = toState(table, impl->terms[0]);
-            leftState->index = "0";
+        auto impl = dynamic_pointer_cast<ImpliesTerm>(assrt->term);
+        if (!impl || impl->terms.size() < 2)
+            continue;
 
-            // Build right-hand side
-            sptr_t<OrTerm> orTerm = dynamic_pointer_cast<OrTerm>(impl->terms[1]);
-            /*if (!table->isInductiveCase(impl->terms[1]) && !orTerm) {
-                continue;
-            }*/
+        // Build left-hand side
+        StatePtr leftState = toState(table, impl->terms[0]);
+        leftState->index = "0";
 
-            sptr_v<Term> rightTerms;
-            if (orTerm) {
-                rightTerms.insert(rightTerms.begin(), orTerm->terms.begin(), orTerm->terms.end());
-            } else {
-                rightTerms.push_back(impl->terms[1]);
-            }
-
-            sptr_v<State> rightSet;
-            for (size_t i = 0, n = rightTerms.size(); i < n; i++) {
-                sptr_t<State> rightState = toState(table, rightTerms[i]);
-
-                stringstream ss;
-                ss << (i + 1);
-                rightState->index = ss.str();
-
-                rightSet.push_back(rightState);
-            }
-
-            sptr_t<Pair> pair = make_shared<Pair>(leftState, rightSet);
-
-            hasEntAssertion = true;
-
-            // Build tree root
-            root = make_shared<PairStmtNode>(pair);
-            root->stratStates.emplace_back(strat->init);
-            nodeQueue.push_back(root);
-
-            bool res = check();
-
-            // todo print trees
-            if (!res)
-                return false;
+        // Build right-hand side
+        OrTermPtr orTerm = dynamic_pointer_cast<OrTerm>(impl->terms[1]);
+        if (!table->isInductiveCase(impl->terms[1]) && !orTerm) {
+            continue;
         }
+
+        vector<TermPtr> rightTerms;
+        if (orTerm) {
+            rightTerms.insert(rightTerms.begin(), orTerm->terms.begin(), orTerm->terms.end());
+        } else {
+            rightTerms.push_back(impl->terms[1]);
+        }
+
+        vector<StatePtr> rightSet;
+        for (size_t i = 0, sz = rightTerms.size(); i < sz; i++) {
+            StatePtr rightState = toState(table, rightTerms[i]);
+
+            stringstream ss;
+            ss << (i + 1);
+            rightState->index = ss.str();
+
+            rightSet.push_back(rightState);
+        }
+
+        PairPtr pair = make_shared<Pair>(leftState, rightSet);
+
+        hasEntAssertion = true;
+
+        // Build tree root
+        root = make_shared<PairStmtNode>(pair);
+        root->stratStates.emplace_back(strategy->init);
+        nodeQueue.push_back(root);
+
+        bool res = check();
+
+        // todo print trees
+        if (!res)
+            return false;
+
     }
 
     if (!hasEntAssertion) {
@@ -144,9 +156,9 @@ bool EntailmentChecker::check(sptr_t<Script> script) {
     return true;
 }
 
-bool EntailmentChecker::check(sptr_t<Pair> pair) {
+bool EntailmentChecker::check(PairPtr pair) {
     root = make_shared<PairStmtNode>(pair);
-    root->stratStates.emplace_back(strat->init);
+    root->stratStates.emplace_back(strategy->init);
     nodeQueue.push_back(root);
 
     bool res = check();
@@ -159,32 +171,31 @@ bool EntailmentChecker::check(sptr_t<Pair> pair) {
 bool EntailmentChecker::check() {
     bool foundProof = false;
     while (!nodeQueue.empty() /*&& !foundProof*/) {
-        sptr_t<PairStmtNode> node = nodeQueue[0];
+        PairStmtNodePtr node = nodeQueue[0];
         nodeQueue.erase(nodeQueue.begin());
 
         check(node);
-
-        cout << root->toString(0) << endl << endl;
 
         if (root->isProof())
             foundProof = true;
     }
 
+    cout << root->toString(0) << endl << endl;
     return foundProof;
 }
 
-void EntailmentChecker::check(sptr_t<PairStmtNode> node) {
-    sptr_v<RuleApplication> appls;
+void EntailmentChecker::check(const PairStmtNodePtr& node) {
+    vector<RuleApplicationPtr> appls;
     tryRules(node, appls);
 
-    for (size_t i = 0, n = appls.size(); i < n; i++) {
-        apply(node, appls[i]);
+    for (const auto& appl : appls) {
+        apply(node, appl);
     }
 }
 
-void EntailmentChecker::tryRules(sptr_t<PairStmtNode> node, sptr_v<RuleApplication>& appls) {
+void EntailmentChecker::tryRules(const PairStmtNodePtr& node, vector<RuleApplicationPtr>& appls) {
     RuleTransitionMap nextStatesMap;
-    strat->next(node->stratStates, nextStatesMap);
+    strategy->next(node->stratStates, nextStatesMap);
 
     bool found = nextStatesMap.find(Rule::AXIOM) != nextStatesMap.end();
     if (found && tryAxiom(node)) {
@@ -203,52 +214,52 @@ void EntailmentChecker::tryRules(sptr_t<PairStmtNode> node, sptr_v<RuleApplicati
     }
 
     found = nextStatesMap.find(Rule::REDUCE) != nextStatesMap.end();
-    sptr_t<ReduceApplication> rdAppl = make_shared<ReduceApplication>();
+    ReduceApplicationPtr rdAppl = make_shared<ReduceApplication>();
     if (found && tryReduce(node, rdAppl)) {
         rdAppl->nextStratStates = nextStatesMap[Rule::REDUCE];
         appls.push_back(rdAppl);
     }
 
     found = nextStatesMap.find(Rule::SPLIT) != nextStatesMap.end();
-    sptr_t<SplitApplication> spAppl = make_shared<SplitApplication>();
+    SplitApplicationPtr spAppl = make_shared<SplitApplication>();
     if (found && trySplit(node, spAppl)) {
         rdAppl->nextStratStates = nextStatesMap[Rule::SPLIT];
         appls.push_back(spAppl);
     }
 
     found = nextStatesMap.find(Rule::LEFT_UNFOLD) != nextStatesMap.end();
-    sptr_t<LeftUnfoldApplication> luAppl = make_shared<LeftUnfoldApplication>();
+    LeftUnfoldApplicationPtr luAppl = make_shared<LeftUnfoldApplication>();
     if (found && tryUnfoldLeft(node, luAppl)) {
         luAppl->nextStratStates = nextStatesMap[Rule::LEFT_UNFOLD];
         appls.push_back(luAppl);
     }
 
     found = nextStatesMap.find(Rule::RIGHT_UNFOLD) != nextStatesMap.end();
-    sptr_t<RightUnfoldApplication> ruAppl = make_shared<RightUnfoldApplication>();
+    RightUnfoldApplicationPtr ruAppl = make_shared<RightUnfoldApplication>();
     if (found && tryUnfoldRight(node, ruAppl)) {
         ruAppl->nextStratStates = nextStatesMap[Rule::RIGHT_UNFOLD];
         appls.push_back(ruAppl);
     }
 }
 
-bool EntailmentChecker::tryAxiom(sptr_t<PairStmtNode> node) {
-    sptr_t<Pair> pair = node->pair;
+bool EntailmentChecker::tryAxiom(const PairStmtNodePtr& node) {
+    PairPtr pair = node->pair;
 
     if (!pair->left->calls.empty())
         return false;
 
     sptr_t<CVC4Interface> cvc = make_shared<CVC4Interface>();
-    sptr_t<Term> leftTerm = pair->left->toTerm();
-    sptr_v<SortedVariable>& vars = pair->left->variables;
+    TermPtr leftTerm = pair->left->toTerm();
+    vector<SortedVariablePtr>& vars = pair->left->variables;
 
-    for (size_t i = 0, n = pair->right.size(); i < n; i++) {
+    for (const auto& rstate : pair->right) {
         // TODO allow predicate calls as uninterpreted functions
-        if (!pair->right[i]->calls.empty())
+        if (!rstate->calls.empty())
             continue;
 
-        sptr_t<Term> rightTerm = pair->right[i]->toTerm();
-        sptr_v<SortedVariable>& binds = pair->right[i]->bindings;
-        bool emptyBinds = pair->right[i]->bindings.empty();
+        TermPtr rightTerm = rstate->toTerm();
+        vector<SortedVariablePtr>& binds = rstate->bindings;
+        bool emptyBinds = rstate->bindings.empty();
 
         if (emptyBinds && cvc->checkEntailment(vars, leftTerm, rightTerm)
             || !emptyBinds && cvc->checkEntailment(vars, binds, leftTerm, rightTerm)) {
@@ -259,23 +270,25 @@ bool EntailmentChecker::tryAxiom(sptr_t<PairStmtNode> node) {
     return false;
 }
 
-bool EntailmentChecker::tryInfDescent(sptr_t<PairStmtNode> node) {
-    sptr_t<Pair> newPair = removePure(node->pair);
+bool EntailmentChecker::tryInfDescent(const PairStmtNodePtr& node) {
+    PairPtr newPair = removePure(node->pair);
     return node->workset.end() != find_if(node->workset.begin(), node->workset.end(),
-                                          [&](const sptr_t<Pair>& p) { return equivs(newPair, p); });
+                                          [&](const PairPtr& p) { return equivs(newPair, p); });
 }
 
 
-bool EntailmentChecker::tryUnfoldLeft(sptr_t<PairStmtNode> node, sptr_t<LeftUnfoldApplication> appl) {
-    for (size_t i = 0, n = node->pair->left->calls.size(); i < n; i++) {
+bool EntailmentChecker::tryUnfoldLeft(const PairStmtNodePtr& node,
+                                      const LeftUnfoldApplicationPtr& appl) {
+    for (size_t i = 0, sz = node->pair->left->calls.size(); i < sz; i++) {
         appl->indices.push_back(i);
     }
 
     return !appl->indices.empty();
 }
 
-bool EntailmentChecker::tryUnfoldRight(sptr_t<PairStmtNode> node, sptr_t<RightUnfoldApplication> appl) {
-    for (size_t i = 0, n = node->pair->right.size(); i < n; i++) {
+bool EntailmentChecker::tryUnfoldRight(const PairStmtNodePtr& node,
+                                       const RightUnfoldApplicationPtr& appl) {
+    for (size_t i = 0, sz = node->pair->right.size(); i < sz; i++) {
         if (node->pair->right[i]->isCallsOnly() && node->pair->right[i]->calls.size() == 1)
             appl->indices.push_back(i);
     }
@@ -283,28 +296,29 @@ bool EntailmentChecker::tryUnfoldRight(sptr_t<PairStmtNode> node, sptr_t<RightUn
     return !appl->indices.empty();
 }
 
-bool EntailmentChecker::tryReduce(sptr_t<PairStmtNode> node, sptr_t<ReduceApplication> appl) {
+bool EntailmentChecker::tryReduce(const PairStmtNodePtr& node,
+                                  const ReduceApplicationPtr& appl) {
     // todo Handle cases with multiple substitutions
 
-    if (!node->pair->left->expr
-        || node->pair->left->expr->pure.empty() && node->pair->left->expr->spatial.empty()) {
+    if (!node->pair->left->constraint
+        || node->pair->left->constraint->pure.empty() && node->pair->left->constraint->spatial.empty()) {
         return false;
     }
 
-    sptr_t<Term> left = node->pair->left->expr->toTerm();
-    sptr_t<CVC4Interface> cvc = make_shared<CVC4Interface>();
+    TermPtr left = node->pair->left->constraint->toTerm();
+    CVC4InterfacePtr cvc = make_shared<CVC4Interface>();
     bool flag = false;
 
-    for (size_t i = 0, n = node->pair->right.size(); i < n; i++) {
-        sptr_um2<string, Term> subst;
+    for (size_t i = 0, sz = node->pair->right.size(); i < sz; i++) {
+        unordered_map<string, TermPtr> subst;
         appl->subst.push_back(subst);
         appl->entails.push_back(false);
 
-        if (!node->pair->right[i]->expr
-            || node->pair->right[i]->expr->pure.empty() && node->pair->right[i]->expr->spatial.empty())
+        if (!node->pair->right[i]->constraint
+            || node->pair->right[i]->constraint->pure.empty() && node->pair->right[i]->constraint->spatial.empty())
             continue;
 
-        sptr_t<Term> expr = node->pair->right[i]->expr->toTerm();
+        TermPtr expr = node->pair->right[i]->constraint->toTerm();
 
         if (cvc->checkEntailment(node->pair->left->variables,
                                  node->pair->right[i]->bindings,
@@ -317,12 +331,14 @@ bool EntailmentChecker::tryReduce(sptr_t<PairStmtNode> node, sptr_t<ReduceApplic
     return flag;
 }
 
-bool EntailmentChecker::trySplit(sptr_t<PairStmtNode> node, sptr_t<SplitApplication> appl) {
+bool EntailmentChecker::trySplit(const PairStmtNodePtr& node,
+                                 const SplitApplicationPtr& appl) {
     // todo
     return false;
 }
 
-void EntailmentChecker::apply(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl) {
+void EntailmentChecker::apply(const PairStmtNodePtr& node,
+                              const RuleApplicationPtr& appl) {
     if (ruleMap.find(appl->getRule()) == ruleMap.end())
         return;
 
@@ -330,108 +346,108 @@ void EntailmentChecker::apply(sptr_t<PairStmtNode> node, sptr_t<RuleApplication>
     (this->*callback)(node, appl);
 }
 
-void EntailmentChecker::applyAxiom(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl) {
-    sptr_t<TrueStmtLeaf> leaf = make_shared<TrueStmtLeaf>();
-    sptr_t<RuleNode> ruleNode = make_shared<RuleNode>(appl->getRule(), node);
+void EntailmentChecker::applyAxiom(const PairStmtNodePtr& node, const RuleApplicationPtr& appl) {
+    TrueStmtLeafPtr leaf = make_shared<TrueStmtLeaf>();
+    RuleNodePtr ruleNode = make_shared<RuleNode>(appl->getRule(), node);
     ruleNode->children.push_back(leaf);
     node->children.push_back(ruleNode);
 }
 
-void EntailmentChecker::applyInfDescent(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl) {
-    sptr_t<InductionStmtLeaf> leaf = make_shared<InductionStmtLeaf>();
-    sptr_t<RuleNode> ruleNode = make_shared<RuleNode>(appl->getRule(), node);
+void EntailmentChecker::applyInfDescent(const PairStmtNodePtr& node, const RuleApplicationPtr& appl) {
+    InfDescentStmtLeafPtr leaf = make_shared<InfDescentStmtLeaf>();
+    RuleNodePtr ruleNode = make_shared<RuleNode>(appl->getRule(), node);
     ruleNode->children.push_back(leaf);
     node->children.push_back(ruleNode);
 }
 
-void EntailmentChecker::applyUnfoldLeft(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl) {
-    sptr_t<LeftUnfoldApplication> ulAppl = dynamic_pointer_cast<LeftUnfoldApplication>(appl);
-    if (!ulAppl) {
+void EntailmentChecker::applyUnfoldLeft(const PairStmtNodePtr& node, const RuleApplicationPtr& appl) {
+    LeftUnfoldApplicationPtr luAppl = dynamic_pointer_cast<LeftUnfoldApplication>(appl);
+    if (!luAppl) {
         return;
     }
 
-    for (size_t i = 0, n = ulAppl->indices.size(); i < n; i++) {
-        ulAppl->unfolded = applyUnfold(node->pair->left, ulAppl->indices[i]);
-        ulAppl->ruleNode = make_shared<RuleNode>(ulAppl->getRule(), node);
-        node->children.push_back(ulAppl->ruleNode);
+    for (const auto& index : luAppl->indices) {
+        luAppl->unfolded = applyUnfold(node->pair->left, index);
+        luAppl->ruleNode = make_shared<RuleNode>(luAppl->getRule(), node);
+        node->children.push_back(luAppl->ruleNode);
 
-        expandLeft(node, ulAppl);
+        expandLeft(node, luAppl);
     }
 }
 
-void EntailmentChecker::applyUnfoldRight(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl) {
-    sptr_t<RightUnfoldApplication> urAppl = dynamic_pointer_cast<RightUnfoldApplication>(appl);
-    if (!urAppl) {
+void EntailmentChecker::applyUnfoldRight(const PairStmtNodePtr& node, const RuleApplicationPtr& appl) {
+    auto ruAppl = dynamic_pointer_cast<RightUnfoldApplication>(appl);
+    if (!ruAppl) {
         return;
     }
 
-    sptr_v<Pair> workset = node->workset;
+    vector<PairPtr> workset = node->workset;
     workset.push_back(removePure(node->pair));
 
     vector<size_t> origin;
-    vector<sptr_v<State>> sets;
+    vector<vector<StatePtr>> sets;
 
-    for (size_t i = 0, n = node->pair->right.size(); i < n; i++) {
-        bool unfold = find(urAppl->indices.begin(), urAppl->indices.end(), i) != urAppl->indices.end();
+    for (size_t i = 0, sz = node->pair->right.size(); i < sz; i++) {
+        bool unfold = find(ruAppl->indices.begin(), ruAppl->indices.end(), i) != ruAppl->indices.end();
 
-        if(unfold) {
-            sptr_v<State> unfolded = applyUnfold(node->pair->right[i], 0);
+        if (unfold) {
+            vector<StatePtr> unfolded = applyUnfold(node->pair->right[i], 0);
             sets.push_back(unfolded);
             origin.push_back(i);
         }
     }
 
-    expandRight(node, sets, origin, urAppl, workset);
+    expandRight(node, sets, origin, ruAppl, workset);
 }
 
-void EntailmentChecker::applyReduce(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl) {
-    sptr_t<ReduceApplication> rdAppl = dynamic_pointer_cast<ReduceApplication>(appl);
+void EntailmentChecker::applyReduce(const PairStmtNodePtr& node, const RuleApplicationPtr& appl) {
+    ReduceApplicationPtr rdAppl = dynamic_pointer_cast<ReduceApplication>(appl);
     if (!rdAppl) {
         return;
     }
 
-    sptr_v<Pair> workset = node->workset;
+    vector<PairPtr> workset = node->workset;
     workset.push_back(removePure(node->pair));
 
-    sptr_t<State> newLeft = node->pair->left->clone();
+    StatePtr newLeft = node->pair->left->clone();
     removeSpatial(newLeft);
 
-    sptr_v<State> newRight;
-    for(size_t i = 0, n = node->pair->right.size(); i < n; i++) {
-        if(!rdAppl->entails[i])
+    vector<StatePtr> newRight;
+    for (size_t i = 0, sz = node->pair->right.size(); i < sz; i++) {
+        if (!rdAppl->entails[i])
             continue;
 
-        sptr_t<State> newState = node->pair->right[i]->clone();
+        StatePtr newState = node->pair->right[i]->clone();
         newState->substitute(rdAppl->subst[i]);
         removeSpatial(newState);
         newRight.push_back(newState);
     }
 
-    sptr_t<Pair> nextPair = make_shared<Pair>(newLeft, newRight);
+    PairPtr nextPair = make_shared<Pair>(newLeft, newRight);
 
-    sptr_t<PairStmtNode> nextNode = make_shared<PairStmtNode>(nextPair, workset);
+    PairStmtNodePtr nextNode = make_shared<PairStmtNode>(nextPair, workset);
     nextNode->stratStates = appl->nextStratStates;
 
-    sptr_t<RuleNode> ruleNode = make_shared<RuleNode>(appl->getRule(), node);
+    RuleNodePtr ruleNode = make_shared<RuleNode>(appl->getRule(), node);
     ruleNode->children.push_back(nextNode);
 
     node->children.push_back(ruleNode);
     nodeQueue.push_back(nextNode);
 }
 
-void EntailmentChecker::applySplit(sptr_t<PairStmtNode> node, sptr_t<RuleApplication> appl) {
+void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplicationPtr& appl) {
     // todo
 }
 
-sptr_t<InductivePredicate> EntailmentChecker::unfold(sptr_t<PredicateCall> call, string index) {
-    sptr_t<InductivePredicate> called = table->predicates[call->predicate];
+InductivePredicatePtr EntailmentChecker::unfold(const PredicateCallPtr& call, const string& index) {
+    InductivePredicatePtr called = table->predicates[call->predicate];
     called = called->clone();
 
     if (!index.empty()) {
         called->renameBindings(index);
     }
 
-    sptr_um2<string, Term> args;
+    unordered_map<string, TermPtr> args;
     for (size_t i = 0, n = call->arguments.size(); i < n; i++) {
         args[called->parameters[i]->name] = call->arguments[i];
     }
@@ -440,19 +456,19 @@ sptr_t<InductivePredicate> EntailmentChecker::unfold(sptr_t<PredicateCall> call,
     return called;
 }
 
-void EntailmentChecker::expandLeft(sptr_t<PairStmtNode> node, sptr_t<LeftUnfoldApplication> appl) {
-    sptr_v<Pair> workset = node->workset;
+void EntailmentChecker::expandLeft(const PairStmtNodePtr& node, const LeftUnfoldApplicationPtr& appl) {
+    vector<PairPtr> workset = node->workset;
     workset.push_back(removePure(node->pair));
 
     for (size_t i = 0, n = appl->unfolded.size(); i < n; i++) {
-        sptr_t<State> left = appl->unfolded[i];
+        StatePtr left = appl->unfolded[i];
 
         // No existential bindings on the left-hand side, move them to variables
         left->variables.insert(left->variables.end(), left->bindings.begin(), left->bindings.end());
         left->bindings.clear();
 
-        sptr_t<Pair> nextPair = make_shared<Pair>(left, node->pair->right);
-        sptr_t<PairStmtNode> nextNode = make_shared<PairStmtNode>(nextPair, workset);
+        PairPtr nextPair = make_shared<Pair>(left, node->pair->right);
+        PairStmtNodePtr nextNode = make_shared<PairStmtNode>(nextPair, workset);
         nextNode->stratStates = appl->nextStratStates;
         appl->ruleNode->children.push_back(nextNode);
 
@@ -460,9 +476,12 @@ void EntailmentChecker::expandLeft(sptr_t<PairStmtNode> node, sptr_t<LeftUnfoldA
     }
 }
 
-void EntailmentChecker::expandRight(sptr_t<PairStmtNode> node, vector<sptr_v<State>> right, vector<size_t> origin,
-                                    sptr_t<RightUnfoldApplication> appl, sptr_v<Pair> workset) {
-    sptr_v<State> newRight;
+void EntailmentChecker::expandRight(const PairStmtNodePtr& node,
+                                    const vector<vector<StatePtr>>& right,
+                                    const vector<size_t>& origin,
+                                    const RightUnfoldApplicationPtr& appl,
+                                    const vector<PairPtr>& workset) {
+    vector<StatePtr> newRight;
     newRight.insert(newRight.begin(), node->pair->right.begin(), node->pair->right.end());
 
     size_t position = origin[0];
@@ -475,25 +494,25 @@ void EntailmentChecker::expandRight(sptr_t<PairStmtNode> node, vector<sptr_v<Sta
         }
     }
 
-    sptr_t<Pair> newPair = make_shared<Pair>(node->pair->left, newRight);
-    sptr_t<PairStmtNode> nextNode = make_shared<PairStmtNode>(newPair, workset);
+    PairPtr newPair = make_shared<Pair>(node->pair->left, newRight);
+    PairStmtNodePtr nextNode = make_shared<PairStmtNode>(newPair, workset);
     nextNode->stratStates = appl->nextStratStates;
 
-    sptr_t<RuleNode> ruleNode = make_shared<RuleNode>(appl->getRule(), node);
+    RuleNodePtr ruleNode = make_shared<RuleNode>(appl->getRule(), node);
     ruleNode->children.push_back(nextNode);
 
     node->children.push_back(ruleNode);
     nodeQueue.push_back(nextNode);
 }
 
-sptr_v<State> EntailmentChecker::applyUnfold(sptr_t<State> state, size_t callIndex) {
-    sptr_v<State> result;
+vector<StatePtr> EntailmentChecker::applyUnfold(const StatePtr& state, size_t callIndex) {
+    vector<StatePtr> result;
     size_t index = 0;
 
-    sptr_t<InductivePredicate> called = unfold(state->calls[callIndex], state->index);
-    for (size_t i = 0, n = called->baseCases.size(); i < n; i++) {
-        sptr_t<State> merged = state->clone();
-        merged->merge(toState(called->baseCases[i]), callIndex);
+    InductivePredicatePtr called = unfold(state->calls[callIndex], state->index);
+    for (const auto& bcase : called->baseCases) {
+        StatePtr merged = state->clone();
+        merged->merge(toState(bcase), callIndex);
 
         stringstream ss;
         ss << state->index << index;
@@ -503,9 +522,9 @@ sptr_v<State> EntailmentChecker::applyUnfold(sptr_t<State> state, size_t callInd
         result.push_back(merged);
     }
 
-    for (size_t i = 0, n = called->indCases.size(); i < n; i++) {
-        sptr_t<State> merged = state->clone();
-        merged->merge(toState(called->indCases[i]), callIndex);
+    for (const auto& icase : called->indCases) {
+        StatePtr merged = state->clone();
+        merged->merge(toState(icase), callIndex);
 
         stringstream ss;
         ss << state->index << index;

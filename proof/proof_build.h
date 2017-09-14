@@ -7,11 +7,12 @@
 #include "util/global_typedef.h"
 
 namespace proof {
-    struct RuleNode;
+    class RuleNode;
 
     /* ===================================== StmtNode ===================================== */
-    struct StmtNode {
-        virtual sptr_t<ProofNode> toProofNode() = 0;
+    class StmtNode {
+    public:
+        virtual ProofNodePtr toProofNode() = 0;
 
         virtual bool isRoot() = 0;
 
@@ -21,110 +22,136 @@ namespace proof {
 
         virtual bool isFailed() = 0;
 
-        virtual std::string toString(int indent = 0) = 0;
+        virtual std::string toString(size_t indent) = 0;
+
+        inline std::string toString() { return toString(0); }
     };
+
+    typedef std::shared_ptr<StmtNode> StmtNodePtr;
 
     /* =================================== TrueStmtLeaf =================================== */
-    struct TrueStmtLeaf : public StmtNode {
-        inline TrueStmtLeaf() { }
+    class TrueStmtLeaf : public StmtNode {
+    public:
+        inline TrueStmtLeaf() = default;
 
-        virtual sptr_t<ProofNode> toProofNode();
+        ProofNodePtr toProofNode() override;
 
-        virtual bool isRoot();
+        bool isRoot() override;
 
-        virtual bool isClosed();
+        bool isClosed() override;
 
-        virtual bool isProof();
+        bool isProof() override;
 
-        virtual bool isFailed();
+        bool isFailed() override;
 
-        virtual std::string toString(int indent);
+        std::string toString(size_t indent) override;
     };
+
+    typedef std::shared_ptr<TrueStmtLeaf> TrueStmtLeafPtr;
 
     /* ================================== FalseStmtLeaf =================================== */
-    struct FalseStmtLeaf : public StmtNode {
-        inline FalseStmtLeaf() { }
+    class FalseStmtLeaf : public StmtNode {
+    public:
+        inline FalseStmtLeaf() = default;
 
-        virtual sptr_t<ProofNode> toProofNode();
+        ProofNodePtr toProofNode() override;
 
-        virtual bool isRoot();
+        bool isRoot() override;
 
-        virtual bool isClosed();
+        bool isClosed() override;
 
-        virtual bool isProof();
+        bool isProof() override;
 
-        virtual bool isFailed();
+        bool isFailed() override;
 
-        virtual std::string toString(int indent);
+        std::string toString(size_t indent) override;
     };
 
-    /* ================================ InductionStmtLeaf ================================= */
-    struct InductionStmtLeaf : public StmtNode {
-        inline InductionStmtLeaf() { }
+    typedef std::shared_ptr<FalseStmtLeaf> FalseStmtLeafPtr;
 
-        virtual sptr_t<ProofNode> toProofNode();
+    /* ================================ InfDescentStmtLeaf ================================ */
+    class InfDescentStmtLeaf : public StmtNode {
+    public:
+        inline InfDescentStmtLeaf() = default;
 
-        virtual bool isRoot();
+        ProofNodePtr toProofNode() override;
 
-        virtual bool isClosed();
+        bool isRoot() override;
 
-        virtual bool isProof();
+        bool isClosed() override;
 
-        virtual bool isFailed();
+        bool isProof() override;
 
-        virtual std::string toString(int indent);
+        bool isFailed() override;
+
+        std::string toString(size_t indent) override;
     };
+
+    typedef std::shared_ptr<InfDescentStmtLeaf> InfDescentStmtLeafPtr;
 
     /* =================================== PairStmtNode =================================== */
-    struct PairStmtNode : public StmtNode {
-        sptr_t<Pair> pair;
-        sptr_v<Pair> workset;
+    class PairStmtNode : public StmtNode {
+    public:
+        PairPtr pair;
+        std::vector<PairPtr> workset;
 
-        sptr_t<RuleNode> parent;
+        RuleNodePtr parent;
         sptr_v<RuleNode> children;
 
         strat::StateList stratStates;
 
-        inline PairStmtNode() { }
+        inline PairStmtNode() = default;
 
-        inline PairStmtNode(sptr_t<Pair> pair) : pair(pair) { }
+        inline explicit PairStmtNode(const PairPtr& pair) : pair(pair) {}
 
-        PairStmtNode(sptr_t<Pair> pair, sptr_v<Pair> &workset);
+        PairStmtNode(const PairPtr& pair,
+                     const std::vector<PairPtr>& workset);
 
-        PairStmtNode(sptr_t<Pair> pair, sptr_v<Pair> &workset, sptr_t<RuleNode> parent);
+        PairStmtNode(const PairPtr& pair,
+                     const std::vector<PairPtr>& workset,
+                     const RuleNodePtr& parent);
 
-        PairStmtNode(sptr_t<Pair> pair, sptr_v<Pair> &workset, sptr_t<RuleNode> parent, sptr_v<RuleNode> &children);
+        PairStmtNode(const PairPtr& pair,
+                     const std::vector<PairPtr>& workset,
+                     const RuleNodePtr& parent,
+                     const std::vector<RuleNodePtr>& children);
 
-        virtual sptr_t<ProofNode> toProofNode();
+        ProofNodePtr toProofNode() override;
 
-        virtual bool isRoot();
+        bool isRoot() override;
 
-        virtual bool isClosed();
+        bool isClosed() override;
 
-        virtual bool isProof();
+        bool isProof() override;
 
-        virtual bool isFailed();
+        bool isFailed() override;
 
-        virtual std::string toString(int indent);
+        std::string toString(size_t indent) override;
     };
+
+    typedef std::shared_ptr<PairStmtNode> PairStmtNodePtr;
 
     /* ===================================== RuleNode ===================================== */
-    struct RuleNode {
+    class RuleNode {
+    public:
         Rule rule;
 
-        sptr_t<PairStmtNode> parent;
+        PairStmtNodePtr parent;
         sptr_v<StmtNode> children;
 
-        inline RuleNode(Rule rule, sptr_t<PairStmtNode> parent) : rule(rule), parent(parent) { }
+        inline RuleNode(Rule rule, const PairStmtNodePtr& parent)
+                : rule(rule), parent(parent) {}
 
-        virtual bool isClosed();
+        bool isClosed();
 
-        virtual bool isProof();
+        bool isProof();
 
-        virtual bool isFailed();
+        bool isFailed();
 
-        virtual std::string toString(int indent);
+        std::string toString(size_t indent);
     };
+
+    typedef std::shared_ptr<RuleNode> RuleNodePtr;
 }
 
 #endif //INDUCTOR_PROOF_BUILD_H

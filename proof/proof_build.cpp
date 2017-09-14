@@ -7,7 +7,7 @@ using namespace proof;
 
 /* =================================== TrueStmtLeaf =================================== */
 
-sptr_t<ProofNode> TrueStmtLeaf::toProofNode() {
+ProofNodePtr TrueStmtLeaf::toProofNode() {
     return make_shared<TrueLeaf>();
 }
 
@@ -27,19 +27,21 @@ bool TrueStmtLeaf::isFailed() {
     return false;
 }
 
-std::string TrueStmtLeaf::toString(int indent) {
+std::string TrueStmtLeaf::toString(size_t indent) {
     stringstream ss;
     ss << "\n";
-    for (int i = 0; i < indent; ++i) {
+
+    for (size_t i = 0; i < indent; ++i) {
         ss << "    ";
     }
+
     ss << "True";
     return ss.str();
 }
 
 /* ================================== FalseStmtLeaf =================================== */
 
-sptr_t<ProofNode> FalseStmtLeaf::toProofNode() {
+ProofNodePtr FalseStmtLeaf::toProofNode() {
     return make_shared<FalseLeaf>();
 }
 
@@ -59,67 +61,77 @@ bool FalseStmtLeaf::isFailed() {
     return true;
 }
 
-std::string FalseStmtLeaf::toString(int indent) {
+std::string FalseStmtLeaf::toString(size_t indent) {
     stringstream ss;
     ss << "\n";
-    for (int i = 0; i < indent; ++i) {
+
+    for (size_t i = 0; i < indent; ++i) {
         ss << "    ";
     }
+
     ss << "False";
     return ss.str();
 }
 
-/* ================================ InductionStmtLeaf ================================= */
+/* ================================ InfDescentStmtLeaf ================================ */
 
-sptr_t<ProofNode> InductionStmtLeaf::toProofNode() {
-    return make_shared<InductionLeaf>();
+ProofNodePtr InfDescentStmtLeaf::toProofNode() {
+    return make_shared<InfDescentLeaf>();
 }
 
-bool InductionStmtLeaf::isRoot() {
+bool InfDescentStmtLeaf::isRoot() {
     return false;
 }
 
-bool InductionStmtLeaf::isClosed() {
+bool InfDescentStmtLeaf::isClosed() {
     return true;
 }
 
-bool InductionStmtLeaf::isProof() {
+bool InfDescentStmtLeaf::isProof() {
     return true;
 }
 
-bool InductionStmtLeaf::isFailed() {
+bool InfDescentStmtLeaf::isFailed() {
     return false;
 }
 
-std::string InductionStmtLeaf::toString(int indent) {
+std::string InfDescentStmtLeaf::toString(size_t indent) {
     stringstream ss;
     ss << "\n";
-    for (int i = 0; i < indent; ++i) {
+
+    for (size_t i = 0; i < indent; ++i) {
         ss << "    ";
     }
+
     ss << "*";
     return ss.str();
 }
 
 /* =================================== PairStmtNode =================================== */
 
-PairStmtNode::PairStmtNode(sptr_t<Pair> pair, sptr_v<Pair> &workset) : pair(pair) {
+PairStmtNode::PairStmtNode(const PairPtr& pair,
+                           const std::vector<PairPtr>& workset)
+        : pair(pair) {
     this->workset.insert(this->workset.begin(), workset.begin(), workset.end());
 }
 
-PairStmtNode::PairStmtNode(sptr_t<Pair> pair, sptr_v<Pair> &workset, sptr_t<RuleNode> parent)
-    : pair(pair), parent(parent) {
+PairStmtNode::PairStmtNode(const PairPtr& pair,
+                           const std::vector<PairPtr>& workset,
+                           const RuleNodePtr& parent)
+        : pair(pair), parent(parent) {
     this->workset.insert(this->workset.begin(), workset.begin(), workset.end());
 }
 
-PairStmtNode::PairStmtNode(sptr_t<Pair> pair, sptr_v<Pair> &workset,
-                           sptr_t<RuleNode> parent, sptr_v<RuleNode> &children)
-    : pair(pair), parent(parent) {
+PairStmtNode::PairStmtNode(const PairPtr& pair,
+                           const std::vector<PairPtr>& workset,
+                           const RuleNodePtr& parent,
+                           const std::vector<RuleNodePtr>& children)
+        : pair(pair), parent(parent) {
     this->workset.insert(this->workset.begin(), workset.begin(), workset.end());
     this->children.insert(this->children.begin(), children.begin(), children.end());
 }
 
-sptr_t<ProofNode> PairStmtNode::toProofNode() {
+ProofNodePtr PairStmtNode::toProofNode() {
     // fixme Placeholder, not how this should work
     return make_shared<PairNode>(pair);
 }
@@ -129,11 +141,11 @@ bool PairStmtNode::isRoot() {
 }
 
 bool PairStmtNode::isClosed() {
-    if(children.empty())
+    if (children.empty())
         return false;
 
-    for(size_t i = 0, n = children.size(); i < n; i++) {
-        if(!children[i]->isClosed())
+    for (const auto& child : children) {
+        if (!child->isClosed())
             return false;
     }
 
@@ -141,11 +153,11 @@ bool PairStmtNode::isClosed() {
 }
 
 bool PairStmtNode::isProof() {
-    if(children.empty())
+    if (children.empty())
         return false;
 
-    for(size_t i = 0, n = children.size(); i < n; i++) {
-        if(!children[i]->isProof())
+    for (const auto& child : children) {
+        if (!child->isProof())
             return false;
     }
 
@@ -153,35 +165,39 @@ bool PairStmtNode::isProof() {
 }
 
 bool PairStmtNode::isFailed() {
-    if(children.empty())
+    if (children.empty())
         return false;
 
-    for(size_t i = 0, n = children.size(); i < n; i++) {
-        if(children[i]->isFailed())
+    for (auto& child : children) {
+        if (child->isFailed())
             return true;
     }
 
     return false;
 }
 
-std::string PairStmtNode::toString(int indent) {
+std::string PairStmtNode::toString(size_t indent) {
     stringstream ss;
     ss << "\n";
-    for (int i = 0; i < indent; ++i) {
+
+    for (size_t i = 0; i < indent; ++i) {
         ss << "    ";
     }
+
     ss << pair->toString();
-    for (size_t i = 0, n = children.size(); i < n; ++i) {
-        ss << children[i]->toString(indent + 1);
+
+    for (const auto& child : children) {
+        ss << child->toString(indent + 1);
     }
+
     return ss.str();
 }
 
 /* ===================================== RuleNode ===================================== */
 
 bool RuleNode::isClosed() {
-    for(size_t i = 0, n = children.size(); i < n; i++) {
-        if(children[i]->isClosed())
+    for (size_t i = 0, n = children.size(); i < n; i++) {
+        if (children[i]->isClosed())
             return true;
     }
 
@@ -189,8 +205,8 @@ bool RuleNode::isClosed() {
 }
 
 bool RuleNode::isProof() {
-    for(size_t i = 0, n = children.size(); i < n; i++) {
-        if(children[i]->isProof())
+    for (size_t i = 0, n = children.size(); i < n; i++) {
+        if (children[i]->isProof())
             return true;
     }
 
@@ -198,23 +214,27 @@ bool RuleNode::isProof() {
 }
 
 bool RuleNode::isFailed() {
-    for(size_t i = 0, n = children.size(); i < n; i++) {
-        if(!children[i]->isFailed())
+    for (size_t i = 0, n = children.size(); i < n; i++) {
+        if (!children[i]->isFailed())
             return false;
     }
 
     return true;
 }
 
-std::string RuleNode::toString(int indent) {
+std::string RuleNode::toString(size_t indent) {
     stringstream ss;
     ss << "\n";
-    for (int i = 0; i < indent; ++i) {
+
+    for (size_t i = 0; i < indent; ++i) {
         ss << "    ";
     }
+
     ss << proof::toString(rule);
-    for (size_t i = 0, n = children.size(); i < n; ++i) {
-        ss << children[i]->toString(indent + 1);
+
+    for (const auto& child : children) {
+        ss << child->toString(indent + 1);
     }
+
     return ss.str();
 }

@@ -23,7 +23,7 @@ namespace strat {
 
             inline StringLiteral(std::string value) : value(value) { }
 
-            virtual std::string toString();
+            std::string toString() override;
         };
 
         /**

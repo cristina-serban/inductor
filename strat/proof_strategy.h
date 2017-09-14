@@ -46,6 +46,8 @@ namespace strat {
 
         void next(const StateList& states, RuleTransitionMap& nextStatesMap);
     };
+
+    typedef std::shared_ptr<Strategy> StrategyPtr;
 }
 
 #endif //PROOFSTRAT_STRATEGY_H

@@ -1,5 +1,4 @@
 #include "proof_rule.h"
-#include "proof_state.h"
 
 using namespace std;
 using namespace proof;

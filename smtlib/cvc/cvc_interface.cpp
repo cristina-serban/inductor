@@ -258,22 +258,22 @@ bool CVC4Interface::checkEntailment(sptr_v<sep::SortedVariable> vars,
 
     vector<vector<Expr>> tvecs;
     engine->getInstantiationTermVectors(qs[0], tvecs);
-    cout << "Quantified formula " << qs[0] << " was instantiated " << tvecs.size() << " times." << endl;
+    // cout << "Quantified formula " << qs[0] << " was instantiated " << tvecs.size() << " times." << endl;
 
     if (tvecs.empty() || tvecs[0].size() != binds.size())
         return false;
 
-    cout << "\t(";
+    // cout << "\t(";
     for (size_t i = 0, n = tvecs[0].size(); i < n; i++) {
-        if (i > 0)
+        /* if (i > 0)
             cout << ", ";
-        cout << tvecs[0][i];
+        cout << tvecs[0][i]; */
 
         stringstream ss;
         ss << tvecs[0][i];
         subst[binds[i]->name] = make_shared<sep::SimpleIdentifier>(ss.str());
     }
-    cout << ")" << endl;
+    // cout << ")" << endl;
 
     return true;
 }

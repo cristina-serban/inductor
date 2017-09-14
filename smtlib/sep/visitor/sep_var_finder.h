@@ -41,6 +41,8 @@ namespace smtlib {
             inline virtual sptr_v<SortedVariable> &getBindings() { return binds; }
         };
 
+        typedef std::shared_ptr<VariableFinderContext> VariableFinderContextPtr;
+
         /* ================================== VariableFinder ================================== */
         /** Finds variables occuring in a term based on a given symbol stack */
         class VariableFinder : public DummyVisitor0,
@@ -60,6 +62,8 @@ namespace smtlib {
 
             virtual void visit(sptr_t<ExistsTerm> node);
         };
+
+        typedef std::shared_ptr<VariableFinder> VariableFinderPtr;
     }
 }
 

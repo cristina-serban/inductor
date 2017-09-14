@@ -1,3 +1,9 @@
+/**
+ * \file proof_rule.h
+ * \brief Proof rules and proof rule applications.
+ */
+
+
 #ifndef INDUCTOR_PROOF_RULE_H
 #define INDUCTOR_PROOF_RULE_H
 
@@ -21,64 +27,98 @@ namespace proof {
     /** Get name for proof rule */
     std::string toString(Rule rule);
 
-    struct RuleHash {
+    class RuleHash {
+    public:
         template <typename T>
         std::size_t operator()(T t) const {
             return static_cast<std::size_t>(t);
         }
     };
 
-    struct State;
-    struct Pair;
-    struct RuleNode;
+    class State;
+    typedef std::shared_ptr<State> StatePtr;
 
-    struct RuleApplication {
+    class Pair;
+    typedef std::shared_ptr<Pair> PairPtr;
+
+    class RuleNode;
+    typedef std::shared_ptr<RuleNode> RuleNodePtr;
+
+    /* ================================= RuleApplication ================================== */
+    class RuleApplication {
     protected:
-        Rule rule;
+        Rule rule{Rule::NONE};
 
     public:
         std::vector<std::string> nextStratStates;
 
-        inline RuleApplication() : rule(Rule::NONE) { }
-        inline RuleApplication(Rule rule) : rule(rule) { }
+        inline RuleApplication() = default;
+
+        inline explicit RuleApplication(Rule rule) : rule(rule) { }
+
+        virtual inline ~RuleApplication() = default;
 
         inline Rule getRule() { return rule; }
-
-        virtual inline ~RuleApplication() { }
     };
 
-    struct InfDescentApplication : public RuleApplication {
+    typedef std::shared_ptr<RuleApplication> RuleApplicationPtr;
+
+    /* ============================== InfDescentApplication =============================== */
+    class InfDescentApplication : public RuleApplication {
+    public:
         inline InfDescentApplication() : RuleApplication(Rule::INFINITE_DESCENT) {}
     };
 
-    struct AxiomApplication : public RuleApplication {
+    typedef std::shared_ptr<InfDescentApplication> InfDescentApplicationPtr;
+
+    /* ================================= AxiomApplication ================================= */
+    class AxiomApplication : public RuleApplication {
+    public:
         inline AxiomApplication() : RuleApplication(Rule::AXIOM) {}
     };
 
-    struct LeftUnfoldApplication : public RuleApplication {
+    typedef std::shared_ptr<AxiomApplication> AxiomApplicationPtr;
+
+    /* ============================== LeftUnfoldApplication =============================== */
+    class LeftUnfoldApplication : public RuleApplication {
+    public:
         std::vector<size_t> indices;
-        sptr_v<State> unfolded;
-        sptr_t<RuleNode> ruleNode;
+        std::vector<StatePtr> unfolded;
+        RuleNodePtr ruleNode;
 
         inline LeftUnfoldApplication() : RuleApplication(Rule::LEFT_UNFOLD) {}
     };
 
-    struct RightUnfoldApplication : public RuleApplication {
+    typedef std::shared_ptr<LeftUnfoldApplication> LeftUnfoldApplicationPtr;
+
+    /* ============================== RightUnfoldApplication ============================== */
+    class RightUnfoldApplication : public RuleApplication {
+    public:
         std::vector<size_t> indices;
 
         inline RightUnfoldApplication() : RuleApplication(Rule::RIGHT_UNFOLD) {}
     };
 
-    struct ReduceApplication : public RuleApplication {
-        std::vector<sptr_um2<std::string, smtlib::sep::Term>> subst;
+    typedef std::shared_ptr<RightUnfoldApplication> RightUnfoldApplicationPtr;
+
+    /* ================================ ReduceApplication ================================= */
+    class ReduceApplication : public RuleApplication {
+    public:
+        std::vector<std::unordered_map<std::string, smtlib::sep::TermPtr>> subst;
         std::vector<bool> entails;
 
         ReduceApplication() : RuleApplication(Rule::REDUCE) {}
     };
 
-    struct SplitApplication : public RuleApplication {
+    typedef std::shared_ptr<ReduceApplication> ReduceApplicationPtr;
+
+    /* ================================= SplitApplication ================================= */
+    class SplitApplication : public RuleApplication {
+    public:
         inline SplitApplication() : RuleApplication(Rule::SPLIT) {}
     };
+
+    typedef std::shared_ptr<SplitApplication> SplitApplicationPtr;
 }
 
 #endif //INDUCTOR_PROOF_RULE_H

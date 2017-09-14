@@ -21,14 +21,16 @@ namespace proof {
     typedef std::shared_ptr<State> StatePtr;
     typedef std::shared_ptr<EntailmentChecker> EntailmentCheckerPtr;
 
-    proof::StatePtr toState(pred::PredicateTablePtr table, smtlib::sep::TermPtr term);
+    proof::StatePtr toState(const pred::PredicateTablePtr& table,
+                            const smtlib::sep::TermPtr& term);
 }
 
 namespace pred {
     class PredicateTable {
         friend class proof::EntailmentChecker;
 
-        friend proof::StatePtr proof::toState(pred::PredicateTablePtr table, smtlib::sep::TermPtr term);
+        friend proof::StatePtr proof::toState(const pred::PredicateTablePtr& table,
+                                              const smtlib::sep::TermPtr& term);
 
     private:
         smtlib::sep::SymbolStackPtr stack;
