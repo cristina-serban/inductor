@@ -40,7 +40,7 @@ Some sample entailment inputs can be found in `input\Entailments`.
 (4) Run `make`. This creates the executable `inductor` which can check entailments from a list of file inputs.
 ```
 .../inductor> make
-.../inductor> ./inductor --check-ent input/Entailments/ls-lseo.smt2
+.../inductor> ./inductor --check-ent input_file_path1 input_file_path2 input_file_path3 ...
 ```
 
 ## Recompiling and building the generated parser ##
