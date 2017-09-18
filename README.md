@@ -43,9 +43,9 @@ To erase the generated code, run `make clean`.
 ```
 
 ## Building and running the project ##
-(1) Before building the project, make sure the files `smtlib/parser/smtlib-bison-parser.y.c`, `smtlib/parser/smtlib-bison-parser.y.h` and `smtlib/parser/smtlib-flex-lexer.l.c` have been generated. If any of these files are not there, see section "Compiling the parser" above.
+(1) Before building the project, make sure the files `smtlib/parser/smtlib-bison-parser.y.c`, `smtlib/parser/smtlib-bison-parser.y.h` and `smtlib/parser/smtlib-flex-lexer.l.c` have been generated. If any of these files is missing, see section ["Compiling the parser" above](https://github.com/cristina-serban/inductor/blob/master/README.md#compiling-the-parser).
 
-(2) Make sure you made the necessary changes required by your build and installation of CVC4. See section "Customization for CVC4" above for more details.
+(2) Make sure you made the necessary changes required by your build and installation of CVC4. See section ["Customization for CVC4"](https://github.com/cristina-serban/inductor/blob/master/README.md#customization-for-cvc4) above for more details.
 
 (3) Run `cmake` in the root directory of the project. This creates the Makefile necessary for compilation.
 ```
