@@ -24,11 +24,11 @@ Depending on how you compiled and/or installed CVC4, you might need to do some c
 **Case 2**. If you compiled CVC4 and [installed it via `make install` to a non-standard prefix](http://cvc4.cs.stanford.edu/wiki/Build_Problems#make_install_to_a_non-standard_prefix), you need to:
 
 - Open `CMakeLists.txt`, comment line 10 (with a `#`) and uncomment lines 13 and 14.
-- Replace `PATH-TO-CVC4-PREFIX` with the actual path to your prefix directory.
+- Replace `PATH-TO-CVC4-PREFIX` with the actual path to your CVC4 prefix directory (2 occurrences).
 
 **Case 3**. If you only compiled CVC4 without running any variant of `make install`, you need to:
 - Open `CMakeLists.txt`, comment line 10 (with a `#`) and uncomment lines 17 and 18.
-- Replace `PATH-TO-CVC4` with the actual path to your CVC4 directory.
+- Replace `PATH-TO-CVC4` with the actual path to your CVC4 directory (5 occurrences).
 - Open `smtlib\cvc\cvc_interface.h`, comment line 16 and uncomment line 19.
 - Open `smtlib\cvc\cvc_term_translator.h`, comment line 16 and uncomment line 19.
 
