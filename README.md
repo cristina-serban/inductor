@@ -50,7 +50,7 @@ If the files `smtlib/parser/smtlib-bison-parser.y` and `smtlib/parser/smtlib-fle
 ```
 To erase the generated code, run `make clean`.
 ```
-.../smtlib-parser/parser> make clean
+.../smtlib/parser> make clean
 ```
 
 ## Generating documentation ##
