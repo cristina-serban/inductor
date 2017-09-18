@@ -35,11 +35,11 @@ Depending on how you compiled and/or installed CVC4, you might need to do some c
 ## Compiling the parser ##
 To compile the files `smtlib/parser/smtlib-bison-parser.y` and `smtlib/parser/smtlib-flex-lexer.l`, go to the `parser` directory and run `make`. If these files are changed, they need to be recompiled.
 ```
-.../smtlib/parser> make
+.../smtlib/parser$ make
 ```
 To erase the generated code, run `make clean`.
 ```
-.../smtlib/parser> make clean
+.../smtlib/parser$ make clean
 ```
 
 ## Building and running the project ##
@@ -49,26 +49,26 @@ To erase the generated code, run `make clean`.
 
 (3) Run `cmake` in the root directory of the project. This creates the Makefile necessary for compilation.
 ```
-.../inductor> cmake .
+.../inductor$ cmake .
 ```
 
 (4) Run `make`. This creates the executable `inductor` which can check entailments from a list of file inputs.
 ```
-.../inductor> make
-.../inductor> ./inductor --check-ent input_file_path1 input_file_path2 input_file_path3 ...
+.../inductor$ make
+.../inductor$ ./inductor --check-ent input_file_path1 input_file_path2 input_file_path3 ...
 ```
 
 (5) As examples, here is how you would run the sample entailments in `input/Entailments`:
 ```
-.../inductor> ./inductor --check-ent input/Entailments/list-liseo.smt2
-.../inductor> ./inductor --check-ent input/Entailments/listp-list.smt2
-.../inductor> ./inductor --check-ent input/Entailments/lsa-ls.smt2
-.../inductor> ./inductor --check-ent input/Entailments/ls-lseo.smt2
-.../inductor> ./inductor --check-ent input/Entailments/lsp-ls.smt2
+.../inductor$ ./inductor --check-ent input/Entailments/list-liseo.smt2
+.../inductor$ ./inductor --check-ent input/Entailments/listp-list.smt2
+.../inductor$ ./inductor --check-ent input/Entailments/lsa-ls.smt2
+.../inductor$ ./inductor --check-ent input/Entailments/ls-lseo.smt2
+.../inductor$ ./inductor --check-ent input/Entailments/lsp-ls.smt2
 ```
 
 ## Generating documentation ##
 ```
-.../inductor> doxygen
+.../inductor$ doxygen
 ```
 The documentation in `html` format is generated in the `docs` folder. Open the `docs/index.html` file in a browser.
