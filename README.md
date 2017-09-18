@@ -29,7 +29,7 @@ Some sample entailment inputs can be found in `input\Entailments`.
 (2) If any of the files mentioned above are not there:
 ```
 .../inductor> cd smtlib/parser
-.../inductor/parser> make
+.../inductor/smtlib/parser> make
 ```
 
 (3) Run `cmake` in the root directory of the project. This creates the Makefile necessary for compilation.
