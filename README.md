@@ -43,7 +43,7 @@ To erase the generated code, run `make clean`.
 ```
 
 ## Building and running the project ##
-(1) Before building the project, make sure the files `smtlib/parser/smtlib-bison-parser.y.c`, `smtlib/parser/smtlib-bison-parser.y.h` and `smtlib/parser/smtlib-flex-lexer.l.c` have been generated. If any of the files mentioned above are not there, see section "Compiling the parser" above.
+(1) Before building the project, make sure the files `smtlib/parser/smtlib-bison-parser.y.c`, `smtlib/parser/smtlib-bison-parser.y.h` and `smtlib/parser/smtlib-flex-lexer.l.c` have been generated. If any of these files are not there, see section "Compiling the parser" above.
 
 (2) Make sure you made the necessary changes required by your build and installation of CVC4. See section "Customization for CVC4" above for more details.
 
