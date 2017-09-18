@@ -12,7 +12,11 @@
 #include "util/global_typedef.h"
 #include "visitor/sep_stack_loader.h"
 
+// CVC4 with `make install` (both standard and non-standard prefix)
 #include <cvc4/cvc4.h>
+
+// CVC4 without `make install`
+// #include "smt/smt_engine.h"
 
 namespace smtlib {
     namespace cvc {
