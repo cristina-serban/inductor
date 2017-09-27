@@ -31,6 +31,7 @@ namespace proof {
         std::vector<PairStmtNodePtr> nodeQueue;
         PairStmtNodePtr root;
         strat::StrategyPtr strategy;
+        smtlib::sep::ScriptPtr script;
 
         std::unordered_map<Rule, ApplyRuleCallback, RuleHash> ruleMap;
 
@@ -98,6 +99,19 @@ namespace proof {
                          const std::vector<size_t>& origin,
                          const RightUnfoldApplicationPtr& appl,
                          const std::vector<PairPtr>& workset);
+
+        void init(std::vector<size_t> &vect, size_t size);
+
+        void inc(std::vector<size_t> &vect, size_t size, size_t maxDigit);
+
+        std::vector<std::vector<size_t>> getChoiceFunctions(size_t tuples, size_t arity);
+
+        std::vector<std::vector<size_t>> getPathFunctions(std::vector<std::vector<size_t>> &choiceFuns,
+                                                          size_t tuples, size_t arity);
+
+        bool nextPathFunction(std::vector<size_t> &pathFun,
+                              std::vector<std::vector<size_t>> &choiceFuns,
+                              size_t tuples, size_t arity);
     };
 }
 

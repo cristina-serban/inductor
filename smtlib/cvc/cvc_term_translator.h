@@ -37,6 +37,14 @@ namespace smtlib {
 
             virtual CVC4::Expr translateBind(sptr_t<sep::SortedVariable> var) = 0;
             virtual CVC4::Expr translateBinds(sptr_v<sep::SortedVariable> vars) = 0;
+
+            virtual bool isDatatypeConstructor(std::string name) = 0;
+            virtual bool isDatatypeSelector(std::string name) = 0;
+
+            virtual CVC4::DatatypeType getDatatypeForConstructor(std::string name) = 0;
+            virtual CVC4::DatatypeType getDatatypeForSelector(std::string name) = 0;
+
+            virtual void addPtoType(std::pair<CVC4::Type, CVC4::Type> ptoType) = 0;
         };
 
         /** Translates sep::Term instances into CVC4 expressions */

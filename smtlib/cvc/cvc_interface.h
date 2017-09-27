@@ -53,8 +53,18 @@ namespace smtlib {
 
             /** Already translated symbols */
             umap<std::string, umap<std::string, CVC4::Expr>> symbols;
+
             /** Already translated sorts */
             umap<std::string, CVC4::Type> sorts;
+
+            umap<std::string, CVC4::DatatypeType> datatypes;
+            umap<std::string, CVC4::DatatypeType> constructors;
+            umap<std::string, CVC4::DatatypeType> selectors;
+
+            std::vector<std::pair<CVC4::Type, CVC4::Type>> ptoTypes;
+
+            /** Already translated constructors */
+            umap<std::string, CVC4::Expr> ctors;
 
             /** Pointer to the term translator */
             sptr_t<TermTranslator> termTranslator;
@@ -101,6 +111,8 @@ namespace smtlib {
 
             /** Translate a list of formal parameters */
             std::vector<CVC4::Expr> translate(sptr_v<sep::SortedVariable> params);
+
+            bool canTranslateSort(std::string sort);
         public:
             sptr_t<CVC4::ExprManager> manager;
             sptr_t<CVC4::SmtEngine> engine;
@@ -222,6 +234,14 @@ namespace smtlib {
 
             virtual CVC4::Expr translateBind(sptr_t<sep::SortedVariable> bind);
             virtual CVC4::Expr translateBinds(sptr_v<sep::SortedVariable> binds);
+
+            virtual bool isDatatypeConstructor(std::string name);
+            virtual bool isDatatypeSelector(std::string name);
+
+            virtual CVC4::DatatypeType getDatatypeForConstructor(std::string name);
+            virtual CVC4::DatatypeType getDatatypeForSelector(std::string name);
+
+            virtual void addPtoType(std::pair<CVC4::Type, CVC4::Type> ptoType);
 
         };
 

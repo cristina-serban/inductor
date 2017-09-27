@@ -115,6 +115,8 @@ namespace proof {
     /* ================================= SplitApplication ================================= */
     class SplitApplication : public RuleApplication {
     public:
+        std::vector<std::vector<size_t>> matches;
+
         inline SplitApplication() : RuleApplication(Rule::SPLIT) {}
     };
 

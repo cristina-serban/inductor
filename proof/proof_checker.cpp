@@ -89,6 +89,7 @@ void EntailmentChecker::initStrategy() {
 }
 
 bool EntailmentChecker::check(const ScriptPtr& script) {
+    this->script = script;
     table->load(script);
 
     bool hasEntAssertion = false;
@@ -197,7 +198,7 @@ void EntailmentChecker::tryRules(const PairStmtNodePtr& node, vector<RuleApplica
     RuleTransitionMap nextStatesMap;
     strategy->next(node->stratStates, nextStatesMap);
 
-    bool found = nextStatesMap.find(Rule::AXIOM) != nextStatesMap.end();
+   bool found = nextStatesMap.find(Rule::AXIOM) != nextStatesMap.end();
     if (found && tryAxiom(node)) {
         auto axAppl = make_shared<AxiomApplication>();
         axAppl->nextStratStates = nextStatesMap[Rule::AXIOM];
@@ -223,7 +224,7 @@ void EntailmentChecker::tryRules(const PairStmtNodePtr& node, vector<RuleApplica
     found = nextStatesMap.find(Rule::SPLIT) != nextStatesMap.end();
     SplitApplicationPtr spAppl = make_shared<SplitApplication>();
     if (found && trySplit(node, spAppl)) {
-        rdAppl->nextStratStates = nextStatesMap[Rule::SPLIT];
+        spAppl->nextStratStates = nextStatesMap[Rule::SPLIT];
         appls.push_back(spAppl);
     }
 
@@ -245,12 +246,21 @@ void EntailmentChecker::tryRules(const PairStmtNodePtr& node, vector<RuleApplica
 bool EntailmentChecker::tryAxiom(const PairStmtNodePtr& node) {
     PairPtr pair = node->pair;
 
+    TermPtr leftTerm = pair->left->toTerm();
+    vector<SortedVariablePtr>& vars = pair->left->variables;
+
+    for (const auto& rstate : pair->right) {
+        TermPtr rightTerm = rstate->toTerm();
+
+        if (leftTerm->toString() == rightTerm->toString())
+            return true;
+    }
+
     if (!pair->left->calls.empty())
         return false;
 
     sptr_t<CVC4Interface> cvc = make_shared<CVC4Interface>();
-    TermPtr leftTerm = pair->left->toTerm();
-    vector<SortedVariablePtr>& vars = pair->left->variables;
+    cvc->loadScript(script);
 
     for (const auto& rstate : pair->right) {
         // TODO allow predicate calls as uninterpreted functions
@@ -307,6 +317,8 @@ bool EntailmentChecker::tryReduce(const PairStmtNodePtr& node,
 
     TermPtr left = node->pair->left->constraint->toTerm();
     CVC4InterfacePtr cvc = make_shared<CVC4Interface>();
+    cvc->loadScript(script);
+
     bool flag = false;
 
     for (size_t i = 0, sz = node->pair->right.size(); i < sz; i++) {
@@ -331,10 +343,82 @@ bool EntailmentChecker::tryReduce(const PairStmtNodePtr& node,
     return flag;
 }
 
+bool matchArgs(vector<TermPtr>& v1, vector<TermPtr>& v2) {
+    if (v1.size() != v2.size())
+        return false;
+
+    for (auto const& arg1 : v1) {
+        for (auto const& arg2 : v2) {
+            if (arg1->toString() != arg2->toString())
+                return false;
+        }
+    }
+
+    return true;
+}
+
+vector<size_t> matchCalls(const PredicateCallPtr& lcall, vector<PredicateCallPtr>& rcalls) {
+    vector<size_t> lMatches;
+
+    for (size_t i = 0, sz = rcalls.size(); i < sz; i++) {
+        if (matchArgs(lcall->arguments, rcalls[i]->arguments))
+            lMatches.push_back(i);
+    }
+
+    return lMatches;
+}
+
 bool EntailmentChecker::trySplit(const PairStmtNodePtr& node,
                                  const SplitApplicationPtr& appl) {
-    // todo
-    return false;
+    auto left = node->pair->left;
+    auto right = node->pair->right;
+
+    size_t lsize = left->calls.size();
+    size_t rsize = right.size();
+
+    if (left->constraint && !left->constraint->isTrue()) {
+        return false;
+    }
+
+    if (left->calls.size() <= 1) {
+        return false;
+    }
+
+    vector<vector<size_t>> matches(lsize);
+    size_t freq[lsize][rsize];
+
+    for (size_t i = 0; i < lsize; i++)
+        for (size_t j = 0; j < rsize; j++)
+            freq[i][j] = 0;
+
+    for (size_t i = 0; i < lsize; i++) {
+        vector<size_t> line(rsize);
+        matches[i] = line;
+
+        for (size_t j = 0; j < rsize; j++) {
+            if (right[j]->calls.size() != lsize)
+                return false;
+
+            vector<size_t> tempMatches = matchCalls(left->calls[i], right[j]->calls);
+
+            if (tempMatches.size() != 1) {
+                return false;
+            }
+
+            matches[i][j] = tempMatches[0];
+            freq[tempMatches[0]][j]++;
+        }
+    }
+
+    for (size_t i = 0; i < lsize; i++) {
+        for (size_t j = 0; j < rsize; j++) {
+            if (freq[i][j] != 1)
+                return false;
+        }
+    }
+
+    appl->matches = matches;
+    return true;
 }
 
 void EntailmentChecker::apply(const PairStmtNodePtr& node,
@@ -436,7 +520,64 @@ void EntailmentChecker::applyReduce(const PairStmtNodePtr& node, const RuleAppli
 }
 
 void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplicationPtr& appl) {
-    // todo
+    SplitApplicationPtr spAppl = dynamic_pointer_cast<SplitApplication>(appl);
+    if (!spAppl) {
+        return;
+    }
+
+    vector<PairPtr> workset = node->workset;
+    workset.push_back(removePure(node->pair));
+
+    auto left = node->pair->left;
+    auto right = node->pair->right;
+
+    size_t lsize = left->calls.size();
+    size_t rsize = right.size();
+
+    vector<vector<size_t>> cf = getChoiceFunctions(rsize, lsize);
+    vector<size_t> pf;
+
+    while (nextPathFunction(pf, cf, rsize, lsize)) {
+        vector<PairStmtNodePtr> nextNodes;
+
+        for (size_t j = 0, szj = pf.size(); j < szj; j++) {
+            size_t index = pf[j] - 1;
+
+            vector<StatePtr> newRightSet;
+            for (size_t k = 0, szk = cf[j].size(); k < szk; k++) {
+                size_t mindex = spAppl->matches[index][k];
+
+                StatePtr newRightState = make_shared<State>();
+                newRightState->calls.push_back(right[k]->calls[mindex]);
+
+                if (cf[j][k] == pf[j]) {
+                    if (newRightSet.end() == find_if(newRightSet.begin(), newRightSet.end(),
+                                                     [&](shared_ptr<State>& s) {
+                                                         return equals(newRightState, s);
+                                                     })) {
+                        newRightSet.push_back(newRightState);
+                    }
+                }
+            }
+
+            StatePtr newLeftState = make_shared<State>();
+            newLeftState->calls.push_back(left->calls[index]->clone());
+
+            PairPtr nextPair = make_shared<Pair>(newLeftState, newRightSet);
+            PairStmtNodePtr nextNode = make_shared<PairStmtNode>(nextPair, workset);
+            nextNode->stratStates = appl->nextStratStates;
+
+            nextNodes.push_back(nextNode);
+        }
+
+        RuleNodePtr ruleNode = make_shared<RuleNode>(appl->getRule(), node);
+        node->children.push_back(ruleNode);
+
+        for (const auto& n : nextNodes) {
+            ruleNode->children.push_back(n);
+            nodeQueue.push_back(n);
+        }
+    }
 }
 
 InductivePredicatePtr EntailmentChecker::unfold(const PredicateCallPtr& call, const string& index) {
@@ -535,4 +676,129 @@ vector<StatePtr> EntailmentChecker::applyUnfold(const StatePtr& state, size_t ca
     }
 
     return result;
+}
+
+
+void EntailmentChecker::init(vector<size_t>& vect, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        if (vect.size() > i)
+            vect[i] = 1;
+        else
+            vect.push_back(1);
+    }
+}
+
+void EntailmentChecker::inc(vector<size_t>& vect, size_t size, size_t maxDigit) {
+    long i = size - 1;
+    do {
+        vect[i]++;
+        if (vect[i] > maxDigit) {
+            vect[i] = 1;
+            i--;
+        } else {
+            break;
+        }
+    } while (i >= 0);
+}
+
+vector<vector<size_t>> EntailmentChecker::getChoiceFunctions(size_t tuples, size_t arity) {
+    vector<vector<size_t>> cf;
+
+    if (tuples > 0 && arity > 0) {
+        size_t numRows = (size_t) pow(arity, tuples);
+
+        vector<size_t> firstRow(tuples);
+        init(firstRow, tuples);
+        cf.push_back(firstRow);
+
+        for (size_t i = 1; i < numRows; i++) {
+            vector<size_t> currRow;
+            currRow.insert(currRow.begin(), cf[i - 1].begin(), cf[i - 1].end());
+            inc(currRow, tuples, arity);
+            cf.push_back(currRow);
+        }
+    }
+
+    return cf;
+}
+
+vector<vector<size_t>> EntailmentChecker::getPathFunctions(vector<vector<size_t>>& choiceFuns,
+                                                           size_t tuples, size_t arity) {
+    vector<vector<size_t>> pf;
+
+    if (tuples > 0 && arity > 0) {
+        size_t numCols = (size_t) pow(arity, tuples);
+        size_t numRows = (size_t) pow(arity, numCols);
+
+        vector<size_t> cursor(numCols);
+        init(cursor, numCols);
+
+        for (size_t long i = 0; i < numRows; i++) {
+            bool notEmpty = true;
+            for (size_t j = 0; j < numCols; j++) {
+                if (choiceFuns[j].end() == find(choiceFuns[j].begin(), choiceFuns[j].end(), cursor[j])) {
+                    notEmpty = false;
+                    break;
+                }
+            }
+
+            if (notEmpty) {
+                pf.push_back(cursor);
+            }
+
+            if (i < numRows - 1)
+                inc(cursor, numCols, arity);
+        }
+    }
+
+    return pf;
+}
+
+bool EntailmentChecker::nextPathFunction(vector<size_t>& pathFun, vector<vector<size_t>>& choiceFuns,
+                                         size_t tuples, size_t arity) {
+    if (tuples == 0 || choiceFuns.empty())
+        return false;
+
+    size_t numCols = (size_t) pow(arity, tuples);
+
+    if (pathFun.empty()) {
+        init(pathFun, numCols);
+    } else if (pathFun.size() != numCols) {
+        pathFun.clear();
+        init(pathFun, numCols);
+    } else {
+        bool done = true;
+        for (size_t j = 0; j < numCols; j++) {
+            if (pathFun[j] < arity)
+                done = false;
+        }
+
+        if (done)
+            return false;
+
+        inc(pathFun, numCols, arity);
+    }
+
+    bool notEmpty = true;
+    for (size_t j = 0; j < numCols; j++) {
+        if (choiceFuns[j].end() == find(choiceFuns[j].begin(), choiceFuns[j].end(), pathFun[j])) {
+            notEmpty = false;
+            break;
+        }
+    }
+
+    bool done = true;
+    for (size_t j = 0; j < numCols; j++) {
+        if (pathFun[j] < arity)
+            done = false;
+    }
+
+    if (done) {
+        return notEmpty;
+    } else {
+        if (!notEmpty)
+            return nextPathFunction(pathFun, choiceFuns, tuples, arity);
+        else
+            return true;
+    }
 }

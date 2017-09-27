@@ -168,6 +168,19 @@ ConstraintPtr Constraint::clone() {
     return newExpr;
 }
 
+bool Constraint::isTrue() {
+    if(!spatial.empty())
+        return false;
+
+    auto trueTermStr = make_shared<TrueTerm>()->toString();
+    for (const auto& p : pure) {
+        if (p->toString() != trueTermStr)
+            return false;
+    }
+
+    return true;
+}
+
 void Constraint::replace(const unordered_map<string, TermPtr>& arguments) {
     for (size_t i = 0, sz = pure.size(); i < sz; i++) {
         pure[i] = ::replace(pure[i], arguments);

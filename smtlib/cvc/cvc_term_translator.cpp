@@ -14,31 +14,31 @@ using namespace smtlib;
 using namespace smtlib::cvc;
 
 void TermTranslator::visit(sptr_t<sep::SimpleIdentifier> node) {
-    if(ctx->getSymbols().find(node->name) != ctx->getSymbols().end()) {
-        if(ctx->getSymbols()[node->name].size() == 1) {
+    if (ctx->getSymbols().find(node->name) != ctx->getSymbols().end()) {
+        if (ctx->getSymbols()[node->name].size() == 1) {
             // If the expression has been built before, return it
             ret = ctx->getSymbols()[node->name].begin()->second;
             return;
-        } else if(ctx->getSymbols()[node->name].size() > 1) {
+        } else if (ctx->getSymbols()[node->name].size() > 1) {
             // If there are several possibilities, we can't choose one at this point
             stringstream ss;
-            ss << "Multiple sort possibilities for unqualified function symbol '" << node->name <<"'";
+            ss << "Multiple sort possibilities for unqualified function symbol '" << node->name << "'";
             Logger::error("TermTranslator::visit", ss.str().c_str());
         }
     }
 
-    if(!ctx->getStack()) {
+    if (!ctx->getStack()) {
         // If the expression has not been built before and we have no stack, we cannot build it
         stringstream ss;
-        ss << "Cannot translate unqualified identifier '" << node->name <<"' without stack";
+        ss << "Cannot translate unqualified identifier '" << node->name << "' without stack";
         Logger::error("TermTranslator::visit", ss.str().c_str());
         return;
     }
 
     // If the symbol is a function
     sptr_v<sep::FunEntry> fentry = ctx->getStack()->getFunEntry(node->name);
-    if(!fentry.empty()) {
-        if(fentry.size() == 1) {
+    if (!fentry.empty()) {
+        if (fentry.size() == 1) {
             // If there is only one entry for the symbol, then we can build it
             size_t sz = fentry[0]->signature.size();
             vector<Type> types = ctx->translateSorts(fentry[0]->signature);
@@ -47,7 +47,7 @@ void TermTranslator::visit(sptr_t<sep::SimpleIdentifier> node) {
         } else {
             // If there are several entries, we can't choose one at this point
             stringstream ss;
-            ss << "Multiple sort possibilities for unqualified function symbol '" << node->name <<"'";
+            ss << "Multiple sort possibilities for unqualified function symbol '" << node->name << "'";
             Logger::error("TermTranslator::visit", ss.str().c_str());
         }
         return;
@@ -55,14 +55,14 @@ void TermTranslator::visit(sptr_t<sep::SimpleIdentifier> node) {
 
     // If the symbol is a variable
     sptr_t<sep::VarEntry> ventry = ctx->getStack()->getVarEntry(node->name);
-    if(ventry) {
+    if (ventry) {
         // Build the expression based on its previously determined sort
         ret = arg->mkVar(ventry->name, ctx->translateSort(ventry->sort));
         ctx->getSymbols()[ventry->name][ventry->sort->toString()] = ret;
     } else {
         // If there are no entries, we cannot build it
         stringstream ss;
-        ss << "Unknown unqualified symbol '" << node->name <<"'";
+        ss << "Unknown unqualified symbol '" << node->name << "'";
         Logger::error("TermTranslator::visit", ss.str().c_str());
     }
 }
@@ -72,39 +72,39 @@ void TermTranslator::visit(sptr_t<sep::QualifiedIdentifier> node) {
     string sort = node->sort->toString();
 
     // If the expression has been built before, return it
-    if(ctx->getSymbols().find(name) != ctx->getSymbols().end()) {
-        if(ctx->getSymbols()[name].find(sort) != ctx->getSymbols()[name].end()) {
+    if (ctx->getSymbols().find(name) != ctx->getSymbols().end()) {
+        if (ctx->getSymbols()[name].find(sort) != ctx->getSymbols()[name].end()) {
             ret = ctx->getSymbols()[name][sort];
             return;
         }
     }
 
-    if(!ctx->getStack()) {
+    if (!ctx->getStack()) {
         // If the expression has not been built before and we have no stack, we cannot build it
         stringstream ss;
-        ss << "Cannot translate qualified identifier '" << node->toString() <<"' without stack";
+        ss << "Cannot translate qualified identifier '" << node->toString() << "' without stack";
         Logger::error("TermTranslator::visit", ss.str().c_str());
         return;
     }
 
     sptr_v<sep::FunEntry> fentry = ctx->getStack()->getFunEntry(node->identifier->name);
-    if(!fentry.empty()) {
+    if (!fentry.empty()) {
         // Get all function entries with the specified return type
         sptr_v<sep::FunEntry> possib;
-        for(size_t i = 0, n = fentry.size(); i < n; i++) {
+        for (size_t i = 0, n = fentry.size(); i < n; i++) {
             size_t sz = fentry[i]->signature.size();
             sptr_t<sep::Sort> retSort = fentry[0]->signature[sz - 1];
-            if(retSort->toString() == node->sort->toString()) {
+            if (retSort->toString() == node->sort->toString()) {
                 possib.push_back(fentry[i]);
             }
         }
 
-        if(possib.empty()) {
+        if (possib.empty()) {
             // If there are no corresponding entries, we can't build it
             stringstream ss;
-            ss << "Unknown qualified function symbol '" << node->toString() <<"'";
+            ss << "Unknown qualified function symbol '" << node->toString() << "'";
             Logger::error("TermTranslator::visit", ss.str().c_str());
-        } else if(possib.size() == 1) {
+        } else if (possib.size() == 1) {
             // If there is only one entry for the symbol, then we can build it
             size_t sz = possib[0]->signature.size();
             vector<Type> types = ctx->translateSorts(fentry[0]->signature);
@@ -113,7 +113,7 @@ void TermTranslator::visit(sptr_t<sep::QualifiedIdentifier> node) {
         } else {
             // If there are several entries, we can't choose one at this point
             stringstream ss;
-            ss << "Multiple sort possibilities for qualified function symbol '" << node->toString() <<"'";
+            ss << "Multiple sort possibilities for qualified function symbol '" << node->toString() << "'";
             Logger::error("TermTranslator::visit", ss.str().c_str());
         }
     } else {
@@ -141,10 +141,10 @@ void TermTranslator::visit(sptr_t<sep::QualifiedTerm> node) {
     // TODO: Add support for other operators
     string op = node->identifier->toString();
 
-    if(op == "+") {
+    if (op == "+") {
         ret = arg->mkExpr(kind::PLUS, wrappedVisit(arg, node->terms));
-    } else if(op == "-") {
-        if(node->terms.size() > 1) {
+    } else if (op == "-") {
+        if (node->terms.size() > 1) {
             ret = arg->mkExpr(kind::MINUS, wrappedVisit(arg, node->terms));
         } else {
             ret = arg->mkExpr(kind::UMINUS, wrappedVisit(arg, node->terms));
@@ -165,6 +165,22 @@ void TermTranslator::visit(sptr_t<sep::QualifiedTerm> node) {
         ret = arg->mkExpr(kind::GT, wrappedVisit(arg, node->terms));
     } else if (op == ">=") {
         ret = arg->mkExpr(kind::GEQ, wrappedVisit(arg, node->terms));
+    } else if (ctx->isDatatypeConstructor(op)) {
+        auto args = wrappedVisit(arg, node->terms);
+        auto datatype = ctx->getDatatypeForConstructor(op);
+        ret = arg->mkExpr(Kind::APPLY_CONSTRUCTOR, datatype.getConstructor(op), args);
+    } else if (ctx->isDatatypeSelector(op)) {
+        auto args = wrappedVisit(arg, node->terms);
+        auto datatype = ctx->getDatatypeForConstructor(op);
+
+        for (const auto& cons : datatype.getDatatype()) {
+            for (const auto& sel : cons) {
+                if (sel.getName() == op) {
+                    ret = arg->mkExpr(Kind::APPLY_SELECTOR, datatype.getConstructor(op), args);
+                    return;
+                }
+            }
+        }
     } else {
         ret = arg->mkExpr(kind::APPLY,
                           wrappedVisit(arg, node->identifier),
@@ -174,17 +190,17 @@ void TermTranslator::visit(sptr_t<sep::QualifiedTerm> node) {
 
 void TermTranslator::visit(sptr_t<sep::LetTerm> node) {
     Logger::warning("TermTranslator::visit", "No CVC4 support for 'let' terms. "
-        "Variables will be replaced with their bindings");
+            "Variables will be replaced with their bindings");
 
     // Duplicate inside term
     sptr_t<sep::Duplicator> dupl = make_shared<sep::Duplicator>();
     sptr_t<sep::Term> duplNode = dynamic_pointer_cast<sep::Term>(dupl->run(node->term));
 
     // Replace each variable with its binding in the duplicated term
-    for(size_t i = 0, n = node->bindings.size(); i < n; i++) {
+    for (size_t i = 0, n = node->bindings.size(); i < n; i++) {
         sptr_t<sep::VariableBinding> bind = node->bindings[i];
         sptr_t<sep::TermReplacerContext> replCtx = make_shared<sep::TermReplacerContext>(
-            make_shared<sep::SimpleIdentifier>(bind->name), bind->term);
+                make_shared<sep::SimpleIdentifier>(bind->name), bind->term);
         sptr_t<sep::TermReplacer> repl = make_shared<sep::TermReplacer>(replCtx);
 
         repl->run(duplNode);
@@ -227,7 +243,7 @@ void TermTranslator::visit(sptr_t<sep::NotTerm> node) {
 }
 
 void TermTranslator::visit(sptr_t<sep::ImpliesTerm> node) {
-    if(node->terms.size() == 2) {
+    if (node->terms.size() == 2) {
         ret = arg->mkExpr(kind::IMPLIES, wrappedVisit(arg, node->terms));
     } else {
         size_t n = node->terms.size();
@@ -251,7 +267,7 @@ void TermTranslator::visit(sptr_t<sep::OrTerm> node) {
 }
 
 void TermTranslator::visit(sptr_t<sep::XorTerm> node) {
-    if(node->terms.size() == 2) {
+    if (node->terms.size() == 2) {
         ret = arg->mkExpr(kind::XOR, wrappedVisit(arg, node->terms));
     } else {
         Expr first = wrappedVisit(arg, node->terms[0]);
@@ -266,7 +282,7 @@ void TermTranslator::visit(sptr_t<sep::XorTerm> node) {
 }
 
 void TermTranslator::visit(sptr_t<sep::EqualsTerm> node) {
-    if(node->terms.size() == 2) {
+    if (node->terms.size() == 2) {
         ret = arg->mkExpr(kind::EQUAL, wrappedVisit(arg, node->terms));
     } else {
         vector<Expr> args;
@@ -274,7 +290,7 @@ void TermTranslator::visit(sptr_t<sep::EqualsTerm> node) {
         Expr prev = wrappedVisit(arg, node->terms[1]);
         args.push_back(arg->mkExpr(kind::EQUAL, first, prev));
 
-        for(size_t i = 2, n = node->terms.size(); i < n; i++) {
+        for (size_t i = 2, n = node->terms.size(); i < n; i++) {
             Expr curr = wrappedVisit(arg, node->terms[i]);
             args.push_back(arg->mkExpr(kind::EQUAL, prev, curr));
             prev = curr;
@@ -312,9 +328,11 @@ void TermTranslator::visit(sptr_t<sep::WandTerm> node) {
 
 // TODO test
 void TermTranslator::visit(sptr_t<sep::PtoTerm> node) {
-    ret = arg->mkExpr(kind::SEP_PTO,
-                      wrappedVisit(arg, node->leftTerm),
-                      wrappedVisit(arg, node->rightTerm));
+    auto leftExpr = wrappedVisit(arg, node->leftTerm);
+    auto rightExpr = wrappedVisit(arg, node->rightTerm);
+
+    ctx->addPtoType(make_pair(leftExpr.getType(), rightExpr.getType()));
+    ret = arg->mkExpr(kind::SEP_PTO, leftExpr, rightExpr);
 }
 
 // TODO test
@@ -327,7 +345,7 @@ void TermTranslator::removeBindings(sptr_t<sep::SortedVariable> var) {
 }
 
 void TermTranslator::removeBindings(sptr_v<sep::SortedVariable> vars) {
-    for(size_t i = 0, n = vars.size(); i < n; i++) {
+    for (size_t i = 0, n = vars.size(); i < n; i++) {
         removeBindings(vars[i]);
     }
 }

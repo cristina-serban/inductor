@@ -91,6 +91,8 @@ namespace pred {
         /** Translates the expression back into a term */
         smtlib::sep::TermPtr toTerm();
 
+        bool isTrue();
+
         /** Replace parameter occurrences with terms */
         void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments);
     };

@@ -1,7 +1,6 @@
 #include "cvc_interface.h"
 
 #include "sep/sep_term.h"
-#include "stack/sep_symbol_stack.h"
 
 using namespace std;
 using namespace CVC4;
@@ -14,6 +13,9 @@ CVC4Interface::CVC4Interface() {
     engine->setOption("track-inst-lemmas", SExpr("true"));
     stack = make_shared<sep::SymbolStack>();
     config = make_shared<::Configuration>();
+
+    empLocArg = manager->mkVar("loctype", manager->integerType());
+    empDataArg = manager->mkVar("datatype", manager->integerType());
 }
 
 void CVC4Interface::reset() {
@@ -24,8 +26,13 @@ void CVC4Interface::reset() {
     engine->setOption("incremental", SExpr("false"));
     engine->setOption("track-inst-lemmas", SExpr("true"));
 
-    empLocArg = manager->mkVar("loctype", manager->integerType());
-    empDataArg = manager->mkVar("datatype", manager->integerType());
+    /*empLocArg = manager->mkVar("loctype", manager->integerType());
+
+    if(datatypes.find("Node") != datatypes.end()) {
+        empDataArg = manager->mkVar("datatype", datatypes["Node"]);
+    } else {
+        empDataArg = manager->mkVar("datatype", manager->integerType());
+    }*/
 
     currentTheories.clear();
     currentLogic.clear();
@@ -83,15 +90,15 @@ Datatype CVC4Interface::translate(string name, sptr_t<sep::DatatypeDeclaration> 
 Datatype CVC4Interface::translate(string name, sptr_t<sep::SimpleDatatypeDeclaration> decl) {
     Datatype datatype = Datatype(name);
 
-    sptr_v<sep::ConstructorDeclaration> &cons = decl->constructors;
+    auto &cons = decl->constructors;
     for(size_t i = 0, n = cons.size(); i < n; i++) {
-        DatatypeConstructor datatypeCons = DatatypeConstructor(cons[i]->name);
-        sptr_v<sep::SelectorDeclaration> &sel = cons[i]->selectors;
+        auto datatypeCons = DatatypeConstructor(cons[i]->name);
+        auto &sel = cons[i]->selectors;
 
         for(size_t j = 0, m = sel.size(); j < m; j++) {
             if(sel[j]->sort->toString() == name) {
                 datatypeCons.addArg(sel[j]->name, DatatypeSelfType());
-            } else if(sorts.find(sel[j]->sort->toString()) == sorts.end()){
+            } else if(!canTranslateSort(sel[j]->sort->name)) {
                 datatypeCons.addArg(sel[j]->name, DatatypeUnresolvedType(sel[j]->sort->name));
             } else {
                 datatypeCons.addArg(sel[j]->name, translateSort(sel[j]->sort));
@@ -165,6 +172,14 @@ vector<Expr> CVC4Interface::translate(sptr_v<sep::SortedVariable> params) {
         formals.push_back(p);
     }
     return formals;
+}
+
+bool CVC4Interface::canTranslateSort(std::string sort) {
+    if(sort == "Int" || sort == "Bool" || sort == "Real") {
+        return true;
+    }
+
+    return sorts.find(sort) != sorts.end();
 }
 
 /* ==================================== Operations ==================================== */
@@ -281,50 +296,74 @@ bool CVC4Interface::checkEntailment(sptr_v<sep::SortedVariable> vars,
 /* ====================================== Script ====================================== */
 void CVC4Interface::loadScript(sptr_t<sep::Script> script) {
     reset();
+
+    ptoTypes.clear();
+
     sptr_t<sep::StackLoader> loader = make_shared<sep::StackLoader>(shared_from_this());
     loader->load(script);
+
+    for(size_t i = 0, n = script->commands.size(); i < n; i++) {
+        sptr_t<sep::DeclareDatatypeCommand> declDt =
+                dynamic_pointer_cast<sep::DeclareDatatypeCommand>(script->commands[i]);
+        if(declDt) {
+            loadDatatype(declDt);
+        }
+
+        sptr_t<sep::DeclareDatatypesCommand> declDts =
+                dynamic_pointer_cast<sep::DeclareDatatypesCommand>(script->commands[i]);
+        if(declDts) {
+            loadDatatypes(declDts);
+        }
+
+        sptr_t<sep::DeclareFunCommand> declFun =
+                dynamic_pointer_cast<sep::DeclareFunCommand>(script->commands[i]);
+        if(declFun) {
+            loadFun(declFun);
+        }
+
+        sptr_t<sep::DefineFunCommand> defFun =
+                dynamic_pointer_cast<sep::DefineFunCommand>(script->commands[i]);
+        if(defFun) {
+            loadFun(defFun);
+        }
+
+        sptr_t<sep::DefineFunRecCommand> defFunRec =
+                dynamic_pointer_cast<sep::DefineFunRecCommand>(script->commands[i]);
+        if(defFunRec) {
+            loadFun(defFunRec);
+        }
+
+        sptr_t<sep::DefineFunsRecCommand> defFunsRec =
+                dynamic_pointer_cast<sep::DefineFunsRecCommand>(script->commands[i]);
+        if(defFunsRec) {
+            loadFuns(defFunsRec);
+        }
+    }
+
+    if(ptoTypes.empty())
+        return;
+
+    auto loctype = ptoTypes[0].first;
+    auto datatype = ptoTypes[0].second;
+
+    bool consistent = true;
+    for(auto i : ptoTypes) {
+        if(i.first != loctype || i.second != datatype) {
+            consistent = false;
+            break;
+        }
+    }
+
+    if(consistent) {
+        empLocArg = manager->mkVar("loctype", loctype);
+        empDataArg = manager->mkVar("datatype", datatype);
+    }
 }
 
 bool CVC4Interface::runScript(sptr_t<sep::Script> script) {
     loadScript(script);
 
     for(size_t i = 0, n = script->commands.size(); i < n; i++) {
-        sptr_t<sep::DeclareDatatypeCommand> declDt =
-            dynamic_pointer_cast<sep::DeclareDatatypeCommand>(script->commands[i]);
-        if(declDt) {
-            loadDatatype(declDt);
-        }
-
-        sptr_t<sep::DeclareDatatypesCommand> declDts =
-            dynamic_pointer_cast<sep::DeclareDatatypesCommand>(script->commands[i]);
-        if(declDts) {
-            loadDatatypes(declDts);
-        }
-
-        sptr_t<sep::DeclareFunCommand> declFun =
-            dynamic_pointer_cast<sep::DeclareFunCommand>(script->commands[i]);
-        if(declFun) {
-            loadFun(declFun);
-        }
-
-        sptr_t<sep::DefineFunCommand> defFun =
-            dynamic_pointer_cast<sep::DefineFunCommand>(script->commands[i]);
-        if(defFun) {
-            loadFun(defFun);
-        }
-
-        sptr_t<sep::DefineFunRecCommand> defFunRec =
-            dynamic_pointer_cast<sep::DefineFunRecCommand>(script->commands[i]);
-        if(defFunRec) {
-            loadFun(defFunRec);
-        }
-
-        sptr_t<sep::DefineFunsRecCommand> defFunsRec =
-            dynamic_pointer_cast<sep::DefineFunsRecCommand>(script->commands[i]);
-        if(defFunsRec) {
-            loadFuns(defFunsRec);
-        }
-
         sptr_t<sep::AssertCommand> assrt = dynamic_pointer_cast<sep::AssertCommand>(script->commands[i]);
         if(assrt) {
             assertTerm(assrt->term);
@@ -342,18 +381,25 @@ bool CVC4Interface::runScript(sptr_t<sep::Script> script) {
 
 /* ==================================== Datatypes ===================================== */
 void CVC4Interface::loadDatatype(sptr_t<sep::DeclareDatatypeCommand> cmd) {
-    sorts[cmd->name] = translateType(cmd->name, cmd->declaration);
+    loadDatatype(cmd->name, cmd->declaration);
 }
 
 void CVC4Interface::loadDatatypes(sptr_t<sep::DeclareDatatypesCommand> cmd) {
-    vector<DatatypeType> types = translateType(cmd->sorts, cmd->declarations);
-    for(size_t i = 0, n = types.size(); i < n; i++) {
-        sorts[cmd->sorts[i]->name] = types[i];
-    }
+    loadDatatypes(cmd->sorts, cmd->declarations);
 }
 
 void CVC4Interface::loadDatatype(string name, sptr_t<sep::DatatypeDeclaration> decl) {
-    sorts[name] = translateType(name, decl);
+    auto type = translateType(name, decl);
+    sorts[name] = type;
+    datatypes[name] = type;
+
+    for(const auto& cons : type.getDatatype()) {
+        constructors[cons.getName()] = type;
+
+        for(const auto& sel : cons) {
+            selectors[sel.getName()] = type;
+        }
+    }
 }
 
 void CVC4Interface::loadDatatypes(sptr_v<sep::SortDeclaration> sorts,
@@ -361,6 +407,15 @@ void CVC4Interface::loadDatatypes(sptr_v<sep::SortDeclaration> sorts,
     vector<DatatypeType> types = translateType(sorts, decls);
     for(size_t i = 0, n = types.size(); i < n; i++) {
         this->sorts[sorts[i]->name] = types[i];
+        this->datatypes[sorts[i]->name] = types[i];
+
+        for(const auto& cons : types[i].getDatatype()) {
+            constructors[cons.getName()] = types[i];
+
+            for(const auto& sel : cons) {
+                selectors[sel.getName()] = types[i];
+            }
+        }
     }
 }
 
@@ -513,5 +568,25 @@ Expr CVC4Interface::translateBinds(sptr_v<sep::SortedVariable> binds) {
     }
 
     return manager->mkExpr(kind::BOUND_VAR_LIST, res);
+}
+
+bool CVC4Interface::isDatatypeConstructor(string name) {
+    return constructors.find(name) != constructors.end();
+}
+
+bool CVC4Interface::isDatatypeSelector(string name) {
+    return selectors.find(name) != selectors.end();
+}
+
+CVC4::DatatypeType CVC4Interface::getDatatypeForConstructor(string name) {
+    return constructors[name];
+}
+
+CVC4::DatatypeType CVC4Interface::getDatatypeForSelector(string name) {
+    return selectors[name];
+}
+
+void CVC4Interface::addPtoType(std::pair<CVC4::Type, CVC4::Type> ptoType) {
+    ptoTypes.push_back(ptoType);
 }
 
