@@ -22,6 +22,8 @@ namespace proof {
 
         virtual bool isFailed() = 0;
 
+        virtual void extractProof() = 0;
+
         virtual std::string toString(size_t indent) = 0;
 
         inline std::string toString() { return toString(0); }
@@ -44,6 +46,8 @@ namespace proof {
 
         bool isFailed() override;
 
+        void extractProof() override { }
+
         std::string toString(size_t indent) override;
     };
 
@@ -64,6 +68,8 @@ namespace proof {
 
         bool isFailed() override;
 
+        void extractProof() override { }
+
         std::string toString(size_t indent) override;
     };
 
@@ -83,6 +89,8 @@ namespace proof {
         bool isProof() override;
 
         bool isFailed() override;
+
+        void extractProof() override { }
 
         std::string toString(size_t indent) override;
     };
@@ -126,6 +134,8 @@ namespace proof {
 
         bool isFailed() override;
 
+        void extractProof() override;
+
         std::string toString(size_t indent) override;
     };
 
@@ -147,6 +157,8 @@ namespace proof {
         bool isProof();
 
         bool isFailed();
+
+        void extractProof();
 
         std::string toString(size_t indent);
     };

@@ -171,7 +171,7 @@ bool EntailmentChecker::check(PairPtr pair) {
 
 bool EntailmentChecker::check() {
     bool foundProof = false;
-    while (!nodeQueue.empty() /*&& !foundProof*/) {
+    while (!nodeQueue.empty() && !foundProof) {
         PairStmtNodePtr node = nodeQueue[0];
         nodeQueue.erase(nodeQueue.begin());
 
@@ -179,6 +179,15 @@ bool EntailmentChecker::check() {
 
         if (root->isProof())
             foundProof = true;
+    }
+
+    if(!root->isClosed()) {
+        cout << "UNKNOWN" << endl;
+    } else if(root->isProof()){
+        cout << "VALID" << endl;
+        root->extractProof();
+    } else if(root->isFailed()) {
+        cout << "INVALID" << endl;
     }
 
     cout << root->toString(0) << endl << endl;
@@ -347,11 +356,9 @@ bool matchArgs(vector<TermPtr>& v1, vector<TermPtr>& v2) {
     if (v1.size() != v2.size())
         return false;
 
-    for (auto const& arg1 : v1) {
-        for (auto const& arg2 : v2) {
-            if (arg1->toString() != arg2->toString())
-                return false;
-        }
+    for(size_t i = 0, sz = v1.size(); i < sz; i++) {
+        if (v1[i]->toString() != v2[i]->toString())
+            return false;
     }
 
     return true;
@@ -376,7 +383,7 @@ bool EntailmentChecker::trySplit(const PairStmtNodePtr& node,
     size_t lsize = left->calls.size();
     size_t rsize = right.size();
 
-    if (left->constraint && !left->constraint->isTrue()) {
+    if (left->constraint && !left->constraint->spatial.empty()) {
         return false;
     }
 
@@ -495,6 +502,7 @@ void EntailmentChecker::applyReduce(const PairStmtNodePtr& node, const RuleAppli
 
     StatePtr newLeft = node->pair->left->clone();
     removeSpatial(newLeft);
+    removePure(newLeft);
 
     vector<StatePtr> newRight;
     for (size_t i = 0, sz = node->pair->right.size(); i < sz; i++) {
@@ -504,6 +512,7 @@ void EntailmentChecker::applyReduce(const PairStmtNodePtr& node, const RuleAppli
         StatePtr newState = node->pair->right[i]->clone();
         newState->substitute(rdAppl->subst[i]);
         removeSpatial(newState);
+        removePure(newState);
         newRight.push_back(newState);
     }
 
@@ -549,6 +558,9 @@ void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplic
 
                 StatePtr newRightState = make_shared<State>();
                 newRightState->calls.push_back(right[k]->calls[mindex]);
+                newRightState->index = right[k]->index;
+                newRightState->variables = right[k]->variables;
+                newRightState->bindings = right[k]->bindings;
 
                 if (cf[j][k] == pf[j]) {
                     if (newRightSet.end() == find_if(newRightSet.begin(), newRightSet.end(),
@@ -562,6 +574,9 @@ void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplic
 
             StatePtr newLeftState = make_shared<State>();
             newLeftState->calls.push_back(left->calls[index]->clone());
+            newLeftState->index = left->index;
+            newLeftState->variables = left->variables;
+            newLeftState->bindings = left->bindings;
 
             PairPtr nextPair = make_shared<Pair>(newLeftState, newRightSet);
             PairStmtNodePtr nextNode = make_shared<PairStmtNode>(nextPair, workset);

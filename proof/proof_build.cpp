@@ -145,11 +145,11 @@ bool PairStmtNode::isClosed() {
         return false;
 
     for (const auto& child : children) {
-        if (!child->isClosed())
-            return false;
+        if (child->isClosed())
+            return true;
     }
 
-    return true;
+    return false;
 }
 
 bool PairStmtNode::isProof() {
@@ -157,11 +157,11 @@ bool PairStmtNode::isProof() {
         return false;
 
     for (const auto& child : children) {
-        if (!child->isProof())
-            return false;
+        if (child->isProof())
+            return true;
     }
 
-    return true;
+    return false;
 }
 
 bool PairStmtNode::isFailed() {
@@ -169,11 +169,37 @@ bool PairStmtNode::isFailed() {
         return false;
 
     for (auto& child : children) {
-        if (child->isFailed())
-            return true;
+        if (!child->isFailed())
+            return false;
     }
 
-    return false;
+    return true;
+}
+
+void PairStmtNode::extractProof() {
+    if (!isProof())
+        return;
+
+    size_t pos = children.size();
+    for (size_t i = 0, sz = children.size(); i < sz; i++) {
+        if (children[i]->isProof()) {
+            pos = i;
+            break;
+        }
+    }
+
+    if (pos >= children.size())
+        return;
+
+    for (size_t i = 0; i < pos; i++) {
+        children.erase(children.begin());
+    }
+
+    for (size_t i = 1, sz = children.size(); i < sz; i++) {
+        children.erase(children.begin() + 1);
+    }
+
+    children[0]->extractProof();
 }
 
 std::string PairStmtNode::toString(size_t indent) {
@@ -197,29 +223,35 @@ std::string PairStmtNode::toString(size_t indent) {
 
 bool RuleNode::isClosed() {
     for (size_t i = 0, n = children.size(); i < n; i++) {
-        if (children[i]->isClosed())
-            return true;
-    }
-
-    return false;
-}
-
-bool RuleNode::isProof() {
-    for (size_t i = 0, n = children.size(); i < n; i++) {
-        if (children[i]->isProof())
-            return true;
-    }
-
-    return false;
-}
-
-bool RuleNode::isFailed() {
-    for (size_t i = 0, n = children.size(); i < n; i++) {
-        if (!children[i]->isFailed())
+        if (!children[i]->isClosed())
             return false;
     }
 
     return true;
+}
+
+bool RuleNode::isProof() {
+    for (size_t i = 0, n = children.size(); i < n; i++) {
+        if (!children[i]->isProof())
+            return false;
+    }
+
+    return true;
+}
+
+bool RuleNode::isFailed() {
+    for (size_t i = 0, n = children.size(); i < n; i++) {
+        if (children[i]->isFailed())
+            return true;
+    }
+
+    return false;
+}
+
+void RuleNode::extractProof() {
+    for (size_t i = 0, sz = children.size(); i < sz; i++) {
+        children[i]->extractProof();
+    }
 }
 
 std::string RuleNode::toString(size_t indent) {
