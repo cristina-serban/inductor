@@ -18,10 +18,11 @@ namespace proof {
         NONE = 0,
         LEFT_UNFOLD,
         RIGHT_UNFOLD,
-        REDUCE,
-        SPLIT,
+        REDUCE, //
+        SPLIT, //
         INFINITE_DESCENT,
-        AXIOM
+        AXIOM,
+        COUNTEREXAMPLE
     };
 
     /** Get name for proof rule */

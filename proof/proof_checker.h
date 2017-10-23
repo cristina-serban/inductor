@@ -70,6 +70,8 @@ namespace proof {
 
         bool trySplit(const PairStmtNodePtr& node, const SplitApplicationPtr& appl);
 
+        bool tryCounterexample(const PairStmtNodePtr& node);
+
         /* ================================== Applying rules ================================== */
         void apply(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
 
@@ -84,6 +86,8 @@ namespace proof {
         void applyReduce(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
 
         void applySplit(const PairStmtNodePtr& node, const RuleApplicationPtr& appl);
+
+        void applyCounterexample(const PairStmtNodePtr& node);
 
         /* ==================================== Utilities ===================================== */
         std::vector<StatePtr> applyUnfold(const StatePtr& state, size_t callIndex);
@@ -112,6 +116,11 @@ namespace proof {
         bool nextPathFunction(std::vector<size_t> &pathFun,
                               std::vector<std::vector<size_t>> &choiceFuns,
                               size_t tuples, size_t arity);
+
+        bool canSplit(const PairStmtNodePtr& node);
+
+        bool canSplit(const StatePtr& state);
+        bool canSplitByEmp(const StatePtr& state);
     };
 }
 

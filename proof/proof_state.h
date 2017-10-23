@@ -67,6 +67,8 @@ namespace proof {
 
         void addBindings(const std::vector<smtlib::sep::SortedVariablePtr>& bindings);
 
+        void merge(const StatePtr& state);
+
         void merge(const StatePtr& state, size_t origin);
 
         void substitute(const std::unordered_map<std::string, smtlib::sep::TermPtr>& subst);

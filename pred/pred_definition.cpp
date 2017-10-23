@@ -169,16 +169,36 @@ ConstraintPtr Constraint::clone() {
 }
 
 bool Constraint::isTrue() {
-    if(!spatial.empty())
+    if(!spatial.empty() || pure.empty())
         return false;
 
-    auto trueTermStr = make_shared<TrueTerm>()->toString();
     for (const auto& p : pure) {
-        if (p->toString() != trueTermStr)
+        if (!dynamic_pointer_cast<TrueTerm>(p))
             return false;
     }
 
     return true;
+}
+
+bool Constraint::isEmp() {
+    if(!pure.empty() && isTrue())
+        return false;
+
+    for (const auto& s : spatial) {
+        if (!dynamic_pointer_cast<EmpTerm>(s))
+            return false;
+    }
+
+    return true;
+}
+
+bool Constraint::isAlloc() {
+    for (const auto& s : spatial) {
+        if (dynamic_pointer_cast<PtoTerm>(s))
+            return true;
+    }
+
+    return false;
 }
 
 void Constraint::replace(const unordered_map<string, TermPtr>& arguments) {

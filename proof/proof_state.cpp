@@ -74,6 +74,57 @@ void State::addBindings(const vector<SortedVariablePtr>& bindings) {
     this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
 }
 
+void State::merge(const StatePtr& state) {
+    // fixme Uniqueness check might not be necessary
+    for (const auto& bind : state->bindings) {
+        bool found = bindings.end() != find_if(bindings.begin(), bindings.end(),
+                                               [&](const SortedVariablePtr& other) {
+                                                   return (bind->toString() == other->toString());
+                                               });
+        if (!found) {
+            bindings.push_back(bind);
+        }
+    }
+
+    for (const auto& var : state->variables) {
+        bool found = variables.end() != find_if(variables.begin(), variables.end(),
+                                                [&](const SortedVariablePtr& other) {
+                                                    return (var->toString() == other->toString());
+                                                });
+        if (!found) {
+            variables.push_back(var);
+        }
+    }
+
+    if (state->constraint) {
+        if (!constraint) {
+            constraint = make_shared<Constraint>();
+        }
+
+        constraint->pure.insert(constraint->pure.end(),
+                                state->constraint->pure.begin(),
+                                state->constraint->pure.end());
+
+        constraint->spatial.insert(constraint->spatial.end(),
+                                   state->constraint->spatial.begin(),
+                                   state->constraint->spatial.end());
+
+        for (size_t i = 0, n = constraint->spatial.size(); i < n; i++) {
+            if (dynamic_pointer_cast<EmpTerm>(constraint->spatial[i])) {
+                constraint->spatial.erase(constraint->spatial.begin() + i);
+                i--;
+                n--;
+            }
+        }
+
+        if (constraint->spatial.empty() && calls.empty() && !constraint->pure.empty()) {
+            constraint->spatial.push_back(make_shared<EmpTerm>());
+        }
+    }
+
+    calls.insert(calls.end(), state->calls.begin(), state->calls.end());
+}
+
 void State::merge(const StatePtr& state, size_t origin) {
     calls.erase(calls.begin() + origin);
 

@@ -169,7 +169,7 @@ bool PairStmtNode::isFailed() {
         return false;
 
     for (auto& child : children) {
-        if (!child->isFailed())
+        if (child->isClosed() && !child->isFailed())
             return false;
     }
 
@@ -200,6 +200,19 @@ void PairStmtNode::extractProof() {
     }
 
     children[0]->extractProof();
+}
+
+void PairStmtNode::extractCounterexample() {
+    if(!this->isFailed()) {
+        return;
+    }
+
+    for(const auto& rule : children) {
+        if(rule->isFailed()) {
+            rule->extractCounterexample();
+            this->cex.insert(this->cex.begin(), rule->cex.begin(), rule->cex.end());
+        }
+    }
 }
 
 std::string PairStmtNode::toString(size_t indent) {
@@ -251,6 +264,48 @@ bool RuleNode::isFailed() {
 void RuleNode::extractProof() {
     for (size_t i = 0, sz = children.size(); i < sz; i++) {
         children[i]->extractProof();
+    }
+}
+
+void RuleNode::extractCounterexample() {
+    if(!this->isFailed()) {
+        return;
+    }
+
+    if(rule == Rule::COUNTEREXAMPLE) {
+        auto state = parent->pair->left->clone();
+        std::vector<StatePtr> v;
+        v.push_back(state);
+
+        this->cex.push_back(v);
+    } else if(rule == Rule::RIGHT_UNFOLD) {
+        children[0]->extractCounterexample();
+        this->cex.insert(this->cex.begin(), children[0]->cex.begin(), children[0]->cex.end());
+    } else if(rule == Rule::LEFT_UNFOLD) {
+        for(const auto& child : children) {
+            if(child->isFailed()) {
+                child->extractCounterexample();
+                this->cex.insert(this->cex.begin(), child->cex.begin(), child->cex.end());
+            }
+        }
+    } else if(rule == Rule::REDUCE) {
+        auto state = parent->pair->left->clone();
+        state->calls.clear();
+
+        children[0]->extractCounterexample();
+
+        for(const auto& v : children[0]->cex) {
+            auto newv = v;
+            newv.insert(newv.begin(), state);
+            this->cex.push_back(newv);
+        }
+    } else if(rule == Rule::SPLIT) {
+        for(const auto& child : children) {
+            if(child->isFailed()) {
+                child->extractCounterexample();
+                this->cex.insert(this->cex.begin(), child->cex.begin(), child->cex.end());
+            }
+        }
     }
 }
 

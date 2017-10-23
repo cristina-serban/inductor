@@ -93,6 +93,10 @@ namespace pred {
 
         bool isTrue();
 
+        bool isEmp();
+
+        bool isAlloc();
+
         /** Replace parameter occurrences with terms */
         void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments);
     };

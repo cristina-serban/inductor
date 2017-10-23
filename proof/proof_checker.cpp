@@ -181,13 +181,31 @@ bool EntailmentChecker::check() {
             foundProof = true;
     }
 
-    if(!root->isClosed()) {
+    if (!root->isClosed()) {
         cout << "UNKNOWN" << endl;
-    } else if(root->isProof()){
+    } else if (root->isProof()) {
         cout << "VALID" << endl;
         root->extractProof();
-    } else if(root->isFailed()) {
+    } else if (root->isFailed()) {
         cout << "INVALID" << endl;
+
+        root->extractCounterexample();
+        if (!root->cex.empty()) {
+            cout << "Counterexamples:" << endl;
+        }
+
+        for (const auto& v : root->cex) {
+            if (v.empty()) {
+                continue;
+            }
+
+            auto state = v[0];
+            for (size_t i = 1, sz = v.size(); i < sz; i++) {
+                state->merge(v[i]);
+            }
+
+            cout << "\t" << state->toString() << endl;
+        }
     }
 
     cout << root->toString(0) << endl << endl;
@@ -207,7 +225,12 @@ void EntailmentChecker::tryRules(const PairStmtNodePtr& node, vector<RuleApplica
     RuleTransitionMap nextStatesMap;
     strategy->next(node->stratStates, nextStatesMap);
 
-   bool found = nextStatesMap.find(Rule::AXIOM) != nextStatesMap.end();
+    if (tryCounterexample(node)) {
+        applyCounterexample(node);
+        return;
+    }
+
+    bool found = nextStatesMap.find(Rule::AXIOM) != nextStatesMap.end();
     if (found && tryAxiom(node)) {
         auto axAppl = make_shared<AxiomApplication>();
         axAppl->nextStratStates = nextStatesMap[Rule::AXIOM];
@@ -319,44 +342,60 @@ bool EntailmentChecker::tryReduce(const PairStmtNodePtr& node,
                                   const ReduceApplicationPtr& appl) {
     // todo Handle cases with multiple substitutions
 
-    if (!node->pair->left->constraint
-        || node->pair->left->constraint->pure.empty() && node->pair->left->constraint->spatial.empty()) {
+    auto leftState = node->pair->left;
+    auto rightSet = node->pair->right;
+
+    bool allocLeftConstr = leftState->constraint && leftState->constraint->isAlloc();
+    bool emptyLeftCalls = leftState->calls.empty();
+
+    if (!emptyLeftCalls && !allocLeftConstr)
         return false;
+
+    for (const auto& rightState : rightSet) {
+        bool allocRightConstr = rightState->constraint && rightState->constraint->isAlloc();
+        bool emptyRightCalls = rightState->calls.empty();
+
+        if (!emptyRightCalls && !allocRightConstr)
+            return false;
     }
 
-    TermPtr left = node->pair->left->constraint->toTerm();
+    TermPtr left;
+    if (!leftState->constraint) {
+        left = make_shared<EmpTerm>();
+    } else {
+        left = leftState->constraint->toTerm();
+    }
+
     CVC4InterfacePtr cvc = make_shared<CVC4Interface>();
     cvc->loadScript(script);
 
-    bool flag = false;
-
-    for (size_t i = 0, sz = node->pair->right.size(); i < sz; i++) {
+    for (size_t i = 0, sz = rightSet.size(); i < sz; i++) {
         unordered_map<string, TermPtr> subst;
         appl->subst.push_back(subst);
         appl->entails.push_back(false);
 
-        if (!node->pair->right[i]->constraint
-            || node->pair->right[i]->constraint->pure.empty() && node->pair->right[i]->constraint->spatial.empty())
-            continue;
-
-        TermPtr expr = node->pair->right[i]->constraint->toTerm();
+        TermPtr expr;
+        if (!rightSet[i]->constraint) {
+            expr = make_shared<EmpTerm>();
+        } else {
+            expr = rightSet[i]->constraint->toTerm();
+        }
 
         if (cvc->checkEntailment(node->pair->left->variables,
                                  node->pair->right[i]->bindings,
                                  left, expr, appl->subst[i])) {
             appl->entails[i] = true;
-            flag = true;
         }
     }
 
-    return flag;
+    return true;
 }
 
 bool matchArgs(vector<TermPtr>& v1, vector<TermPtr>& v2) {
     if (v1.size() != v2.size())
         return false;
 
-    for(size_t i = 0, sz = v1.size(); i < sz; i++) {
+    for (size_t i = 0, sz = v1.size(); i < sz; i++) {
         if (v1[i]->toString() != v2[i]->toString())
             return false;
     }
@@ -377,7 +416,7 @@ vector<size_t> matchCalls(const PredicateCallPtr& lcall, vector<PredicateCallPtr
 
 bool EntailmentChecker::trySplit(const PairStmtNodePtr& node,
                                  const SplitApplicationPtr& appl) {
-    auto left = node->pair->left;
+    /*auto left = node->pair->left;
     auto right = node->pair->right;
 
     size_t lsize = left->calls.size();
@@ -403,10 +442,68 @@ bool EntailmentChecker::trySplit(const PairStmtNodePtr& node,
         matches[i] = line;
 
         for (size_t j = 0; j < rsize; j++) {
-            if (right[j]->calls.size() != lsize)
+            if (right[j]->calls.size() != lsize && !right[j]->isEmp())
                 return false;
 
-            vector<size_t> tempMatches = matchCalls(left->calls[i], right[j]->calls);
+            vector<size_t> tempMatches;
+            if(right[j]->isEmp()) {
+                tempMatches.push_back(i);
+            } else {
+                tempMatches = matchCalls(left->calls[i], right[j]->calls);
+            }
+
+            if (tempMatches.size() != 1) {
+                return false;
+            }
+
+            matches[i][j] = tempMatches[0];
+            freq[tempMatches[0]][j]++;
+        }
+    }
+
+    for (size_t i = 0; i < lsize; i++) {
+        for (size_t j = 0; j < rsize; j++) {
+            if (freq[i][j] != 1)
+                return false;
+        }
+    }
+
+    appl->matches = matches;
+    return true;*/
+
+    auto left = node->pair->left;
+    auto right = node->pair->right;
+
+    size_t lsize = left->calls.size();
+    size_t rsize = right.size();
+
+    if (!canSplit(node))
+        return false;
+
+    if (left->isEmp())
+        return true;
+
+    vector<vector<size_t>> matches(lsize);
+    size_t freq[lsize][rsize];
+
+    for (size_t i = 0; i < lsize; i++)
+        for (size_t j = 0; j < rsize; j++)
+            freq[i][j] = 0;
+
+    for (size_t i = 0; i < lsize; i++) {
+        vector<size_t> line(rsize);
+        matches[i] = line;
+
+        for (size_t j = 0; j < rsize; j++) {
+            if (right[j]->calls.size() != lsize && !right[j]->isEmp())
+                return false;
+
+            vector<size_t> tempMatches;
+            if (right[j]->isEmp()) {
+                tempMatches.push_back(i);
+            } else {
+                tempMatches = matchCalls(left->calls[i], right[j]->calls);
+            }
 
             if (tempMatches.size() != 1) {
                 return false;
@@ -426,6 +523,10 @@ bool EntailmentChecker::trySplit(const PairStmtNodePtr& node,
 
     appl->matches = matches;
     return true;
+}
+
+bool EntailmentChecker::tryCounterexample(const PairStmtNodePtr& node) {
+    return node->pair->right.empty();
 }
 
 void EntailmentChecker::apply(const PairStmtNodePtr& node,
@@ -540,6 +641,55 @@ void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplic
     auto left = node->pair->left;
     auto right = node->pair->right;
 
+    if (left->isEmp()) {
+        for (const auto& r : right) {
+            vector<PairStmtNodePtr> nextNodes;
+
+            if (r->isEmp()) {
+                StatePtr newLeftState = left->clone();
+                StatePtr newRightState = r->clone();
+
+                vector<StatePtr> newRightSet;
+                newRightSet.push_back(newRightState);
+
+                PairPtr nextPair = make_shared<Pair>(newLeftState, newRightSet);
+                PairStmtNodePtr nextNode = make_shared<PairStmtNode>(nextPair, workset);
+                nextNode->stratStates = appl->nextStratStates;
+
+                nextNodes.push_back(nextNode);
+            } else {
+                for (const auto& call : r->calls) {
+                    StatePtr newRightState;
+                    newRightState = make_shared<State>();
+                    newRightState->calls.push_back(call->clone());
+                    newRightState->index = r->index;
+                    newRightState->variables = r->variables;
+                    newRightState->bindings = r->bindings;
+
+                    vector<StatePtr> newRightSet;
+                    newRightSet.push_back(newRightState);
+
+                    PairPtr nextPair = make_shared<Pair>(left->clone(), newRightSet);
+                    PairStmtNodePtr nextNode = make_shared<PairStmtNode>(nextPair, workset);
+                    nextNode->stratStates = appl->nextStratStates;
+
+                    nextNodes.push_back(nextNode);
+                }
+            }
+
+            RuleNodePtr ruleNode = make_shared<RuleNode>(appl->getRule(), node);
+            node->children.push_back(ruleNode);
+
+            for (const auto& n : nextNodes) {
+                ruleNode->children.push_back(n);
+                nodeQueue.push_back(n);
+            }
+
+        }
+
+        return;
+    }
+
     size_t lsize = left->calls.size();
     size_t rsize = right.size();
 
@@ -556,11 +706,17 @@ void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplic
             for (size_t k = 0, szk = cf[j].size(); k < szk; k++) {
                 size_t mindex = spAppl->matches[index][k];
 
-                StatePtr newRightState = make_shared<State>();
-                newRightState->calls.push_back(right[k]->calls[mindex]);
-                newRightState->index = right[k]->index;
-                newRightState->variables = right[k]->variables;
-                newRightState->bindings = right[k]->bindings;
+                StatePtr newRightState;
+
+                if (right[k]->isEmp()) {
+                    newRightState = right[k]->clone();
+                } else {
+                    newRightState = make_shared<State>();
+                    newRightState->calls.push_back(right[k]->calls[mindex]->clone());
+                    newRightState->index = right[k]->index;
+                    newRightState->variables = right[k]->variables;
+                    newRightState->bindings = right[k]->bindings;
+                }
 
                 if (cf[j][k] == pf[j]) {
                     if (newRightSet.end() == find_if(newRightSet.begin(), newRightSet.end(),
@@ -593,6 +749,13 @@ void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplic
             nodeQueue.push_back(n);
         }
     }
+}
+
+void EntailmentChecker::applyCounterexample(const PairStmtNodePtr& node) {
+    FalseStmtLeafPtr leaf = make_shared<FalseStmtLeaf>();
+    RuleNodePtr ruleNode = make_shared<RuleNode>(Rule::COUNTEREXAMPLE, node);
+    ruleNode->children.push_back(leaf);
+    node->children.push_back(ruleNode);
 }
 
 InductivePredicatePtr EntailmentChecker::unfold(const PredicateCallPtr& call, const string& index) {
@@ -816,4 +979,46 @@ bool EntailmentChecker::nextPathFunction(vector<size_t>& pathFun, vector<vector<
         else
             return true;
     }
+}
+
+bool EntailmentChecker::canSplit(const PairStmtNodePtr& node) {
+    auto left = node->pair->left;
+    auto right = node->pair->right;
+
+
+    if (!canSplit(left)) {
+        return false;
+    }
+
+    if (left->isEmp()) {
+        for (auto const& r : right) {
+            if (!canSplitByEmp(r)) {
+                return false;
+            }
+        }
+    } else {
+        for (auto const& r : right) {
+            if (!canSplit(r)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool EntailmentChecker::canSplit(const StatePtr& state) {
+    if (state->constraint) {
+        return state->constraint->isEmp() && state->calls.size() != 1;
+    } else {
+        return state->calls.size() != 1;
+    }
+}
+
+bool EntailmentChecker::canSplitByEmp(const StatePtr& state) {
+    if (state->constraint) {
+        return state->constraint->isEmp();
+    }
+
+    return true;
 }

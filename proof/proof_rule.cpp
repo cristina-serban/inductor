@@ -19,6 +19,8 @@ string proof::toString(Rule rule) {
             return "SP";
         case AXIOM:
             return "AX";
+        case COUNTEREXAMPLE:
+            return "CE";
         default:
             return "";
     }

@@ -12,6 +12,8 @@ namespace proof {
     /* ===================================== StmtNode ===================================== */
     class StmtNode {
     public:
+        std::vector<std::vector<StatePtr>> cex;
+
         virtual ProofNodePtr toProofNode() = 0;
 
         virtual bool isRoot() = 0;
@@ -23,6 +25,8 @@ namespace proof {
         virtual bool isFailed() = 0;
 
         virtual void extractProof() = 0;
+
+        virtual void extractCounterexample() = 0;
 
         virtual std::string toString(size_t indent) = 0;
 
@@ -48,6 +52,8 @@ namespace proof {
 
         void extractProof() override { }
 
+        void extractCounterexample() override { }
+
         std::string toString(size_t indent) override;
     };
 
@@ -68,7 +74,9 @@ namespace proof {
 
         bool isFailed() override;
 
-        void extractProof() override { }
+        void extractProof() override {}
+
+        void extractCounterexample() override {}
 
         std::string toString(size_t indent) override;
     };
@@ -91,6 +99,8 @@ namespace proof {
         bool isFailed() override;
 
         void extractProof() override { }
+
+        void extractCounterexample() override { }
 
         std::string toString(size_t indent) override;
     };
@@ -136,6 +146,8 @@ namespace proof {
 
         void extractProof() override;
 
+        void extractCounterexample() override;
+
         std::string toString(size_t indent) override;
     };
 
@@ -149,6 +161,8 @@ namespace proof {
         PairStmtNodePtr parent;
         sptr_v<StmtNode> children;
 
+        std::vector<std::vector<StatePtr>> cex;
+
         inline RuleNode(Rule rule, const PairStmtNodePtr& parent)
                 : rule(rule), parent(parent) {}
 
@@ -159,6 +173,8 @@ namespace proof {
         bool isFailed();
 
         void extractProof();
+
+        void extractCounterexample();
 
         std::string toString(size_t indent);
     };
