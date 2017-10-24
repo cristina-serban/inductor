@@ -206,6 +206,8 @@ bool EntailmentChecker::check() {
 
             cout << "\t" << state->toString() << endl;
         }
+
+        root->extractFailedBranches();
     }
 
     cout << root->toString(0) << endl << endl;

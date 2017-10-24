@@ -26,6 +26,8 @@ namespace proof {
 
         virtual void extractProof() = 0;
 
+        virtual void extractFailedBranches() = 0;
+
         virtual void extractCounterexample() = 0;
 
         virtual std::string toString(size_t indent) = 0;
@@ -50,9 +52,11 @@ namespace proof {
 
         bool isFailed() override;
 
-        void extractProof() override { }
+        void extractProof() override {}
 
-        void extractCounterexample() override { }
+        void extractFailedBranches() override {}
+
+        void extractCounterexample() override {}
 
         std::string toString(size_t indent) override;
     };
@@ -76,6 +80,8 @@ namespace proof {
 
         void extractProof() override {}
 
+        void extractFailedBranches() override {}
+
         void extractCounterexample() override {}
 
         std::string toString(size_t indent) override;
@@ -98,9 +104,11 @@ namespace proof {
 
         bool isFailed() override;
 
-        void extractProof() override { }
+        void extractProof() override {}
 
-        void extractCounterexample() override { }
+        void extractFailedBranches() override {}
+
+        void extractCounterexample() override {}
 
         std::string toString(size_t indent) override;
     };
@@ -146,6 +154,8 @@ namespace proof {
 
         void extractProof() override;
 
+        void extractFailedBranches() override;
+
         void extractCounterexample() override;
 
         std::string toString(size_t indent) override;
@@ -173,6 +183,8 @@ namespace proof {
         bool isFailed();
 
         void extractProof();
+
+        void extractFailedBranches();
 
         void extractCounterexample();
 

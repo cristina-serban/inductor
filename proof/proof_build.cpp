@@ -202,6 +202,18 @@ void PairStmtNode::extractProof() {
     children[0]->extractProof();
 }
 
+void PairStmtNode::extractFailedBranches() {
+    for (size_t i = 0, sz = children.size(); i < sz; i++) {
+        if (!children[i]->isFailed()) {
+            children.erase(children.begin() + i);
+            i--;
+            sz--;
+        } else {
+            children[i]->extractFailedBranches();
+        }
+    }
+}
+
 void PairStmtNode::extractCounterexample() {
     if(!this->isFailed()) {
         return;
@@ -264,6 +276,21 @@ bool RuleNode::isFailed() {
 void RuleNode::extractProof() {
     for (size_t i = 0, sz = children.size(); i < sz; i++) {
         children[i]->extractProof();
+    }
+}
+
+void RuleNode::extractFailedBranches() {
+    if (!isFailed())
+        return;
+
+    for (size_t i = 0, sz = children.size(); i < sz; i++) {
+        if (!children[i]->isFailed()) {
+            children.erase(children.begin() + i);
+            i--;
+            sz--;
+        } else {
+            children[i]->extractFailedBranches();
+        }
     }
 }
 
