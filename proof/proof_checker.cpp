@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <math.h>
 
 using namespace std;
 using namespace pred;
