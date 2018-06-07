@@ -4,8 +4,8 @@
 #include <regex>
 #include <vector>
 
-#include "exec/execution.h"
 #include "cvc/cvc_term_translator.h"
+#include "exec/execution.h"
 #include "sep/sep_literal.h"
 #include "sep/sep_term.h"
 #include "util/error_messages.h"
@@ -19,14 +19,14 @@ using namespace smtlib;
 using namespace smtlib::cvc;
 
 int main(int argc, char **argv) {
-    sptr_t<ExecutionSettings> settings = make_shared<ExecutionSettings>();
+    ExecutionSettingsPtr settings = make_shared<ExecutionSettings>();
     vector<string> files;
 
     regex unfoldLevelRegex("--unfold-level=(.*)");
-    regex unfoldOutputPath("--unfold-path=(\\\")?(.*)(\\\")?");
+    regex unfoldOutputPath(R"(--unfold-path=(\")?(.*)(\")?)");
 
     bool unfold = false;
-    bool ent = false;
+    bool entail = false;
 
     for (int i = 1; i < argc; i++) {
         string argstr = string(argv[i]);
@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
         if (strcmp(argv[i], "--no-core") == 0) {
             settings->setCoreTheoryEnabled(false);
         } if (strcmp(argv[i], "--check-ent") == 0) {
-            ent = true;
+            entail = true;
         } else if (strcmp(argv[i], "--unfold-exist=y") == 0) {
             settings->setUnfoldExistential(true);
             unfold = true;
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
             settings->setCvcEmp(true);
         } else if (regex_match(argstr, sm, unfoldLevelRegex)) {
             if (sm.size() == 2) {
-                int level = stoi(sm[1].str().c_str());
+                int level = stoi(sm[1].str());
                 if (level >= 0) {
                     settings->setUnfoldLevel(level);
                     unfold = true;
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
             }
         } else if (regex_match(argstr, sm, unfoldOutputPath)) {
             if (sm.size() == 4) {
-                    settings->setUnfoldOutputPath(string(sm[2].str().c_str()));
+                    settings->setUnfoldOutputPath(sm[2].str());
                 unfold = true;
             } else {
                 Logger::error("main()", ErrorMessages::ERR_OUT_PATH_INVALID.c_str());
@@ -73,13 +73,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    for (auto file : files) {
+    for (const auto& file : files) {
         settings->setInputFromFile(file);
         Execution exec(settings);
 
         if (unfold) {
             exec.unfoldPredicates();
-        } else if(ent) {
+        } else if(entail) {
             exec.checkEntailment();
         } else {
             exec.checkSortedness();

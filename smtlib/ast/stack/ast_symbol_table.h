@@ -9,35 +9,41 @@
 
 namespace smtlib {
     namespace ast {
+        typedef std::unordered_map<std::string, SortEntryPtr> SortEntryMap;
+        typedef std::unordered_map<std::string, std::vector<FunEntryPtr>> FunEntryMap;
+        typedef std::unordered_map<std::string, VarEntryPtr> VarEntryMap;
+
         class SymbolTable {
         private:
-            sptr_um2<std::string, SortInfo> sorts;
-            umap<std::string, sptr_v<FunInfo>> funs;
-            sptr_um2<std::string, VarInfo> vars;
+            SortEntryMap sorts;
+            FunEntryMap funs;
+            VarEntryMap vars;
 
         public:
-            inline sptr_um2<std::string, SortInfo> &getSorts() {
+            inline SortEntryMap& getSorts() {
                 return sorts;
             }
 
-            inline umap<std::string, sptr_v<FunInfo>> &getFuns() {
+            inline FunEntryMap& getFuns() {
                 return funs;
             }
 
-            inline sptr_um2<std::string, VarInfo> &getVars() {
+            inline VarEntryMap& getVars() {
                 return vars;
             }
 
-            sptr_t<SortInfo> getSortInfo(std::string name);
-            sptr_v<FunInfo> getFunInfo(std::string name);
-            sptr_t<VarInfo> getVarInfo(std::string name);
+            SortEntryPtr getSortEntry(const std::string& name);
+            std::vector<FunEntryPtr> getFunEntry(const std::string& name);
+            VarEntryPtr getVarEntry(const std::string& name);
 
-            bool add(sptr_t<SortInfo> info);
-            bool add(sptr_t<FunInfo> info);
-            bool add(sptr_t<VarInfo> info);
+            bool add(const SortEntryPtr& entry);
+            bool add(const FunEntryPtr& entry);
+            bool add(const VarEntryPtr& entry);
 
             void reset();
         };
+
+        typedef std::shared_ptr<SymbolTable> SymbolTablePtr;
     }
 }
 

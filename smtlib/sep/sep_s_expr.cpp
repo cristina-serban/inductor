@@ -5,10 +5,6 @@
 using namespace std;
 using namespace smtlib::sep;
 
-CompSExpression::CompSExpression(const vector<SExpressionPtr>& exprs) {
-    this->expressions.insert(this->expressions.end(), exprs.begin(), exprs.end());
-}
-
 void CompSExpression::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }

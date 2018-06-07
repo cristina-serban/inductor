@@ -76,7 +76,7 @@ std::vector<unsigned long> IndexReachability::find(unsigned long x) {
 }
 
 void IndexReachability::close() {
-    std::vector<std::vector<unsigned long>> copy;
+    IndexReachabilityMap copy;
 
     do {
         copy = copyMap();
@@ -145,13 +145,13 @@ std::string IndexReachability::toString() {
     return ss.str();
 }
 
-std::vector<std::vector<unsigned long>> IndexReachability::copyMap() {
-    std::vector<std::vector<unsigned long>> result;
+IndexReachabilityMap IndexReachability::copyMap() {
+    IndexReachabilityMap result;
     result.insert(result.begin(), map.begin(), map.end());
     return result;
 }
 
-bool IndexReachability::equalsMap(const std::vector<std::vector<unsigned long>>& other) {
+bool IndexReachability::equalsMap(const IndexReachabilityMap& other) {
     if (map.size() != other.size())
         return false;
 

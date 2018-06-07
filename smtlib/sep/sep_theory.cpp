@@ -5,11 +5,7 @@
 using namespace smtlib::sep;
 using namespace std;
 
-Theory::Theory(const string& name, const vector<AttributePtr>& attributes) : name(name) {
-    this->attributes.insert(this->attributes.begin(), attributes.begin(), attributes.end());
-}
-
-void Theory::accept(Visitor0* visitor){
+void Theory::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 

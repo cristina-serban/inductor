@@ -9,7 +9,7 @@ using namespace smtlib::ast;
 
 /* ================================== AssertCommand =================================== */
 
-void AssertCommand::accept(Visitor0* visitor){
+void AssertCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -21,7 +21,7 @@ string AssertCommand::toString() {
 
 /* ================================= CheckSatCommand ================================== */
 
-void CheckSatCommand::accept(Visitor0* visitor){
+void CheckSatCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -33,11 +33,7 @@ string CheckSatCommand::toString() {
 
 /* =============================== CheckSatAssumCommand =============================== */
 
-CheckSatAssumCommand::CheckSatAssumCommand(const vector<PropLiteralPtr>& assumptions) {
-    this->assumptions.insert(this->assumptions.end(), assumptions.begin(), assumptions.end());
-}
-
-void CheckSatAssumCommand::accept(Visitor0* visitor){
+void CheckSatAssumCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -58,7 +54,7 @@ string CheckSatAssumCommand::toString() {
 
 /* =============================== DeclareConstCommand ================================ */
 
-void DeclareConstCommand::accept(Visitor0* visitor){
+void DeclareConstCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -81,12 +77,6 @@ string DeclareDatatypeCommand::toString() {
 }
 
 /* ============================= DeclareDatatypesCommand ============================== */
-
-DeclareDatatypesCommand::DeclareDatatypesCommand(const vector<SortDeclarationPtr>& sorts,
-                                                 const vector<DatatypeDeclarationPtr>& declarations) {
-    this->sorts.insert(this->sorts.begin(), sorts.begin(), sorts.end());
-    this->declarations.insert(this->declarations.begin(), declarations.begin(), declarations.end());
-}
 
 void DeclareDatatypesCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
@@ -117,14 +107,7 @@ string DeclareDatatypesCommand::toString() {
 }
 /* =============================== DeclareFunCommand ================================ */
 
-DeclareFunCommand::DeclareFunCommand(const SymbolPtr& symbol,
-                                     const vector<SortPtr>& parameters,
-                                     const SortPtr& sort)
-        : symbol(symbol), sort(sort) {
-    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
-}
-
-void DeclareFunCommand::accept(Visitor0* visitor){
+void DeclareFunCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -145,7 +128,7 @@ string DeclareFunCommand::toString() {
 
 /* =============================== DeclareSortCommand ================================ */
 
-void DeclareSortCommand::accept(Visitor0* visitor){
+void DeclareSortCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -157,14 +140,7 @@ string DeclareSortCommand::toString() {
 
 /* ================================= DefineFunCommand ================================= */
 
-DefineFunCommand::DefineFunCommand(const SymbolPtr& symbol,
-                                   const vector<SortedVariablePtr>& params,
-                                   const SortPtr& sort,
-                                   const TermPtr& body) {
-    definition = make_shared<FunctionDefinition>(symbol, params, sort, body);
-}
-
-void DefineFunCommand::accept(Visitor0* visitor){
+void DefineFunCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -176,19 +152,7 @@ string DefineFunCommand::toString() {
 
 /* ================================ DefineFunRecCommand =============================== */
 
-DefineFunRecCommand::DefineFunRecCommand(const FunctionDeclarationPtr& signature,
-                                         const TermPtr& body) {
-    definition = make_shared<FunctionDefinition>(signature, body);
-}
-
-DefineFunRecCommand::DefineFunRecCommand(const SymbolPtr& symbol,
-                                         const vector<SortedVariablePtr>& params,
-                                         const SortPtr& sort,
-                                         const TermPtr& body) {
-    definition = make_shared<FunctionDefinition>(symbol, params, sort, body);
-}
-
-void DefineFunRecCommand::accept(Visitor0* visitor){
+void DefineFunRecCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -200,13 +164,7 @@ string DefineFunRecCommand::toString() {
 
 /* =============================== DefineFunsRecCommand =============================== */
 
-DefineFunsRecCommand::DefineFunsRecCommand(const vector<FunctionDeclarationPtr>& declarations,
-                                           const vector<TermPtr>& bodies) {
-    this->declarations.insert(this->declarations.end(), declarations.begin(), declarations.end());
-    this->bodies.insert(this->bodies.end(), bodies.begin(), bodies.end());
-}
-
-void DefineFunsRecCommand::accept(Visitor0* visitor){
+void DefineFunsRecCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -236,14 +194,7 @@ string DefineFunsRecCommand::toString() {
 
 /* ================================ DefineSortCommand ================================= */
 
-DefineSortCommand::DefineSortCommand(const SymbolPtr& symbol,
-                                     const vector<SymbolPtr>& parameters,
-                                     const SortPtr& sort)
-        : symbol(symbol), sort(sort) {
-    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
-}
-
-void DefineSortCommand::accept(Visitor0* visitor){
+void DefineSortCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -264,7 +215,7 @@ string DefineSortCommand::toString() {
 
 /* =================================== EchoCommand ==================================== */
 
-void EchoCommand::accept(Visitor0* visitor){
+void EchoCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -276,7 +227,7 @@ string EchoCommand::toString() {
 
 /* =================================== ExitCommand ==================================== */
 
-void ExitCommand::accept(Visitor0* visitor){
+void ExitCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -288,7 +239,7 @@ string ExitCommand::toString() {
 
 /* ================================ GetAssertsCommand ================================= */
 
-void GetAssertsCommand::accept(Visitor0* visitor){
+void GetAssertsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -300,7 +251,7 @@ string GetAssertsCommand::toString() {
 
 /* ================================ GetAssignsCommand ================================= */
 
-void GetAssignsCommand::accept(Visitor0* visitor){
+void GetAssignsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -312,7 +263,7 @@ string GetAssignsCommand::toString() {
 
 /* ================================== GetInfoCommand ================================== */
 
-void GetInfoCommand::accept(Visitor0* visitor){
+void GetInfoCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -324,7 +275,7 @@ string GetInfoCommand::toString() {
 
 /* ================================= GetModelCommand ================================== */
 
-void GetModelCommand::accept(Visitor0* visitor){
+void GetModelCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -336,7 +287,7 @@ string GetModelCommand::toString() {
 
 /* ================================= GetOptionCommand ================================= */
 
-void GetOptionCommand::accept(Visitor0* visitor){
+void GetOptionCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -348,7 +299,7 @@ string GetOptionCommand::toString() {
 
 /* ================================= GetProofCommand ================================== */
 
-void GetProofCommand::accept(Visitor0* visitor){
+void GetProofCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -360,7 +311,7 @@ string GetProofCommand::toString() {
 
 /* ============================== GetUnsatAssumsCommand =============================== */
 
-void GetUnsatAssumsCommand::accept(Visitor0* visitor){
+void GetUnsatAssumsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -372,7 +323,7 @@ string GetUnsatAssumsCommand::toString() {
 
 /* =============================== GetUnsatCoreCommand ================================ */
 
-void GetUnsatCoreCommand::accept(Visitor0* visitor){
+void GetUnsatCoreCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -384,11 +335,7 @@ string GetUnsatCoreCommand::toString() {
 
 /* ================================= GetValueCommand ================================== */
 
-GetValueCommand::GetValueCommand(const vector<TermPtr>& terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
-
-void GetValueCommand::accept(Visitor0* visitor){
+void GetValueCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -409,7 +356,7 @@ string GetValueCommand::toString() {
 
 /* =================================== PopCommand ==================================== */
 
-void PopCommand::accept(Visitor0* visitor){
+void PopCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -421,7 +368,7 @@ string PopCommand::toString() {
 
 /* =================================== PushCommand ==================================== */
 
-void PushCommand::accept(Visitor0* visitor){
+void PushCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -433,7 +380,7 @@ string PushCommand::toString() {
 
 /* =================================== ResetCommand =================================== */
 
-void ResetCommand::accept(Visitor0* visitor){
+void ResetCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -445,7 +392,7 @@ string ResetCommand::toString() {
 
 /* =============================== ResetAssertsCommand ================================ */
 
-void ResetAssertsCommand::accept(Visitor0* visitor){
+void ResetAssertsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -457,7 +404,7 @@ string ResetAssertsCommand::toString() {
 
 /* ================================== SetInfoCommand ================================== */
 
-void SetInfoCommand::accept(Visitor0* visitor){
+void SetInfoCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -470,7 +417,7 @@ string SetInfoCommand::toString() {
 
 /* ================================= SetLogicCommand ================================== */
 
-void SetLogicCommand::accept(Visitor0* visitor){
+void SetLogicCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 
@@ -482,7 +429,7 @@ string SetLogicCommand::toString() {
 
 /* ================================= SetOptionCommand ================================= */
 
-void SetOptionCommand::accept(Visitor0* visitor){
+void SetOptionCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 } 
 

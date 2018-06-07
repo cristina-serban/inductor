@@ -28,14 +28,17 @@ namespace smtlib {
              * Constructs logic without attributes.
              * \param name          Logic name
              */
-            inline explicit Logic(const std::string& name) : name(name) {}
+            inline explicit Logic(std::string name)
+                    : name(std::move(name)) {}
 
             /**
              * Constructs logic with attributes.
              * \param name          Logic name
              * \param attributes    Logic attributes
              */
-            Logic(const std::string& name, const std::vector<AttributePtr>& attributes);
+            inline Logic(std::string name, std::vector<AttributePtr> attributes)
+                    : name(std::move(name))
+                    , attributes(std::move(attributes)) {}
 
             void accept(Visitor0* visitor) override;
 

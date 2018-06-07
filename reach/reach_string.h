@@ -7,22 +7,25 @@
 #define INDUCTOR_REACH_STRING_H
 
 #include "reach/reach_index.h"
-#include "util/global_typedef.h"
 
 #include <string>
+#include <unordered_map>
 
 namespace reach {
     class StringReachability;
     typedef std::shared_ptr<StringReachability> StringReachabilityPtr;
 
+    typedef std::unordered_map<std::string, std::vector<std::string>> StringReachabilityMap;
+    typedef std::unordered_map<std::string, unsigned long> StringToIndexMap;
+
     /** Reachability relation for strings */
     class StringReachability {
     private:
-        std::unordered_map<std::string, std::vector<std::string>> map;
+        StringReachabilityMap map;
 
-        std::unordered_map<std::string, std::vector<std::string>> copyMap();
+        StringReachabilityMap copyMap();
 
-        bool equalsMap(const std::unordered_map<std::string, std::vector<std::string>>& other);
+        bool equalsMap(const StringReachabilityMap& other);
     public:
         /**
         * Add a new string
@@ -67,7 +70,7 @@ namespace reach {
         std::string toString();
 
         /** Transform the structure into one for index reachability, based on a given order */
-        IndexReachabilityPtr toIndexReachability(const std::unordered_map<std::string, unsigned long>& params);
+        IndexReachabilityPtr toIndexReachability(const StringToIndexMap& params);
     };
 }
 

@@ -6,39 +6,39 @@ using namespace std;
 using namespace smtlib;
 using namespace smtlib::ast;
 
-unordered_map<string, string> &VariableRenamerContext::getRenamingMap() {
+RenamingMap& VariableRenamerContext::getRenamingMap() {
     return renamingMap;
 };
 
-void VariableRenamer::visit(sptr_t<SimpleIdentifier> node) {
-    string &name = node->symbol->value;
+void VariableRenamer::visit(const SimpleIdentifierPtr& node) {
+    string& name = node->symbol->value;
 
-    auto &renamingMap = ctx->getRenamingMap();
+    auto& renamingMap = ctx->getRenamingMap();
     auto it = renamingMap.find(name);
 
     if (it != renamingMap.end()) {
-        node->symbol->value = renamingMap[name];
+        node->symbol->value = it->second;
     }
 }
 
-void VariableRenamer::visit(sptr_t<SortedVariable> node) {
-    string &name = node->symbol->value;
+void VariableRenamer::visit(const SortedVariablePtr& node) {
+    string& name = node->symbol->value;
 
-    auto &renamingMap = ctx->getRenamingMap();
+    auto& renamingMap = ctx->getRenamingMap();
     auto it = renamingMap.find(name);
 
     if (it != renamingMap.end()) {
-        node->symbol->value = renamingMap[name];
+        node->symbol->value = it->second;
     }
 }
 
-void VariableRenamer::visit(sptr_t<VariableBinding> node) {
-    string &name = node->symbol->value;
+void VariableRenamer::visit(const VariableBindingPtr& node) {
+    string& name = node->symbol->value;
 
-    auto &renamingMap = ctx->getRenamingMap();
+    auto& renamingMap = ctx->getRenamingMap();
     auto it = renamingMap.find(name);
 
     if (it != renamingMap.end()) {
-        node->symbol->value = renamingMap[name];
+        node->symbol->value = it->second;
     }
 }

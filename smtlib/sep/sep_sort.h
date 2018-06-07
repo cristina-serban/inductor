@@ -25,14 +25,17 @@ namespace smtlib {
              * Constructor for a simple sort
              * \param name      Sort name
              */
-            inline explicit Sort(const std::string& name) : name(name) { }
+            inline explicit Sort(std::string name)
+                    : name(std::move(name)) {}
 
             /**
              * Constructor for a sort with arguments
              * \param name      Sort name
              * \param arguments Sort arguments
              */
-            Sort(const std::string& name, const std::vector<SortPtr>& arguments);
+            inline Sort(std::string name, std::vector<SortPtr> arguments)
+                    : name(std::move(name))
+                    , arguments(std::move(arguments)) {}
 
             /** Checks whether the sort has arguments */
             bool hasArgs();

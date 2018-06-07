@@ -20,28 +20,30 @@ namespace strat {
                           public std::enable_shared_from_this<Automaton> {
         public:
             /** Strategy name */
-            sptr_t<StringLiteral> name;
+            StringLiteralPtr name;
 
             /** States of the automaton */
-            std::vector<sptr_t<State>> states;
+            std::vector<StatePtr> states;
 
             /** Inital state */
-            sptr_t<State> init;
+            StatePtr initial;
 
             /** Final states */
-            std::vector<sptr_t<State>> final;
+            std::vector<StatePtr> final;
 
             /** Transitions */
-            std::vector<sptr_t<Transition>> transitions;
+            std::vector<TransitionPtr> transitions;
 
-            Automaton(sptr_t<StringLiteral> name,
-                      std::vector<sptr_t<State>> &states,
-                      sptr_t<State> init,
-                      std::vector<sptr_t<State>> &final,
-                      std::vector<sptr_t<Transition>> &transitions);
+            Automaton(StringLiteralPtr name,
+                      std::vector<StatePtr> states,
+                      StatePtr initial,
+                      std::vector<StatePtr> final,
+                      std::vector<TransitionPtr> transitions);
 
-            std::string toString();
+            std::string toString() override;
         };
+
+        typedef std::shared_ptr<Automaton> AutomatonPtr;
     }
 }
 

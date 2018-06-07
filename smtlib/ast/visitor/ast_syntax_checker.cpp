@@ -17,9 +17,8 @@ using namespace std;
 using namespace smtlib;
 using namespace smtlib::ast;
 
-sptr_t<SyntaxChecker::Error>
-SyntaxChecker::addError(string message, sptr_t<Node> node,
-                        sptr_t<SyntaxChecker::Error> err) {
+SyntaxChecker::ErrorPtr SyntaxChecker::addError(const string& message, const NodePtr& node,
+                                                SyntaxChecker::ErrorPtr& err) {
     if (!err) {
         err = make_shared<Error>(message, node);
         errors.push_back(err);
@@ -30,19 +29,17 @@ SyntaxChecker::addError(string message, sptr_t<Node> node,
     return err;
 }
 
-sptr_t<SyntaxChecker::Error>
-SyntaxChecker::checkParamUsage(sptr_v<Symbol> &params,
-                               unordered_map<string, bool> &paramUsage,
-                               sptr_t<Sort> sort,
-                               sptr_t<Node> source,
-                               sptr_t<Error> err) {
+SyntaxChecker::ErrorPtr SyntaxChecker::checkParamUsage(const std::vector<SymbolPtr>& params,
+                                                       unordered_map<string, bool>& paramUsage,
+                                                       const SortPtr& sort, const NodePtr& source,
+                                                       SyntaxChecker::ErrorPtr& err) {
     if (!sort)
         return err;
 
     string name = sort->identifier->toString();
     bool isParam = false;
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        if (name == (*paramIt)->toString())
+    for (const auto& param : params) {
+        if (name == param->toString())
             isParam = true;
     }
 
@@ -53,17 +50,17 @@ SyntaxChecker::checkParamUsage(sptr_v<Symbol> &params,
             err = addError(ErrorMessages::buildSortParamArity(sort->toString(), name), source, err);
         }
     } else {
-        sptr_v<Sort> argSorts = sort->arguments;
-        for (auto argIt = argSorts.begin(); argIt != argSorts.end(); argIt++) {
-            checkParamUsage(params, paramUsage, *argIt, source, err);
+        std::vector<SortPtr>& argSorts = sort->arguments;
+        for (const auto& arg : argSorts) {
+            checkParamUsage(params, paramUsage, arg, source, err);
         }
     }
 
     return err;
 }
 
-void SyntaxChecker::visit(sptr_t<Attribute> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const AttributePtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -79,8 +76,8 @@ void SyntaxChecker::visit(sptr_t<Attribute> node) {
     visit0(node->value);
 }
 
-void SyntaxChecker::visit(sptr_t<CompAttributeValue> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const CompAttributeValuePtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -90,8 +87,8 @@ void SyntaxChecker::visit(sptr_t<CompAttributeValue> node) {
     visit0(node->values);
 }
 
-void SyntaxChecker::visit(sptr_t<Symbol> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SymbolPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -103,8 +100,8 @@ void SyntaxChecker::visit(sptr_t<Symbol> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<Keyword> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const KeywordPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -116,8 +113,8 @@ void SyntaxChecker::visit(sptr_t<Keyword> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<MetaSpecConstant> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const MetaSpecConstantPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -125,8 +122,8 @@ void SyntaxChecker::visit(sptr_t<MetaSpecConstant> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<BooleanValue> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const BooleanValuePtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -134,8 +131,8 @@ void SyntaxChecker::visit(sptr_t<BooleanValue> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<PropLiteral> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const PropLiteralPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -149,8 +146,8 @@ void SyntaxChecker::visit(sptr_t<PropLiteral> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<AssertCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const AssertCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -164,8 +161,8 @@ void SyntaxChecker::visit(sptr_t<AssertCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<CheckSatCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const CheckSatCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -173,8 +170,8 @@ void SyntaxChecker::visit(sptr_t<CheckSatCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<CheckSatAssumCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const CheckSatAssumCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -184,8 +181,8 @@ void SyntaxChecker::visit(sptr_t<CheckSatAssumCommand> node) {
     visit0(node->assumptions);
 }
 
-void SyntaxChecker::visit(sptr_t<DeclareConstCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DeclareConstCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -206,8 +203,8 @@ void SyntaxChecker::visit(sptr_t<DeclareConstCommand> node) {
 }
 
 
-void SyntaxChecker::visit(sptr_t<DeclareDatatypeCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DeclareDatatypeCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -227,8 +224,8 @@ void SyntaxChecker::visit(sptr_t<DeclareDatatypeCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<DeclareDatatypesCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DeclareDatatypesCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -254,7 +251,7 @@ void SyntaxChecker::visit(sptr_t<DeclareDatatypesCommand> node) {
     for (size_t i = 0; i < minCount; i++) {
         long arity = node->sorts[i]->arity->value;
         size_t paramCount = 0;
-        sptr_t<ParametricDatatypeDeclaration> decl =
+        ParametricDatatypeDeclarationPtr decl =
                 dynamic_pointer_cast<ParametricDatatypeDeclaration>(node->declarations[i]);
         if (decl) {
             paramCount = decl->parameters.size();
@@ -271,8 +268,8 @@ void SyntaxChecker::visit(sptr_t<DeclareDatatypesCommand> node) {
     visit0(node->declarations);
 }
 
-void SyntaxChecker::visit(sptr_t<DeclareFunCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DeclareFunCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -294,8 +291,8 @@ void SyntaxChecker::visit(sptr_t<DeclareFunCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<DeclareSortCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DeclareSortCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -315,8 +312,8 @@ void SyntaxChecker::visit(sptr_t<DeclareSortCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<DefineFunCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DefineFunCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -330,8 +327,8 @@ void SyntaxChecker::visit(sptr_t<DefineFunCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<DefineFunRecCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DefineFunRecCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -345,8 +342,8 @@ void SyntaxChecker::visit(sptr_t<DefineFunRecCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<DefineFunsRecCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DefineFunsRecCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -372,8 +369,8 @@ void SyntaxChecker::visit(sptr_t<DefineFunsRecCommand> node) {
     visit0(node->declarations);
 }
 
-void SyntaxChecker::visit(sptr_t<DefineSortCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DefineSortCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -403,9 +400,9 @@ void SyntaxChecker::visit(sptr_t<DefineSortCommand> node) {
 
     if (paramUsage.size() != node->parameters.size()) {
         vector<string> unusedParams;
-        sptr_v<Symbol> params = node->parameters;
-        for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-            string pname = (*paramIt)->toString();
+        std::vector<SymbolPtr>& params = node->parameters;
+        for (const auto& param : params) {
+            string pname = param->toString();
             if (paramUsage.find(pname) == paramUsage.end()) {
                 unusedParams.push_back("'" + pname + "'");
             }
@@ -414,22 +411,22 @@ void SyntaxChecker::visit(sptr_t<DefineSortCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<EchoCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const EchoCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
         return;
     }
 
-    if (node->message == "") {
+    if (node->message.empty()) {
         err = addError(ErrorMessages::ERR_ECHO_EMPTY_STRING, node, err);
     }
 
 }
 
-void SyntaxChecker::visit(sptr_t<ExitCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const ExitCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -437,8 +434,8 @@ void SyntaxChecker::visit(sptr_t<ExitCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<GetAssertsCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const GetAssertsCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -446,8 +443,8 @@ void SyntaxChecker::visit(sptr_t<GetAssertsCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<GetAssignsCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const GetAssignsCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -455,8 +452,8 @@ void SyntaxChecker::visit(sptr_t<GetAssignsCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<GetInfoCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const GetInfoCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -470,8 +467,8 @@ void SyntaxChecker::visit(sptr_t<GetInfoCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<GetModelCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const GetModelCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -479,8 +476,8 @@ void SyntaxChecker::visit(sptr_t<GetModelCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<GetOptionCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const GetOptionCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -494,8 +491,8 @@ void SyntaxChecker::visit(sptr_t<GetOptionCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<GetProofCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const GetProofCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -503,8 +500,8 @@ void SyntaxChecker::visit(sptr_t<GetProofCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<GetUnsatAssumsCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const GetUnsatAssumsCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -512,8 +509,8 @@ void SyntaxChecker::visit(sptr_t<GetUnsatAssumsCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<GetUnsatCoreCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const GetUnsatCoreCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -521,8 +518,8 @@ void SyntaxChecker::visit(sptr_t<GetUnsatCoreCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<GetValueCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const GetValueCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -536,8 +533,8 @@ void SyntaxChecker::visit(sptr_t<GetValueCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<PopCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const PopCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -551,8 +548,8 @@ void SyntaxChecker::visit(sptr_t<PopCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<PushCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const PushCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -566,8 +563,8 @@ void SyntaxChecker::visit(sptr_t<PushCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<ResetCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const ResetCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -575,8 +572,8 @@ void SyntaxChecker::visit(sptr_t<ResetCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<ResetAssertsCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const ResetAssertsCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -584,8 +581,8 @@ void SyntaxChecker::visit(sptr_t<ResetAssertsCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<SetInfoCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SetInfoCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -599,8 +596,8 @@ void SyntaxChecker::visit(sptr_t<SetInfoCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<SetLogicCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SetLogicCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -612,8 +609,8 @@ void SyntaxChecker::visit(sptr_t<SetLogicCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<SetOptionCommand> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SetOptionCommandPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -623,15 +620,15 @@ void SyntaxChecker::visit(sptr_t<SetOptionCommand> node) {
     if (!node->option) {
         err = addError(ErrorMessages::ERR_SET_OPT_MISSING_OPT, node, err);
     } else {
-        sptr_t<Attribute> option = node->option;
+        AttributePtr option = node->option;
         if ((option->keyword->value == KW_DIAG_OUTPUT_CHANNEL
              || option->keyword->value == KW_REGULAR_OUTPUT_CHANNEL)
-            && !dynamic_cast<StringLiteral *>(option->value.get())) {
+            && !dynamic_pointer_cast<StringLiteral>(option->value)) {
             err = addError(ErrorMessages::ERR_OPT_VALUE_STRING, option, err);
         } else if ((option->keyword->value == KW_RANDOM_SEED
                     || option->keyword->value == KW_VERBOSITY
                     || option->keyword->value == KW_REPROD_RESOURCE_LIMIT)
-                   && !dynamic_cast<NumeralLiteral *>(option->value.get())) {
+                   && !dynamic_pointer_cast<NumeralLiteral>(option->value)) {
             err = addError(ErrorMessages::ERR_OPT_VALUE_NUMERAL, option, err);
         } else if ((option->keyword->value == KW_EXPAND_DEFS
                     || option->keyword->value == KW_GLOBAL_DECLS
@@ -653,8 +650,8 @@ void SyntaxChecker::visit(sptr_t<SetOptionCommand> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<FunctionDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const FunctionDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -676,8 +673,8 @@ void SyntaxChecker::visit(sptr_t<FunctionDeclaration> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<FunctionDefinition> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const FunctionDefinitionPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -697,8 +694,8 @@ void SyntaxChecker::visit(sptr_t<FunctionDefinition> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<SimpleIdentifier> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SimpleIdentifierPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -718,8 +715,8 @@ void SyntaxChecker::visit(sptr_t<SimpleIdentifier> node) {
     visit0(node->indices);
 }
 
-void SyntaxChecker::visit(sptr_t<QualifiedIdentifier> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const QualifiedIdentifierPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -739,8 +736,8 @@ void SyntaxChecker::visit(sptr_t<QualifiedIdentifier> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<DecimalLiteral> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const DecimalLiteralPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -748,8 +745,8 @@ void SyntaxChecker::visit(sptr_t<DecimalLiteral> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<NumeralLiteral> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const NumeralLiteralPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -757,8 +754,8 @@ void SyntaxChecker::visit(sptr_t<NumeralLiteral> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<StringLiteral> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const StringLiteralPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -766,15 +763,15 @@ void SyntaxChecker::visit(sptr_t<StringLiteral> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<Logic> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const LogicPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
         return;
     }
 
-    sptr_v<Attribute> attrs = node->attributes;
+    std::vector<AttributePtr>& attrs = node->attributes;
 
     if (!node->name) {
         err = addError(ErrorMessages::ERR_LOGIC_MISSING_NAME, node, err);
@@ -784,35 +781,34 @@ void SyntaxChecker::visit(sptr_t<Logic> node) {
         err = addError(ErrorMessages::ERR_LOGIC_EMPTY_ATTRS, node, err);
     }
 
-    for (auto attrIt = attrs.begin(); attrIt != attrs.end(); attrIt++) {
-        sptr_t<Attribute> attr = *attrIt;
+    for (const auto& attr : attrs) {
         if (!attr)
             continue;
 
-        sptr_t<Error> attrerr;
+        ErrorPtr attrerr;
 
         if (attr->keyword->value == KW_LANGUAGE
             || attr->keyword->value == KW_EXTENSIONS
             || attr->keyword->value == KW_VALUES
             || attr->keyword->value == KW_NOTES) {
-            if (!dynamic_cast<StringLiteral *>(attr->value.get())) {
+            if (!dynamic_pointer_cast<StringLiteral>(attr->value)) {
                 attrerr = addError(ErrorMessages::ERR_ATTR_VALUE_STRING, attr, attrerr);
             }
         } else if (attr->keyword->value == KW_THEORIES) {
-            if (!dynamic_cast<CompAttributeValue *>(attr->value.get())) {
+            if (!dynamic_pointer_cast<CompAttributeValue>(attr->value)) {
                 err = addError(ErrorMessages::ERR_ATTR_VALUE_THEORIES, attr, err);
             } else {
-                CompAttributeValue *val = dynamic_cast<CompAttributeValue *>(attr->value.get());
-                sptr_v<AttributeValue> values = val->values;
+                auto val = dynamic_pointer_cast<CompAttributeValue>(attr->value);
+                std::vector<AttributeValuePtr>& values = val->values;
 
                 // Note: standard prohibits empty theory list, but there are logics that only use Core
                 /*if (values.empty()) {
                     err = addError(ErrorMessages::ERR_ATTR_VALUE_THEORIES_EMPTY, attr, err);
                 }*/
 
-                for (auto valueIt = values.begin(); valueIt != values.begin(); valueIt++) {
-                    if ((*valueIt) && !dynamic_cast<Symbol *>((*valueIt).get())) {
-                        attrerr = addError(ErrorMessages::buildAttrValueSymbol((*valueIt)->toString()), attr, attrerr);
+                for (const auto& value : values) {
+                    if (value && !dynamic_pointer_cast<Symbol>(value)) {
+                        attrerr = addError(ErrorMessages::buildAttrValueSymbol(value->toString()), attr, attrerr);
                     }
                 }
             }
@@ -822,15 +818,15 @@ void SyntaxChecker::visit(sptr_t<Logic> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<Theory> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const TheoryPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
         return;
     }
 
-    sptr_v<Attribute> attrs = node->attributes;
+    std::vector<AttributePtr>& attrs = node->attributes;
 
     if (!node->name) {
         err = addError(ErrorMessages::ERR_THEORY_MISSING_NAME, node, err);
@@ -840,54 +836,52 @@ void SyntaxChecker::visit(sptr_t<Theory> node) {
         err = addError(ErrorMessages::ERR_THEORY_EMPTY_ATTRS, node, err);
     }
 
-    for (auto attrIt = attrs.begin(); attrIt != attrs.end(); attrIt++) {
-        sptr_t<Attribute> attr = *attrIt;
+    for (const auto& attr : attrs) {
         if (!attr)
             continue;
 
-        sptr_t<Error> attrerr;
+        ErrorPtr attrerr;
 
         if (attr->keyword->value == KW_SORTS_DESC
             || attr->keyword->value == KW_FUNS_DESC
             || attr->keyword->value == KW_DEFINITION
             || attr->keyword->value == KW_VALUES
             || attr->keyword->value == KW_NOTES) {
-            if (!dynamic_cast<StringLiteral *>(attr->value.get())) {
+            if (!dynamic_pointer_cast<StringLiteral>(attr->value)) {
                 attrerr = addError(ErrorMessages::ERR_ATTR_VALUE_STRING, attr, attrerr);
             }
         } else if (attr->keyword->value == KW_SORTS) {
-            if (!dynamic_cast<CompAttributeValue *>(attr->value.get())) {
+            if (!dynamic_pointer_cast<CompAttributeValue>(attr->value)) {
                 attrerr = addError(ErrorMessages::ERR_ATTR_VALUE_SORTS, attr, attrerr);
             } else {
-                CompAttributeValue *val = dynamic_cast<CompAttributeValue *>(attr->value.get());
-                sptr_v<AttributeValue> values = val->values;
+                auto val = dynamic_pointer_cast<CompAttributeValue>(attr->value);
+                std::vector<AttributeValuePtr>& values = val->values;
 
                 if (values.empty()) {
                     attrerr = addError(ErrorMessages::ERR_ATTR_VALUE_SORTS_EMPTY, attr, attrerr);
                 }
 
-                for (auto valueIt = values.begin(); valueIt != values.begin(); valueIt++) {
-                    if ((*valueIt) && !dynamic_cast<SortSymbolDeclaration *>((*valueIt).get())) {
+                for (const auto& value : values) {
+                    if (value && !dynamic_pointer_cast<SortSymbolDeclaration>(value)) {
                         attrerr = addError(
-                                ErrorMessages::buildAttrValueSortDecl((*valueIt)->toString()), attr, attrerr);
+                                ErrorMessages::buildAttrValueSortDecl(value->toString()), attr, attrerr);
                     }
                 }
             }
         } else if (attr->keyword->value == KW_FUNS) {
-            if (!dynamic_cast<CompAttributeValue *>(attr->value.get())) {
+            if (!dynamic_pointer_cast<CompAttributeValue>(attr->value)) {
                 attrerr = addError(ErrorMessages::ERR_ATTR_VALUE_FUNS, attr, attrerr);
             } else {
-                CompAttributeValue *val = dynamic_cast<CompAttributeValue *>(attr->value.get());
-                sptr_v<AttributeValue> values = val->values;
+                auto val = dynamic_pointer_cast<CompAttributeValue>(attr->value);
+                std::vector<AttributeValuePtr>& values = val->values;
 
                 if (values.empty()) {
                     attrerr = addError(ErrorMessages::ERR_ATTR_VALUE_FUNS_EMPTY, attr, attrerr);
                 }
 
-                for (auto valueIt = values.begin(); valueIt != values.begin(); valueIt++) {
-                    if ((*valueIt) && !dynamic_cast<FunSymbolDeclaration *>((*valueIt).get())) {
-                        attrerr = addError(
-                                ErrorMessages::buildAttrValueFunDecl((*valueIt)->toString()), attr, attrerr);
+                for (const auto& value : values) {
+                    if (value && !dynamic_pointer_cast<FunSymbolDeclaration>(value)) {
+                        attrerr = addError(ErrorMessages::buildAttrValueFunDecl(value->toString()), attr, attrerr);
                     }
                 }
             }
@@ -897,8 +891,8 @@ void SyntaxChecker::visit(sptr_t<Theory> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<Script> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const ScriptPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -908,8 +902,8 @@ void SyntaxChecker::visit(sptr_t<Script> node) {
     visit0(node->commands);
 }
 
-void SyntaxChecker::visit(sptr_t<Sort> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SortPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -929,8 +923,8 @@ void SyntaxChecker::visit(sptr_t<Sort> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<CompSExpression> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const CompSExpressionPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -940,8 +934,8 @@ void SyntaxChecker::visit(sptr_t<CompSExpression> node) {
     visit0(node->expressions);
 }
 
-void SyntaxChecker::visit(sptr_t<SortSymbolDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SortSymbolDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -963,8 +957,8 @@ void SyntaxChecker::visit(sptr_t<SortSymbolDeclaration> node) {
     visit0(node->attributes);
 }
 
-void SyntaxChecker::visit(sptr_t<SpecConstFunDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SpecConstFunDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -986,8 +980,8 @@ void SyntaxChecker::visit(sptr_t<SpecConstFunDeclaration> node) {
     visit0(node->attributes);
 }
 
-void SyntaxChecker::visit(sptr_t<MetaSpecConstFunDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const MetaSpecConstFunDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1009,8 +1003,8 @@ void SyntaxChecker::visit(sptr_t<MetaSpecConstFunDeclaration> node) {
     visit0(node->attributes);
 }
 
-void SyntaxChecker::visit(sptr_t<SimpleFunDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SimpleFunDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1032,8 +1026,8 @@ void SyntaxChecker::visit(sptr_t<SimpleFunDeclaration> node) {
     visit0(node->attributes);
 }
 
-void SyntaxChecker::visit(sptr_t<ParametricFunDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const ParametricFunDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1063,16 +1057,16 @@ void SyntaxChecker::visit(sptr_t<ParametricFunDeclaration> node) {
 
     // Check parameter usage
     unordered_map<string, bool> paramUsage;
-    sptr_v<Sort> sig = node->signature;
-    for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
-        err = checkParamUsage(node->parameters, paramUsage, *sortIt, node, err);
+    std::vector<SortPtr>& sig = node->signature;
+    for (const auto& sort : sig) {
+        err = checkParamUsage(node->parameters, paramUsage, sort, node, err);
     }
 
     if (paramUsage.size() != node->parameters.size()) {
         vector<string> unusedParams;
-        sptr_v<Symbol> params = node->parameters;
-        for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-            string pname = (*paramIt)->toString();
+        std::vector<SymbolPtr>& params = node->parameters;
+        for (const auto& param : params) {
+            string pname = param->toString();
             if (paramUsage.find(pname) == paramUsage.end()) {
                 unusedParams.push_back("'" + pname + "'");
             }
@@ -1085,8 +1079,8 @@ void SyntaxChecker::visit(sptr_t<ParametricFunDeclaration> node) {
     visit0(node->attributes);
 }
 
-void SyntaxChecker::visit(sptr_t<SortDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SortDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1106,8 +1100,8 @@ void SyntaxChecker::visit(sptr_t<SortDeclaration> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<SelectorDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SelectorDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1127,8 +1121,8 @@ void SyntaxChecker::visit(sptr_t<SelectorDeclaration> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<ConstructorDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const ConstructorDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1141,15 +1135,14 @@ void SyntaxChecker::visit(sptr_t<ConstructorDeclaration> node) {
         visit0(node->symbol);
     }
 
-    sptr_v<SelectorDeclaration> &selectors = node->selectors;
-    for (auto selIt = selectors.begin(); selIt != selectors.end(); selIt++) {
-        visit0((*selIt));
+    std::vector<SelectorDeclarationPtr>& selectors = node->selectors;
+    for (const auto& sel : selectors) {
+        visit0(sel);
     }
 }
 
-
-void SyntaxChecker::visit(sptr_t<SimpleDatatypeDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SimpleDatatypeDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1164,8 +1157,8 @@ void SyntaxChecker::visit(sptr_t<SimpleDatatypeDeclaration> node) {
 
 }
 
-void SyntaxChecker::visit(sptr_t<ParametricDatatypeDeclaration> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const ParametricDatatypeDeclarationPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1184,21 +1177,21 @@ void SyntaxChecker::visit(sptr_t<ParametricDatatypeDeclaration> node) {
         visit0(node->constructors);
     }
 
-    umap<string, bool> paramUsage;
+    unordered_map<string, bool> paramUsage;
 
-    sptr_v<ConstructorDeclaration> constructors = node->constructors;
-    for (auto consIt = constructors.begin(); consIt != constructors.end(); consIt++) {
-        sptr_v<SelectorDeclaration> selectors = (*consIt)->selectors;
-        for (auto selit = selectors.begin(); selit != selectors.end(); selit++) {
-            err = checkParamUsage(node->parameters, paramUsage, (*selit)->sort, node, err);
+    std::vector<ConstructorDeclarationPtr>& constructors = node->constructors;
+    for (const auto& cons : constructors) {
+        std::vector<SelectorDeclarationPtr>& selectors = cons->selectors;
+        for (const auto& sel : selectors) {
+            err = checkParamUsage(node->parameters, paramUsage, sel->sort, node, err);
         }
     }
 
     if (paramUsage.size() != node->parameters.size()) {
         vector<string> unusedParams;
-        sptr_v<Symbol> params = node->parameters;
-        for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-            string pname = (*paramIt)->toString();
+        std::vector<SymbolPtr>& params = node->parameters;
+        for (const auto& param : params) {
+            string pname = param->toString();
             if (paramUsage.find(pname) == paramUsage.end()) {
                 unusedParams.push_back("'" + pname + "'");
             }
@@ -1207,8 +1200,8 @@ void SyntaxChecker::visit(sptr_t<ParametricDatatypeDeclaration> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<QualifiedConstructor> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const QualifiedConstructorPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1228,8 +1221,8 @@ void SyntaxChecker::visit(sptr_t<QualifiedConstructor> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<QualifiedPattern> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const QualifiedPatternPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1249,8 +1242,8 @@ void SyntaxChecker::visit(sptr_t<QualifiedPattern> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<MatchCase> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const MatchCasePtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1270,8 +1263,8 @@ void SyntaxChecker::visit(sptr_t<MatchCase> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<QualifiedTerm> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const QualifiedTermPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1291,8 +1284,8 @@ void SyntaxChecker::visit(sptr_t<QualifiedTerm> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<LetTerm> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const LetTermPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1302,9 +1295,9 @@ void SyntaxChecker::visit(sptr_t<LetTerm> node) {
     if (node->bindings.empty()) {
         err = addError(ErrorMessages::ERR_LET_TERM_EMPTY_VARS, node, err);
     } else {
-        sptr_v<VariableBinding> &bindings = node->bindings;
-        for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
-            visit0((*bindingIt));
+        std::vector<VariableBindingPtr>& bindings = node->bindings;
+        for (const auto& bind : bindings) {
+            visit0(bind);
         }
     }
 
@@ -1315,8 +1308,8 @@ void SyntaxChecker::visit(sptr_t<LetTerm> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<ForallTerm> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const ForallTermPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1326,9 +1319,9 @@ void SyntaxChecker::visit(sptr_t<ForallTerm> node) {
     if (node->bindings.empty()) {
         err = addError(ErrorMessages::ERR_FORALL_TERM_EMPTY_VARS, node, err);
     } else {
-        sptr_v<SortedVariable> &bindings = node->bindings;
-        for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
-            visit0((*bindingIt));
+        std::vector<SortedVariablePtr>& bindings = node->bindings;
+        for (const auto& bind : bindings) {
+            visit0(bind);
         }
     }
 
@@ -1339,8 +1332,8 @@ void SyntaxChecker::visit(sptr_t<ForallTerm> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<ExistsTerm> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const ExistsTermPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1350,9 +1343,9 @@ void SyntaxChecker::visit(sptr_t<ExistsTerm> node) {
     if (node->bindings.empty()) {
         err = addError(ErrorMessages::ERR_EXISTS_TERM_EMPTY_VARS, node, err);
     } else {
-        sptr_v<SortedVariable> &bindings = node->bindings;
-        for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
-            visit0((*bindingIt));
+        std::vector<SortedVariablePtr>& bindings = node->bindings;
+        for (const auto& binding : bindings) {
+            visit0(binding);
         }
     }
 
@@ -1363,8 +1356,8 @@ void SyntaxChecker::visit(sptr_t<ExistsTerm> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<MatchTerm> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const MatchTermPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1380,15 +1373,15 @@ void SyntaxChecker::visit(sptr_t<MatchTerm> node) {
     if (node->cases.empty()) {
         err = addError(ErrorMessages::ERR_MATCH_TERM_EMPTY_CASES, node, err);
     } else {
-        sptr_v<MatchCase> &cases = node->cases;
-        for (auto caseIt = cases.begin(); caseIt != cases.end(); caseIt++) {
-            visit0((*caseIt));
+        std::vector<MatchCasePtr>& cases = node->cases;
+        for (const auto& caseIt : cases) {
+            visit0(caseIt);
         }
     }
 }
 
-void SyntaxChecker::visit(sptr_t<AnnotatedTerm> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const AnnotatedTermPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1408,8 +1401,8 @@ void SyntaxChecker::visit(sptr_t<AnnotatedTerm> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<SortedVariable> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const SortedVariablePtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1429,8 +1422,8 @@ void SyntaxChecker::visit(sptr_t<SortedVariable> node) {
     }
 }
 
-void SyntaxChecker::visit(sptr_t<VariableBinding> node) {
-    sptr_t<Error> err;
+void SyntaxChecker::visit(const VariableBindingPtr& node) {
+    ErrorPtr err;
 
     if (!node) {
         err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
@@ -1450,15 +1443,14 @@ void SyntaxChecker::visit(sptr_t<VariableBinding> node) {
     }
 }
 
-bool SyntaxChecker::check(sptr_t<Node> node) {
+bool SyntaxChecker::check(const NodePtr& node) {
     visit0(node);
     return errors.empty();
 }
 
 string SyntaxChecker::getErrors() {
     stringstream ss;
-    for (auto errIt = errors.begin(); errIt != errors.end(); errIt++) {
-        sptr_t<Error> err = *errIt;
+    for (const auto& err : errors) {
         if (err->node) {
             ss << err->node->rowLeft << ":" << err->node->colLeft
             << " - " << err->node->rowRight << ":" << err->node->colRight << "   ";
@@ -1473,8 +1465,8 @@ string SyntaxChecker::getErrors() {
         }
 
         ss << endl;
-        for (auto itt = err->messages.begin(); itt != err->messages.end(); itt++) {
-            ss << "\t" << *itt << "." << endl;
+        for (const auto& msg : err->messages) {
+            ss << "\t" << msg << "." << endl;
         }
 
         ss << endl;

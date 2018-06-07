@@ -31,10 +31,6 @@ string CheckSatCommand::toString() {
 
 /* =============================== CheckSatAssumCommand =============================== */
 
-CheckSatAssumCommand::CheckSatAssumCommand(const vector<PropLiteralPtr>& assumptions) {
-    this->assumptions.insert(this->assumptions.end(), assumptions.begin(), assumptions.end());
-}
-
 void CheckSatAssumCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -80,12 +76,6 @@ string DeclareDatatypeCommand::toString() {
 
 /* ============================= DeclareDatatypesCommand ============================== */
 
-DeclareDatatypesCommand::DeclareDatatypesCommand(const vector<SortDeclarationPtr>& sorts,
-                                                 const vector<DatatypeDeclarationPtr>& declarations) {
-    this->sorts.insert(this->sorts.begin(), sorts.begin(), sorts.end());
-    this->declarations.insert(this->declarations.begin(), declarations.begin(), declarations.end());
-}
-
 void DeclareDatatypesCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -115,13 +105,6 @@ string DeclareDatatypesCommand::toString() {
 }
 
 /* =============================== DeclareFunCommand ================================ */
-
-DeclareFunCommand::DeclareFunCommand(const string& name,
-                                     const vector<SortPtr>& parameters,
-                                     const SortPtr& sort)
-        : name(name), sort(sort) {
-    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
-}
 
 void DeclareFunCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
@@ -157,18 +140,6 @@ string DeclareSortCommand::toString() {
 
 /* ================================= DefineFunCommand ================================= */
 
-DefineFunCommand::DefineFunCommand(const FunctionDeclarationPtr& signature,
-                                   const TermPtr& body) {
-    definition = std::make_shared<FunctionDefinition>(signature, body);
-}
-
-DefineFunCommand::DefineFunCommand(const string& name,
-                                   const vector<SortedVariablePtr>& params,
-                                   const SortPtr& sort,
-                                   const TermPtr& body) {
-    definition = make_shared<FunctionDefinition>(name, params, sort, body);
-}
-
 void DefineFunCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -181,18 +152,6 @@ string DefineFunCommand::toString() {
 
 /* ================================ DefineFunRecCommand =============================== */
 
-DefineFunRecCommand::DefineFunRecCommand(const string& name,
-                                         const vector<SortedVariablePtr>& params,
-                                         const SortPtr& sort,
-                                         const TermPtr& body) {
-    definition = make_shared<FunctionDefinition>(name, params, sort, body);
-}
-
-DefineFunRecCommand::DefineFunRecCommand(const FunctionDeclarationPtr& signature,
-                                         const TermPtr& body) {
-    definition = make_shared<FunctionDefinition>(signature, body);
-}
-
 void DefineFunRecCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -204,12 +163,6 @@ string DefineFunRecCommand::toString() {
 }
 
 /* =============================== DefineFunsRecCommand =============================== */
-
-DefineFunsRecCommand::DefineFunsRecCommand(const vector<FunctionDeclarationPtr>& declarations,
-                                           const vector<TermPtr>& bodies) {
-    this->declarations.insert(this->declarations.end(), declarations.begin(), declarations.end());
-    this->bodies.insert(this->bodies.end(), bodies.begin(), bodies.end());
-}
 
 void DefineFunsRecCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
@@ -240,13 +193,6 @@ string DefineFunsRecCommand::toString() {
 }
 
 /* ================================ DefineSortCommand ================================= */
-
-DefineSortCommand::DefineSortCommand(const string& name,
-                                     const vector<string>& parameters,
-                                     const SortPtr& sort)
-        : name(name), sort(sort) {
-    this->parameters.insert(this->parameters.end(), parameters.begin(), parameters.end());
-}
 
 void DefineSortCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
@@ -388,10 +334,6 @@ string GetUnsatCoreCommand::toString() {
 }
 
 /* ================================= GetValueCommand ================================== */
-
-GetValueCommand::GetValueCommand(const vector<TermPtr>& terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
 
 void GetValueCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());

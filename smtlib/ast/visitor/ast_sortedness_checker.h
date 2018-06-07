@@ -18,36 +18,42 @@ namespace smtlib {
         /* ============================= SortednessCheckerContext ============================= */
         class ISortCheckContext {
         public:
-            virtual sptr_t<SymbolStack> getStack() = 0;
+            virtual SymbolStackPtr getStack() = 0;
             virtual std::vector<std::string>& getCurrentTheories() = 0;
             virtual std::string getCurrentLogic() = 0;
-            virtual sptr_t<Configuration> getConfiguration() = 0;
-            virtual void setCurrentLogic(std::string logic) = 0;
+            virtual ConfigurationPtr getConfiguration() = 0;
+            virtual void setCurrentLogic(const std::string& logic) = 0;
         };
+
+        typedef std::shared_ptr<ISortCheckContext> ISortCheckContextPtr;
 
         class SortednessCheckerContext : public ISortCheckContext,
                                          public std::enable_shared_from_this<SortednessCheckerContext> {
         private:
-            sptr_t<SymbolStack> stack;
+            SymbolStackPtr stack;
             std::vector<std::string> currentTheories;
             std::string currentLogic;
-            sptr_t<Configuration> config;
+            ConfigurationPtr config;
         public:
-            SortednessCheckerContext(): stack(std::make_shared<SymbolStack>()),
-                                        config(std::make_shared<Configuration>()) { }
+            SortednessCheckerContext()
+                    : stack(std::make_shared<SymbolStack>())
+                    , config(std::make_shared<Configuration>()) {}
 
-            inline SortednessCheckerContext(sptr_t<SymbolStack> stack) : stack(stack) { }
+            inline explicit SortednessCheckerContext(SymbolStackPtr stack)
+                    : stack(std::move(stack)) {}
 
-            inline virtual sptr_t<SymbolStack> getStack() { return stack; }
+            inline SymbolStackPtr getStack() override { return stack; }
 
-            inline virtual std::vector<std::string> &getCurrentTheories() { return currentTheories; }
+            inline std::vector<std::string>& getCurrentTheories() override { return currentTheories; }
 
-            inline virtual std::string getCurrentLogic() { return currentLogic; }
+            inline std::string getCurrentLogic() override { return currentLogic; }
 
-            inline virtual sptr_t<Configuration> getConfiguration() { return config; }
+            inline ConfigurationPtr getConfiguration() override { return config; }
 
-            inline virtual void setCurrentLogic(std::string logic) { this->currentLogic = logic; }
+            inline void setCurrentLogic(const std::string& logic) override { this->currentLogic = logic; }
         };
+
+        typedef std::shared_ptr<SortednessCheckerContext> SortCheckContextPtr;
 
         /* ================================ SortednessChecker ================================= */
         class SortednessChecker : public DummyVisitor0,
@@ -56,125 +62,134 @@ namespace smtlib {
         public:
             struct Error {
                 std::string message;
-                sptr_t<SymbolInfo> info;
+                SymbolEntryPtr entry;
 
-                Error(std::string message) : message(message) { }
+                inline explicit Error(std::string message)
+                        : message(std::move(message)) {}
 
-                Error(std::string message, sptr_t<SymbolInfo> info)
-                        : message(message), info(info) { }
+                inline Error(std::string message, SymbolEntryPtr entry)
+                        : message(std::move(message))
+                        , entry(std::move(entry)) {}
             };
+
+            typedef std::shared_ptr<Error> ErrorPtr;
 
             struct NodeError {
-                sptr_v<Error> errs;
-                sptr_t<Node> node;
+                std::vector<ErrorPtr> errs;
+                NodePtr node;
 
-                NodeError() { }
+                inline NodeError() = default;
 
-                NodeError(sptr_t<Error> err, sptr_t<Node> node) {
-                    errs.push_back(err);
-                    this->node = node;
+                inline NodeError(ErrorPtr err, NodePtr node)
+                        : node(std::move(node)) {
+                    errs.push_back(std::move(err));
                 }
 
-                NodeError(sptr_v<Error> &errs,
-                          sptr_t<Node> node) {
-                    this->errs.insert(this->errs.begin(), errs.begin(), errs.end());
-                    this->node = node;
-                }
+                inline NodeError(std::vector<ErrorPtr> errs, NodePtr node)
+                        : errs(std::move(errs))
+                        , node(std::move(node)) {}
             };
+
+            typedef std::shared_ptr<NodeError> NodeErrorPtr;
+
         private:
-            sptr_t<ISortCheckContext> ctx;
-            std::map<std::string, sptr_v<NodeError>> errors;
+            ISortCheckContextPtr ctx;
+            std::map<std::string, std::vector<NodeErrorPtr>> errors;
 
-            sptr_t<SortInfo> getInfo(sptr_t<SortSymbolDeclaration> node);
-            sptr_t<SortInfo> getInfo(sptr_t<DeclareSortCommand> node);
-            sptr_t<SortInfo> getInfo(sptr_t<DefineSortCommand> node);
+            SortEntryPtr getEntry(const SortSymbolDeclarationPtr& node);
+            SortEntryPtr getEntry(const DeclareSortCommandPtr& node);
+            SortEntryPtr getEntry(const DefineSortCommandPtr& node);
 
-            sptr_t<FunInfo> getInfo(sptr_t<SpecConstFunDeclaration> node);
-            sptr_t<FunInfo> getInfo(sptr_t<MetaSpecConstFunDeclaration> node);
-            sptr_t<FunInfo> getInfo(sptr_t<SimpleFunDeclaration> node);
-            sptr_t<FunInfo> getInfo(sptr_t<ParametricFunDeclaration> node);
-            sptr_t<FunInfo> getInfo(sptr_t<DeclareConstCommand> node);
-            sptr_t<FunInfo> getInfo(sptr_t<DeclareFunCommand> node);
-            sptr_t<FunInfo> getInfo(sptr_t<DefineFunCommand> node);
-            sptr_t<FunInfo> getInfo(sptr_t<DefineFunRecCommand> node);
+            FunEntryPtr getEntry(const SpecConstFunDeclarationPtr& node);
+            FunEntryPtr getEntry(const MetaSpecConstFunDeclarationPtr& node);
+            FunEntryPtr getEntry(const SimpleFunDeclarationPtr& node);
+            FunEntryPtr getEntry(const ParametricFunDeclarationPtr& node);
+            FunEntryPtr getEntry(const DeclareConstCommandPtr& node);
+            FunEntryPtr getEntry(const DeclareFunCommandPtr& node);
+            FunEntryPtr getEntry(const DefineFunCommandPtr& node);
+            FunEntryPtr getEntry(const DefineFunRecCommandPtr& node);
 
-            sptr_v<FunInfo> getInfo(sptr_t<DefineFunsRecCommand> node);
-            sptr_v<SymbolInfo> getInfo(sptr_t<DeclareDatatypeCommand> node);
-            sptr_v<SymbolInfo> getInfo(sptr_t<DeclareDatatypesCommand> node);
+            std::vector<FunEntryPtr> getEntry(const DefineFunsRecCommandPtr& node);
+            std::vector<SymbolEntryPtr> getEntry(const DeclareDatatypeCommandPtr& node);
+            std::vector<SymbolEntryPtr> getEntry(const DeclareDatatypesCommandPtr& node);
 
-            void loadTheory(std::string theory,
-                            sptr_t<Node> node,
-                            sptr_t<NodeError> err);
+            void loadTheory(const std::string& theory,
+                            const NodePtr& node,
+                            NodeErrorPtr& err);
 
-            void loadLogic(std::string logic,
-                           sptr_t<Node> node,
-                           sptr_t<NodeError> err);
+            void loadLogic(const std::string& logic,
+                           const NodePtr& node,
+                           NodeErrorPtr& err);
 
         public:
-            inline SortednessChecker() : ctx(std::make_shared<SortednessCheckerContext>()) { }
+            inline SortednessChecker()
+                    : ctx(std::make_shared<SortednessCheckerContext>()) {}
 
-            inline SortednessChecker(sptr_t<ISortCheckContext> ctx) : ctx(ctx) { }
+            inline explicit SortednessChecker(ISortCheckContextPtr ctx)
+                    : ctx(std::move(ctx)) {}
 
-            sptr_t<NodeError> addError(std::string message,
-                                                sptr_t<Node> node,
-                                                sptr_t<NodeError> err);
+            NodeErrorPtr addError(const std::string& message,
+                                  const NodePtr& node,
+                                  NodeErrorPtr& err);
 
-            sptr_t<NodeError> addError(std::string message,
-                                                sptr_t<Node> node,
-                                                sptr_t<SymbolInfo> symbolInfo,
-                                                sptr_t<NodeError> err);
+            NodeErrorPtr addError(const std::string& message,
+                                  const NodePtr& node,
+                                  const SymbolEntryPtr& entry,
+                                  NodeErrorPtr& err);
 
-            void addError(std::string message,
-                          sptr_t<Node> node);
+            void addError(const std::string& message,
+                          const NodePtr& node);
 
-            void addError(std::string message,
-                          sptr_t<Node> node,
-                          sptr_t<SymbolInfo> err);
+            void addError(const std::string& message,
+                          const NodePtr& node,
+                          const SymbolEntryPtr& entry);
 
-            void loadTheory(std::string theory);
+            void loadTheory(const std::string& theory);
 
-            sptr_t<NodeError> checkSort(sptr_t<Sort> sort,
-                                                 sptr_t<Node> source,
-                                                 sptr_t<NodeError> err);
+            NodeErrorPtr checkSort(const SortPtr& sort,
+                                   const NodePtr& source,
+                                   NodeErrorPtr& err);
 
-            sptr_t<NodeError> checkSort(sptr_v<Symbol> &params,
-                                                 sptr_t<Sort> sort,
-                                                 sptr_t<Node> source,
-                                                 sptr_t<NodeError> err);
+            NodeErrorPtr checkSort(const std::vector<SymbolPtr>& params,
+                                   const SortPtr& sort,
+                                   const NodePtr& source,
+                                   NodeErrorPtr& err);
 
-            virtual void visit(sptr_t<AssertCommand> node);
-            virtual void visit(sptr_t<DeclareConstCommand> node);
-            virtual void visit(sptr_t<DeclareFunCommand> node);
-            virtual void visit(sptr_t<DeclareDatatypeCommand> node);
-            virtual void visit(sptr_t<DeclareDatatypesCommand> node);
-            virtual void visit(sptr_t<DeclareSortCommand> node);
-            virtual void visit(sptr_t<DefineFunCommand> node);
-            virtual void visit(sptr_t<DefineFunRecCommand> node);
-            virtual void visit(sptr_t<DefineFunsRecCommand> node);
-            virtual void visit(sptr_t<DefineSortCommand> node);
-            virtual void visit(sptr_t<GetValueCommand> node);
-            virtual void visit(sptr_t<PopCommand> node);
-            virtual void visit(sptr_t<PushCommand> node);
-            virtual void visit(sptr_t<ResetCommand> node);
-            virtual void visit(sptr_t<SetLogicCommand> node);
-            virtual void visit(sptr_t<Logic> node);
-            virtual void visit(sptr_t<Theory> node);
-            virtual void visit(sptr_t<Script> node);
-            virtual void visit(sptr_t<SortSymbolDeclaration> node);
-            virtual void visit(sptr_t<SpecConstFunDeclaration> node);
-            virtual void visit(sptr_t<MetaSpecConstFunDeclaration> node);
-            virtual void visit(sptr_t<SimpleFunDeclaration> node);
-            virtual void visit(sptr_t<ParametricFunDeclaration> node);
+            void visit(const AssertCommandPtr& node) override;
+            void visit(const DeclareConstCommandPtr& node) override;
+            void visit(const DeclareFunCommandPtr& node) override;
+            void visit(const DeclareDatatypeCommandPtr& node) override;
+            void visit(const DeclareDatatypesCommandPtr& node) override;
+            void visit(const DeclareSortCommandPtr& node) override;
+            void visit(const DefineFunCommandPtr& node) override;
+            void visit(const DefineFunRecCommandPtr& node) override;
+            void visit(const DefineFunsRecCommandPtr& node) override;
+            void visit(const DefineSortCommandPtr& node) override;
+            void visit(const GetValueCommandPtr& node) override;
+            void visit(const PopCommandPtr& node) override;
+            void visit(const PushCommandPtr& node) override;
+            void visit(const ResetCommandPtr& node) override;
+            void visit(const SetLogicCommandPtr& node) override;
+            void visit(const LogicPtr& node) override;
+            void visit(const TheoryPtr& node) override;
+            void visit(const ScriptPtr& node) override;
+            void visit(const SortSymbolDeclarationPtr& node) override;
+            void visit(const SpecConstFunDeclarationPtr& node) override;
+            void visit(const MetaSpecConstFunDeclarationPtr& node) override;
+            void visit(const SimpleFunDeclarationPtr& node) override;
+            void visit(const ParametricFunDeclarationPtr& node) override;
 
-            bool check(sptr_t<Node> node);
+            bool check(NodePtr& node);
 
             std::string getErrors();
 
             // ITermSorterContext implementation
-            virtual sptr_t<SymbolStack> getStack();
-            virtual sptr_t<SortednessChecker> getChecker();
-            virtual sptr_t<Configuration> getConfiguration();
+            SymbolStackPtr getStack() override;
+            SortednessCheckerPtr getChecker() override;
+            ConfigurationPtr getConfiguration() override;
         };
+
+        typedef std::shared_ptr<SortednessChecker> SortednessCheckerPtr;
     }
 }
 

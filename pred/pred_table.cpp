@@ -14,7 +14,7 @@ using namespace reach;
 using namespace smtlib::sep;
 
 void fill(size_t pos, vector<size_t>& sizes,
-          vector<long> current, vector<vector<long>>& result) {
+          vector<long>& current, vector<vector<long>>& result) {
     if (pos == sizes.size()) {
         result.push_back(current);
         return;
@@ -24,7 +24,7 @@ void fill(size_t pos, vector<size_t>& sizes,
         // fixme This makes no sense, why did I do it?
         current[pos] = -1;
     } else {
-        for (unsigned long i = 0; i < sizes[pos]; i++) {
+        for (size_t i = 0; i < sizes[pos]; i++) {
             current[pos] = i;
             fill(pos + 1, sizes, current, result);
         }
@@ -32,7 +32,7 @@ void fill(size_t pos, vector<size_t>& sizes,
 }
 
 template<class T>
-vector<vector<long>> genCombinations(vector<vector<T>> options) {
+vector<vector<long>> genCombinations(const vector<vector<T>>& options) {
     vector<size_t> sizes;
     for (size_t i = 0, sz = options.size(); i < sz; i++) {
         sizes.push_back(options[i].size());
@@ -44,21 +44,20 @@ vector<vector<long>> genCombinations(vector<vector<T>> options) {
     return result;
 }
 
-PredicateTable::PredicateTable(unordered_map<string, InductivePredicatePtr>& predicates)
-        : equiv(make_shared<EquivAnalysis>()),
-          alloc(make_shared<AllocAnalysis>()),
-          reach(make_shared<ReachAnalysis>()) {
-    this->predicates.insert(predicates.begin(), predicates.end());
-}
+PredicateTable::PredicateTable(unordered_map<string, InductivePredicatePtr> predicates)
+        : equiv(make_shared<EquivAnalysis>())
+        , alloc(make_shared<AllocAnalysis>())
+        , reach(make_shared<ReachAnalysis>())
+        , predicates(std::move(predicates)) {}
 
-bool PredicateTable::load(ScriptPtr script) {
+bool PredicateTable::load(const ScriptPtr& script) {
     errors.clear();
 
     StackLoaderContextPtr ctx = make_shared<StackLoaderContext>(stack);
     StackLoaderPtr loader = make_shared<StackLoader>(ctx);
     loader->load(script);
 
-    vector<CommandPtr> cmds = script->commands;
+    const vector<CommandPtr>& cmds = script->commands;
     for (const auto& cmd : cmds) {
         auto cmdFun = dynamic_pointer_cast<DefineFunCommand>(cmd);
         auto cmdFunRec = dynamic_pointer_cast<DefineFunRecCommand>(cmd);
@@ -83,7 +82,7 @@ void PredicateTable::print() {
     for (const auto& predEntry : predicates) {
         cout << predEntry.first << endl;
 
-        InductivePredicatePtr pred = predEntry.second;
+        const InductivePredicatePtr& pred = predEntry.second;
 
         for (const auto& baseCase : pred->baseCases) {
             cout << "\t" << baseCase->toTerm()->toString() << endl;
@@ -101,7 +100,7 @@ void PredicateTable::printAllocAnalysis() {
     for (const auto& predEntry : predicates) {
         cout << predEntry.first << "(";
 
-        vector<Allocated> allc = alloc->index->predicates[predEntry.first];
+        const vector<Allocated>& allc = alloc->index->predicates[predEntry.first];
         for (size_t i = 0, sz = allc.size(); i < sz; i++) {
             if (i != 0)
                 cout << ", ";
@@ -117,7 +116,8 @@ void PredicateTable::printAllocAnalysis() {
 
 void PredicateTable::printReachAnalysis() {
     for (const auto& predEntry : predicates) {
-        cout << predEntry.first << " -> " << reach->index->predicates[predEntry.first]->toString() << endl;
+        cout << predEntry.first << " -> "
+             << reach->index->predicates[predEntry.first]->toString() << endl;
     }
 
     cout << endl;
@@ -146,10 +146,10 @@ void PredicateTable::load(const DefineFunsRecCommandPtr& cmd) {
         add(decl);
     }
 
-    vector<TermPtr> bodies = cmd->bodies;
+    const vector<TermPtr>& bodies = cmd->bodies;
 
     for (size_t i = 0, sz = bodies.size(); i < sz; i++) {
-        string name = cmd->declarations[i]->name;
+        const string& name = cmd->declarations[i]->name;
         if (predicates.find(name) == predicates.end()) {
             continue;
         }
@@ -191,7 +191,7 @@ InductivePredicatePtr PredicateTable::add(const FunctionDeclarationPtr& decl) {
 
 bool PredicateTable::isInductiveCase(const TermPtr& term) {
     for (const auto& predEntry : predicates) {
-        InductivePredicatePtr pred = predEntry.second;
+        const InductivePredicatePtr& pred = predEntry.second;
 
         auto decl = make_shared<FunctionDeclaration>(pred->name, pred->parameters, pred->sort);
         auto ctx = make_shared<OccurrenceCheckerContext>(decl);
@@ -260,8 +260,7 @@ InductiveCasePtr PredicateTable::buildInductiveCase(const TermPtr& term) {
     ss << ErrorMessages::ERR_INVALID_IND_CASE << ": '" << term->toString() << "'";
     errors.push_back(ss.str());
 
-    InductiveCasePtr null;
-    return null;
+    return InductiveCasePtr();
 }
 
 InductiveCasePtr PredicateTable::buildInductiveCase(const vector<SortedVariablePtr>& bindings,
@@ -305,11 +304,11 @@ ConstraintPtr PredicateTable::buildConstraint(const TermPtr& term) {
     auto constraint = make_shared<Constraint>();
     auto list = buildTermList(term);
 
-    for (const auto& it : list) {
-        if (isSpatial(it)) {
-            constraint->spatial.push_back(it);
+    for (const auto& elem : list) {
+        if (isSpatial(elem)) {
+            constraint->spatial.push_back(elem);
         } else {
-            constraint->pure.push_back(it);
+            constraint->pure.push_back(elem);
         }
     }
 
@@ -345,8 +344,8 @@ vector<TermPtr> PredicateTable::buildTermList(const TermPtr& term) {
 
 void PredicateTable::printEquiv() {
     for (const auto& predEntry : predicates) {
-        auto name = predEntry.first;
-        auto pred = predEntry.second;
+        const string& name = predEntry.first;
+        const InductivePredicatePtr& pred = predEntry.second;
 
         cout << name << endl;
 
@@ -372,16 +371,16 @@ void PredicateTable::buildEquiv() {
     equiv->clear();
 
     for (const auto& predEntry : predicates) {
-        string name = predEntry.first;
-        InductivePredicatePtr pred = predEntry.second;
+        const string& name = predEntry.first;
+        const InductivePredicatePtr& pred = predEntry.second;
 
         unordered_map<BaseCasePtr, equiv::StringEquivalencePtr> bmap;
         unordered_map<InductiveCasePtr, equiv::StringEquivalencePtr> imap;
         equiv->base[name] = bmap;
         equiv->inductive[name] = imap;
 
-        unordered_map<string, unsigned long> paramMap;
-        for (unsigned long i = 0; i < pred->parameters.size(); i++) {
+        unordered_map<string, size_t> paramMap;
+        for (size_t i = 0, sz = pred->parameters.size(); i < sz; i++) {
             paramMap[pred->parameters[i]->name] = i;
         }
 
@@ -472,12 +471,12 @@ void PredicateTable::buildEquiv(const string& pred, const InductiveCasePtr& icas
 }
 
 void PredicateTable::buildIndexEquiv(const string& pred, const BaseCasePtr& bcase,
-                                     const unordered_map<string, unsigned long>& paramMap) {
+                                     const StringToIndexMap& paramMap) {
     equiv->index->base[pred][bcase] = equiv->base[pred][bcase]->toIndexEquivalence(paramMap);
 }
 
 void PredicateTable::buildIndexEquiv(const string& pred, const InductiveCasePtr& icase,
-                                     const unordered_map<string, unsigned long>& paramMap) {
+                                     const StringToIndexMap& paramMap) {
     equiv->index->inductive[pred][icase] = equiv->inductive[pred][icase]->toIndexEquivalence(paramMap);
 }
 
@@ -518,7 +517,7 @@ void PredicateTable::initAlloc() {
 }
 
 void PredicateTable::initAlloc(const string& pred) {
-    auto def = predicates[pred];
+    const InductivePredicatePtr& def = predicates[pred];
 
     // Global
     vector<Allocated> indexAlloc;
@@ -540,8 +539,8 @@ void PredicateTable::initAlloc(const string& pred) {
 }
 
 void PredicateTable::initAlloc(const string& pred, const BaseCasePtr& bcase) {
-    auto def = predicates[pred];
-    auto eq = equiv->base[pred][bcase];
+    const InductivePredicatePtr& def = predicates[pred];
+    const StringEquivalencePtr& eq = equiv->base[pred][bcase];
 
     // Variables
     unordered_map<string, Allocated> init;
@@ -558,7 +557,7 @@ void PredicateTable::initAlloc(const string& pred, const BaseCasePtr& bcase) {
     for (const auto& sconstr : bcase->constraint->spatial) {
         PtoTermPtr pto = dynamic_pointer_cast<PtoTerm>(sconstr);
         if (pto) {
-            auto p = eq->find(pto->leftTerm->toString());
+            equiv::NodePtr p = eq->find(pto->leftTerm->toString());
             while (p) {
                 alloc->base[pred][bcase][p->data] = Allocated::ALWAYS;
                 p = p->next;
@@ -568,7 +567,7 @@ void PredicateTable::initAlloc(const string& pred, const BaseCasePtr& bcase) {
 
     // Indices
     vector<Allocated> indexAlloc;
-    for (const auto& param : def->parameters) {
+    for (const SortedVariablePtr& param : def->parameters) {
         indexAlloc.push_back(alloc->base[pred][bcase][param->name]);
     }
 
@@ -576,11 +575,11 @@ void PredicateTable::initAlloc(const string& pred, const BaseCasePtr& bcase) {
 }
 
 void PredicateTable::initAlloc(const string& pred, const InductiveCasePtr& icase) {
-    auto def = predicates[pred];
+    const InductivePredicatePtr& def = predicates[pred];
 
     // Indices
     vector<Allocated> indexAlloc;
-    for (unsigned long i = 0; i < def->parameters.size(); i++) {
+    for (size_t i = 0, sz = def->parameters.size(); i < sz; i++) {
         indexAlloc.push_back(Allocated::MAYBE);
     }
 
@@ -588,7 +587,7 @@ void PredicateTable::initAlloc(const string& pred, const InductiveCasePtr& icase
 }
 
 void PredicateTable::analyseAlloc(const string& pred) {
-    auto def = predicates[pred];
+    const InductivePredicatePtr& def = predicates[pred];
 
     for (const auto& icase : def->indCases) {
         analyseAlloc(pred, icase);
@@ -607,7 +606,8 @@ void PredicateTable::analyseAlloc(const string& pred) {
 }
 
 void PredicateTable::analyseAlloc(const string& pred, const InductiveCasePtr& icase) {
-    if (alloc->inductive[pred].find(icase) == alloc->inductive[pred].end()) {
+    const auto& analysis = alloc->inductive[pred];
+    if (analysis.find(icase) == analysis.end()) {
         // First time analysing this inductive case
         analyseAllocFirst(pred, icase);
     } else {
@@ -617,8 +617,8 @@ void PredicateTable::analyseAlloc(const string& pred, const InductiveCasePtr& ic
 }
 
 void PredicateTable::analyseAllocFirst(const string& pred, const InductiveCasePtr& icase) {
-    auto def = predicates[pred];
-    StringEquivalencePtr eq = equiv->inductive[pred][icase];
+    const InductivePredicatePtr& def = predicates[pred];
+    const StringEquivalencePtr& eq = equiv->inductive[pred][icase];
 
     // Initialise
     unordered_map<string, Allocated> init;
@@ -628,8 +628,8 @@ void PredicateTable::analyseAllocFirst(const string& pred, const InductiveCasePt
         alloc->inductive[pred][icase][param->name] = Allocated::NEVER;
     }
 
-    for (auto it = icase->bindings.begin(); it != icase->bindings.end(); it++) {
-        alloc->inductive[pred][icase][(*it)->name] = Allocated::NEVER;
+    for (const auto& bind : icase->bindings) {
+        alloc->inductive[pred][icase][bind->name] = Allocated::NEVER;
     }
 
     if (icase->constraint) {
@@ -639,7 +639,7 @@ void PredicateTable::analyseAllocFirst(const string& pred, const InductiveCasePt
             if (!pto)
                 continue;
 
-            auto p = eq->find(pto->leftTerm->toString());
+            equiv::NodePtr p = eq->find(pto->leftTerm->toString());
             while (p) {
                 alloc->inductive[pred][icase][p->data] = Allocated::ALWAYS;
                 p = p->next;
@@ -650,7 +650,7 @@ void PredicateTable::analyseAllocFirst(const string& pred, const InductiveCasePt
     // Get all base cases for each call
     vector<vector<BaseCasePtr>> options;
     for (const auto& call : icase->calls) {
-        string called = call->predicate;
+        const string& called = call->predicate;
         options.push_back(predicates[called]->baseCases);
     }
 
@@ -670,7 +670,7 @@ void PredicateTable::analyseAllocFirst(const string& pred, const InductiveCasePt
                     cases[i][arg] = disj(cases[i][arg], allc[k]);
                 }
             } else {
-                string calledPred = icase->calls[j]->predicate;
+                const string& calledPred = icase->calls[j]->predicate;
                 vector<Allocated> allc = alloc->index->base[calledPred][options[j][combinations[i][j]]];
 
                 for (size_t k = 0, szk = predicates[calledPred]->parameters.size(); k < szk; k++) {
@@ -681,12 +681,12 @@ void PredicateTable::analyseAllocFirst(const string& pred, const InductiveCasePt
         }
 
         // Propagate equivalence induced by base case calls
-        for (unsigned long j = 0; j < combinations[i].size(); j++) {
+        for (size_t j = 0, szj = combinations[i].size(); j < szj; j++) {
             if (combinations[i][j] == -1)
                 continue;
 
-            string calledPred = icase->calls[j]->predicate;
-            IndexEquivalencePtr eqcall = equiv->index->base[calledPred][options[j][combinations[i][j]]];
+            const string& calledPred = icase->calls[j]->predicate;
+            const IndexEquivalencePtr& eqcall = equiv->index->base[calledPred][options[j][combinations[i][j]]];
 
             for (size_t k = 0, szk = predicates[calledPred]->parameters.size(); k < szk; k++) {
                 string arg = icase->calls[j]->arguments[k]->toString();
@@ -710,8 +710,8 @@ void PredicateTable::analyseAllocFirst(const string& pred, const InductiveCasePt
 }
 
 void PredicateTable::analyseAllocRecurse(const string& pred, const InductiveCasePtr& icase) {
-    auto def = predicates[pred];
-    auto eq = equiv->inductive[pred][icase];
+    const InductivePredicatePtr& def = predicates[pred];
+    const StringEquivalencePtr& eq = equiv->inductive[pred][icase];
 
     // Get all cases for each call
     vector<vector<CasePtr>> options(icase->calls.size());
@@ -730,17 +730,17 @@ void PredicateTable::analyseAllocRecurse(const string& pred, const InductiveCase
     vector<vector<long>> combinations = genCombinations(options);
     vector<umap<string, Allocated>> cases;
 
-    for (unsigned long i = 0; i < combinations.size(); i++) {
+    for (size_t i = 0, szi = combinations.size(); i < szi; i++) {
         cases.push_back(alloc->inductive[pred][icase]);
 
-        for (unsigned long j = 0; j < combinations[i].size(); j++) {
+        for (size_t j = 0, szj = combinations[i].size(); j < szj; j++) {
             if (combinations[i][j] == -1)
                 return;
 
-            string calledPred = icase->calls[j]->predicate;
+            const string& calledPred = icase->calls[j]->predicate;
 
-            auto bcall = dynamic_pointer_cast<BaseCase>(options[j][combinations[i][j]]);
-            auto icall = dynamic_pointer_cast<InductiveCase>(options[j][combinations[i][j]]);
+            BaseCasePtr bcall = dynamic_pointer_cast<BaseCase>(options[j][combinations[i][j]]);
+            InductiveCasePtr icall = dynamic_pointer_cast<InductiveCase>(options[j][combinations[i][j]]);
 
             vector<Allocated> allc;
             if (bcall) {
@@ -749,20 +749,20 @@ void PredicateTable::analyseAllocRecurse(const string& pred, const InductiveCase
                 allc = alloc->index->inductive[calledPred][icall];
             }
 
-            for (unsigned long k = 0; k < predicates[calledPred]->parameters.size(); k++) {
+            for (size_t k = 0, szk = predicates[calledPred]->parameters.size(); k < szk; k++) {
                 string arg = icase->calls[j]->arguments[k]->toString();
                 cases[i][arg] = disj(cases[i][arg], allc[k]);
             }
         }
 
-        for (unsigned long j = 0; j < combinations[i].size(); j++) {
+        for (size_t j = 0, szj = combinations[i].size(); j < szj; j++) {
             if (combinations[i][j] == -1)
                 return;
 
-            string calledPred = icase->calls[j]->predicate;
+            const string& calledPred = icase->calls[j]->predicate;
 
-            auto bcall = dynamic_pointer_cast<BaseCase>(options[j][combinations[i][j]]);
-            auto icall = dynamic_pointer_cast<InductiveCase>(options[j][combinations[i][j]]);
+            BaseCasePtr bcall = dynamic_pointer_cast<BaseCase>(options[j][combinations[i][j]]);
+            InductiveCasePtr icall = dynamic_pointer_cast<InductiveCase>(options[j][combinations[i][j]]);
 
             IndexEquivalencePtr eqcall;
             if (bcall) {
@@ -771,12 +771,12 @@ void PredicateTable::analyseAllocRecurse(const string& pred, const InductiveCase
                 eqcall = equiv->index->inductive[calledPred][icall];
             }
 
-            for (unsigned long k = 0; k < predicates[calledPred]->parameters.size(); k++) {
+            for (size_t k = 0, szk = predicates[calledPred]->parameters.size(); k < szk; k++) {
                 string arg = icase->calls[j]->arguments[k]->toString();
                 long set = eqcall->find(k);
 
                 if (set >= 0 && cases[i][arg] != Allocated::NEVER) {
-                    for (unsigned long l = 0; l < eqcall->classes.size(); l++) {
+                    for (size_t l = 0, szl = eqcall->classes.size(); l < szl; l++) {
                         if (eqcall->find(l) == set) {
                             string otherArg = icase->calls[j]->arguments[l]->toString();
                             cases[i][otherArg] = disj(cases[i][otherArg], cases[i][arg]);
@@ -806,14 +806,14 @@ void PredicateTable::analyseReach() {
 
         for (const auto& predEntry : predicates) {
             if (predEntry.second->isOnlySelfRecursive()) {
-                string pred = predEntry.first;
+                const string& pred = predEntry.first;
                 analyseReach(pred);
             }
         }
 
         for (const auto& predEntry : predicates) {
             if (!predEntry.second->isOnlySelfRecursive()) {
-                string pred = predEntry.first;
+                const string& pred = predEntry.first;
                 analyseReach(pred);
             }
         }
@@ -829,7 +829,7 @@ void PredicateTable::initReach() {
 }
 
 void PredicateTable::initReach(const string& pred) {
-    auto def = predicates[pred];
+    const InductivePredicatePtr& def = predicates[pred];
 
     // Global
     IndexReachabilityPtr init = make_shared<IndexReachability>();
@@ -848,11 +848,11 @@ void PredicateTable::initReach(const string& pred) {
 }
 
 void PredicateTable::initReach(const string& pred, const BaseCasePtr& bcase) {
-    auto def = predicates[pred];
-    auto eq = equiv->base[pred][bcase];
+    const InductivePredicatePtr& def = predicates[pred];
+    const StringEquivalencePtr& eq = equiv->base[pred][bcase];
 
     // Add variables
-    auto init = make_shared<StringReachability>();
+    StringReachabilityPtr init = make_shared<StringReachability>();
     reach->base[pred][bcase] = init;
 
     for (const auto& param : def->parameters) {
@@ -898,16 +898,16 @@ void PredicateTable::initReach(const string& pred, const BaseCasePtr& bcase) {
 }
 
 void PredicateTable::initReach(const string& pred, const InductiveCasePtr& icase) {
-    auto def = predicates[pred];
+    const InductivePredicatePtr& def = predicates[pred];
 
     // Indices
-    auto indexReach = make_shared<IndexReachability>();
+    IndexReachabilityPtr indexReach = make_shared<IndexReachability>();
     indexReach->fill(def->parameters.size());
     reach->index->inductive[pred][icase] = indexReach;
 }
 
 void PredicateTable::analyseReach(const string& pred) {
-    auto def = predicates[pred];
+    const InductivePredicatePtr& def = predicates[pred];
 
     for (const auto& icase : def->indCases) {
         analyseReach(pred, icase);
@@ -926,7 +926,8 @@ void PredicateTable::analyseReach(const string& pred) {
 }
 
 void PredicateTable::analyseReach(const string& pred, const InductiveCasePtr& icase) {
-    if (reach->inductive[pred].find(icase) == reach->inductive[pred].end()) {
+    auto& analysis = reach->inductive[pred];
+    if (analysis.find(icase) == analysis.end()) {
         // First time analysing this inductive case
         analyseReachFirst(pred, icase);
     } else {
@@ -936,26 +937,26 @@ void PredicateTable::analyseReach(const string& pred, const InductiveCasePtr& ic
 }
 
 void PredicateTable::analyseReachFirst(const string& pred, const InductiveCasePtr& icase) {
-    auto def = predicates[pred];
-    auto eq = equiv->inductive[pred][icase];
+    const InductivePredicatePtr& def = predicates[pred];
+    const StringEquivalencePtr& eq = equiv->inductive[pred][icase];
 
     // Initialise
     // Add variables
-    auto init = make_shared<StringReachability>();
+    StringReachabilityPtr init = make_shared<StringReachability>();
     reach->inductive[pred][icase] = init;
 
     for (const auto& param : def->parameters) {
         reach->inductive[pred][icase]->add(param->name);
     }
 
-    for (auto it = icase->bindings.begin(); it != icase->bindings.end(); it++) {
-        reach->inductive[pred][icase]->add((*it)->name);
+    for (const auto& bind : icase->bindings) {
+        reach->inductive[pred][icase]->add(bind->name);
     }
 
     // Variable equivalence
     auto keys = reach->inductive[pred][icase]->keys();
     for (const auto& key : keys) {
-        auto p = eq->find(key);
+        equiv::NodePtr p = eq->find(key);
         while (p) {
             reach->inductive[pred][icase]->link(key, p->data);
             reach->inductive[pred][icase]->link(p->data, key);
@@ -987,7 +988,7 @@ void PredicateTable::analyseReachFirst(const string& pred, const InductiveCasePt
     // Get all base cases for each call
     vector<vector<BaseCasePtr>> options;
     for (const auto& call : icase->calls) {
-        string called = call->predicate;
+        const string& called = call->predicate;
         options.push_back(predicates[pred]->baseCases);
     }
 
@@ -1005,7 +1006,7 @@ void PredicateTable::analyseReachFirst(const string& pred, const InductiveCasePt
                 IndexReachabilityPtr idxReach = reach->index->predicates[icase->calls[j]->predicate];
                 cases[i] = disj(cases[i], idxReach, icase->calls[j]->arguments);
             } else {
-                string calledPred = icase->calls[j]->predicate;
+                const string& calledPred = icase->calls[j]->predicate;
                 IndexReachabilityPtr idxReach = reach->index->base[calledPred][options[j][combinations[i][j]]];
                 cases[i] = disj(cases[i], idxReach, icase->calls[j]->arguments);
             }
@@ -1016,7 +1017,7 @@ void PredicateTable::analyseReachFirst(const string& pred, const InductiveCasePt
             if (combinations[i][j] == -1)
                 continue;
 
-            string calledPred = icase->calls[j]->predicate;
+            const string& calledPred = icase->calls[j]->predicate;
             IndexEquivalencePtr eqcall = equiv->index->base[calledPred][options[j][combinations[i][j]]];
 
             for (size_t k = 0, szk = predicates[calledPred]->parameters.size(); k < szk; k++) {
@@ -1040,13 +1041,13 @@ void PredicateTable::analyseReachFirst(const string& pred, const InductiveCasePt
 }
 
 void PredicateTable::analyseReachRecurse(const string& pred, const InductiveCasePtr& icase) {
-    auto def = predicates[pred];
-    auto eq = equiv->inductive[pred][icase];
+    const InductivePredicatePtr& def = predicates[pred];
+    const StringEquivalencePtr& eq = equiv->inductive[pred][icase];
 
     // Get all cases for each call
     vector<vector<CasePtr>> options(icase->calls.size());
     for (size_t i = 0, sz = icase->calls.size(); i < sz; i++) {
-        string called = icase->calls[i]->predicate;
+        const string& called = icase->calls[i]->predicate;
         options[i].insert(options[i].begin(),
                           predicates[called]->baseCases.begin(),
                           predicates[called]->baseCases.end());
@@ -1067,7 +1068,7 @@ void PredicateTable::analyseReachRecurse(const string& pred, const InductiveCase
             if (combinations[i][j] == -1)
                 return;
 
-            string calledPred = icase->calls[j]->predicate;
+            const string& calledPred = icase->calls[j]->predicate;
 
             auto bcall = dynamic_pointer_cast<BaseCase>(options[j][combinations[i][j]]);
             auto icall = dynamic_pointer_cast<InductiveCase>(options[j][combinations[i][j]]);
@@ -1086,10 +1087,10 @@ void PredicateTable::analyseReachRecurse(const string& pred, const InductiveCase
             if (combinations[i][j] == -1)
                 return;
 
-            string calledPred = icase->calls[j]->predicate;
+            const string& calledPred = icase->calls[j]->predicate;
 
-            auto bcall = dynamic_pointer_cast<BaseCase>(options[j][combinations[i][j]]);
-            auto icall = dynamic_pointer_cast<InductiveCase>(options[j][combinations[i][j]]);
+            BaseCasePtr bcall = dynamic_pointer_cast<BaseCase>(options[j][combinations[i][j]]);
+            InductiveCasePtr icall = dynamic_pointer_cast<InductiveCase>(options[j][combinations[i][j]]);
 
             IndexEquivalencePtr eqcall;
             if (bcall) {

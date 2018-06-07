@@ -5,10 +5,6 @@
 using namespace smtlib::ast;
 using namespace std;
 
-Logic::Logic(const SymbolPtr& name, const vector<AttributePtr>& attributes) : name(name) {
-    this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
-}
-
 void Logic::accept(Visitor0 *visitor) {
     visitor->visit(shared_from_this());
 }

@@ -7,11 +7,6 @@ using namespace smtlib::ast;
 
 /* ================================= SimpleIdentifier ================================= */
 
-SimpleIdentifier::SimpleIdentifier(const SymbolPtr& symbol, const vector<IndexPtr>& indices)
-        : symbol(symbol) {
-    this->indices.insert(this->indices.end(), indices.begin(), indices.end());
-}
-
 bool SimpleIdentifier::isIndexed() {
     return !indices.empty();
 }
@@ -25,7 +20,7 @@ string SimpleIdentifier::toString() {
         return symbol->toString();
 
     stringstream ss;
-    ss << "( _ " << symbol->toString() << " ";
+    ss << "(_ " << symbol->toString() << " ";
 
     for (size_t i = 0, sz = indices.size(); i < sz; i++) {
         if (i != 0)

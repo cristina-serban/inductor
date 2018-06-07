@@ -5,43 +5,41 @@ using namespace std;
 using namespace strat;
 using namespace strat::ast;
 
-shared_ptr<Strategy> Translator::translate(shared_ptr<File> file) {
+StrategyPtr Translator::translate(const FilePtr& file) {
     return translate(file->automaton);
 }
 
-shared_ptr<Strategy> Translator::translate(shared_ptr<Automaton> aut) {
-    shared_ptr<Strategy> strat = make_shared<Strategy>();
+StrategyPtr Translator::translate(const AutomatonPtr& aut) {
+    StrategyPtr strategy = make_shared<Strategy>();
 
-    for(size_t i = 0, n = aut->states.size(); i < n; i++) {
-        strat->states.push_back(translate(aut->states[i]));
+    for (const auto& state : aut->states) {
+        strategy->states.push_back(translate(state));
     }
 
-    strat->init = translate(aut->init);
+    strategy->init = translate(aut->initial);
 
-    for(size_t i = 0, n = aut->final.size(); i < n; i++) {
-        strat->final.push_back(translate(aut->final[i]));
+    for (const auto& finalState : aut->final) {
+        strategy->final.push_back(translate(finalState));
     }
 
-    for(size_t i = 0, n = aut->transitions.size(); i < n; i++) {
-        auto trans = aut->transitions[i];
-
+    for (const auto& trans : aut->transitions) {
         string start = translate(trans->start);
         proof::Rule rule = translate(trans->rule);
         string end = translate(trans->end);
 
-        if(strat->transitions.find(start) == strat->transitions.end()) {
+        if(strategy->transitions.find(start) == strategy->transitions.end()) {
             vector<pair<proof::Rule, string>> vect;
-            strat->transitions[start] = vect;
+            strategy->transitions[start] = vect;
         }
 
-        pair<proof::Rule, string> tr (rule, end);
-        strat->transitions[start].push_back(tr);
+        pair<proof::Rule, string> tr(rule, end);
+        strategy->transitions[start].push_back(tr);
     }
 
-    return strat;
+    return strategy;
 }
 
-proof::Rule Translator::translate(shared_ptr<Rule> rule) {
+proof::Rule Translator::translate(const RulePtr& rule) {
     string ruleName = rule->name->value;
 
     if(ruleName == proof::toString(proof::Rule::INFINITE_DESCENT)) {
@@ -61,6 +59,6 @@ proof::Rule Translator::translate(shared_ptr<Rule> rule) {
     }
 }
 
-string Translator::translate(shared_ptr<State> state) {
+string Translator::translate(const StatePtr& state) {
     return state->name->value;
 }

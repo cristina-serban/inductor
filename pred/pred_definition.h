@@ -51,13 +51,13 @@ namespace pred {
         /** Inductive cases (i.e. cases with at least one inductive call) */
         std::vector<InductiveCasePtr> indCases;
 
-        InductivePredicate(const std::string& name,
-                           const std::vector<smtlib::sep::SortedVariablePtr>& parameters);
+        InductivePredicate(std::string name,
+                           std::vector<smtlib::sep::SortedVariablePtr> parameters);
 
-        InductivePredicate(const std::string& name,
-                           const std::vector<smtlib::sep::SortedVariablePtr>& parameters,
-                           const std::vector<BaseCasePtr>& baseCases,
-                           const std::vector<InductiveCasePtr>& indCases);
+        InductivePredicate(std::string name,
+                           std::vector<smtlib::sep::SortedVariablePtr> parameters,
+                           std::vector<BaseCasePtr> baseCases,
+                           std::vector<InductiveCasePtr> indCases);
 
         /** Whether the definition includes only self-calls (and not calls to other predicates) */
         bool isOnlySelfRecursive();
@@ -125,10 +125,14 @@ namespace pred {
         /** Mandatory expression */
         ConstraintPtr constraint;
 
-        inline explicit BaseCase(const ConstraintPtr& constraint) : constraint(constraint) {}
+        inline explicit BaseCase(ConstraintPtr constraint)
+                : constraint(std::move(constraint)) {}
 
-        BaseCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-                 const ConstraintPtr& constraint);
+        inline BaseCase(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                        ConstraintPtr constraint)
+                : constraint(std::move(constraint))
+                , bindings(std::move(bindings)) {}
+
 
         /** Clones the base case */
         BaseCasePtr clone();
@@ -157,22 +161,23 @@ namespace pred {
 
         inline InductiveCase() = default;
 
-        inline explicit InductiveCase(const ConstraintPtr& constraint) : constraint(constraint) {}
+        inline explicit InductiveCase(ConstraintPtr constraint)
+                : constraint(std::move(constraint)) {}
 
-        InductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-                      const ConstraintPtr& constraint);
+        InductiveCase(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                      ConstraintPtr constraint);
 
-        InductiveCase(const ConstraintPtr& constraint,
-                      const std::vector<PredicateCallPtr>& calls);
+        InductiveCase(ConstraintPtr constraint,
+                      std::vector<PredicateCallPtr> calls);
 
-        InductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-                      const ConstraintPtr& constraint,
-                      const std::vector<PredicateCallPtr>& calls);
+        InductiveCase(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                      ConstraintPtr constraint,
+                      std::vector<PredicateCallPtr> calls);
 
-        InductiveCase(const std::vector<PredicateCallPtr>& calls);
+        explicit InductiveCase(std::vector<PredicateCallPtr> calls);
 
-        InductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-                      const std::vector<PredicateCallPtr>& calls);
+        InductiveCase(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                      std::vector<PredicateCallPtr> calls);
 
         /** Clones the inductive case */
         InductiveCasePtr clone();
@@ -195,10 +200,13 @@ namespace pred {
         /** Optional call arguments */
         std::vector<smtlib::sep::TermPtr> arguments;
 
-        inline explicit PredicateCall(const std::string& predicate) : predicate(predicate) {}
+        inline explicit PredicateCall(std::string predicate)
+                : predicate(std::move(predicate)) {}
 
-        PredicateCall(const std::string& predicate,
-                      const std::vector<smtlib::sep::TermPtr>& arguments);
+        inline PredicateCall(std::string predicate,
+                             std::vector<smtlib::sep::TermPtr> arguments)
+                : predicate(std::move(predicate))
+                , arguments(std::move(arguments)) {}
 
         /** Translates the call back into a term */
         smtlib::sep::TermPtr toTerm();

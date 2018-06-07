@@ -12,101 +12,108 @@ namespace smtlib {
     namespace sep {
         class IStackLoaderContext {
         public:
-            virtual sptr_t<SymbolStack> getStack() = 0;
-            virtual std::vector<std::string> &getCurrentTheories() = 0;
+            virtual SymbolStackPtr getStack() = 0;
+            virtual std::vector<std::string>& getCurrentTheories() = 0;
             virtual std::string getCurrentLogic() = 0;
-            virtual sptr_t<Configuration> getConfiguration() = 0;
-            virtual void setCurrentLogic(std::string logic) = 0;
+            virtual ConfigurationPtr getConfiguration() = 0;
+            virtual void setCurrentLogic(const std::string& logic) = 0;
         };
 
         class StackLoaderContext : public IStackLoaderContext,
                                    public std::enable_shared_from_this<StackLoaderContext> {
         private:
-            sptr_t<SymbolStack> stack;
+            SymbolStackPtr stack;
             std::vector<std::string> currentTheories;
             std::string currentLogic;
-            sptr_t<Configuration> config;
+            ConfigurationPtr config;
         public:
-            StackLoaderContext() : stack(std::make_shared<SymbolStack>()),
-                                   config(std::make_shared<Configuration>()) { }
+            StackLoaderContext()
+                    : stack(std::make_shared<SymbolStack>())
+                    , config(std::make_shared<Configuration>()) {}
 
-            inline StackLoaderContext(sptr_t<SymbolStack> stack)
-                : stack(stack), config(std::make_shared<Configuration>()) { }
+            inline explicit StackLoaderContext(SymbolStackPtr stack)
+                    : stack(std::move(stack))
+                    , config(std::make_shared<Configuration>()) {}
 
-            inline virtual sptr_t<SymbolStack> getStack() { return stack; }
+            inline SymbolStackPtr getStack() override { return stack; }
 
-            inline virtual std::vector<std::string> &getCurrentTheories() { return currentTheories; }
+            inline std::vector<std::string>& getCurrentTheories() override { return currentTheories; }
 
-            inline virtual std::string getCurrentLogic() { return currentLogic; }
+            inline std::string getCurrentLogic() override { return currentLogic; }
 
-            inline virtual sptr_t<Configuration> getConfiguration() { return config; }
+            inline ConfigurationPtr getConfiguration() override { return config; }
 
-            inline virtual void setCurrentLogic(std::string logic) { this->currentLogic = logic; }
+            inline void setCurrentLogic(const std::string& logic) override { this->currentLogic = logic; }
         };
+
+        typedef std::shared_ptr<IStackLoaderContext> IStackLoaderContextPtr;
 
         class StackLoader : public DummyVisitor0,
                             public std::enable_shared_from_this<StackLoader> {
         private:
-            sptr_t<IStackLoaderContext> ctx;
+            IStackLoaderContextPtr ctx;
 
-            sptr_t<SortEntry> buildEntry(sptr_t<SortSymbolDeclaration> node);
-            sptr_t<SortEntry> buildEntry(sptr_t<DeclareSortCommand> node);
-            sptr_t<SortEntry> buildEntry(sptr_t<DefineSortCommand> node);
+            SortEntryPtr buildEntry(const SortSymbolDeclarationPtr& node);
+            SortEntryPtr buildEntry(const DeclareSortCommandPtr& node);
+            SortEntryPtr buildEntry(const DefineSortCommandPtr& node);
 
-            sptr_t<FunEntry> buildEntry(sptr_t<SpecConstFunDeclaration> node);
-            sptr_t<FunEntry> buildEntry(sptr_t<MetaSpecConstFunDeclaration> node);
-            sptr_t<FunEntry> buildEntry(sptr_t<SimpleFunDeclaration> node);
-            sptr_t<FunEntry> buildEntry(sptr_t<ParametricFunDeclaration> node);
+            FunEntryPtr buildEntry(const SpecConstFunDeclarationPtr& node);
+            FunEntryPtr buildEntry(const MetaSpecConstFunDeclarationPtr& node);
+            FunEntryPtr buildEntry(const SimpleFunDeclarationPtr& node);
+            FunEntryPtr buildEntry(const ParametricFunDeclarationPtr& node);
 
-            sptr_t<FunEntry> buildEntry(sptr_t<DeclareConstCommand> node);
-            sptr_t<FunEntry> buildEntry(sptr_t<DeclareFunCommand> node);
-            sptr_t<FunEntry> buildEntry(sptr_t<DefineFunCommand> node);
-            sptr_t<FunEntry> buildEntry(sptr_t<DefineFunRecCommand> node);
+            FunEntryPtr buildEntry(const DeclareConstCommandPtr& node);
+            FunEntryPtr buildEntry(const DeclareFunCommandPtr& node);
+            FunEntryPtr buildEntry(const DefineFunCommandPtr& node);
+            FunEntryPtr buildEntry(const DefineFunRecCommandPtr& node);
 
-            sptr_v<FunEntry> buildEntry(sptr_t<DefineFunsRecCommand> node);
+            std::vector<FunEntryPtr> buildEntry(const DefineFunsRecCommandPtr& node);
 
-            sptr_t<DatatypeEntry> buildEntry(sptr_t<DeclareDatatypeCommand> node);
-            sptr_v<DatatypeEntry> buildEntry(sptr_t<DeclareDatatypesCommand> node);
+            DatatypeEntryPtr buildEntry(const DeclareDatatypeCommandPtr& node);
+            std::vector<DatatypeEntryPtr> buildEntry(const DeclareDatatypesCommandPtr& node);
 
-            void loadTheory(std::string theory);
-            void loadLogic(std::string logic);
+            void loadTheory(const std::string& theory);
+            void loadLogic(const std::string& logic);
         public:
-            inline StackLoader() : ctx(std::make_shared<StackLoaderContext>()) { }
+            inline StackLoader()
+                    : ctx(std::make_shared<StackLoaderContext>()) {}
 
-            inline StackLoader(sptr_t<IStackLoaderContext> ctx) : ctx(ctx) { }
+            inline explicit StackLoader(IStackLoaderContextPtr ctx)
+                    : ctx(std::move(ctx)) {}
 
-            virtual void visit(sptr_t<DeclareConstCommand> node);
-            virtual void visit(sptr_t<DeclareFunCommand> node);
-            virtual void visit(sptr_t<DeclareDatatypeCommand> node);
-            virtual void visit(sptr_t<DeclareDatatypesCommand> node);
-            virtual void visit(sptr_t<DeclareSortCommand> node);
-            virtual void visit(sptr_t<DefineFunCommand> node);
-            virtual void visit(sptr_t<DefineFunRecCommand> node);
-            virtual void visit(sptr_t<DefineFunsRecCommand> node);
-            virtual void visit(sptr_t<DefineSortCommand> node);
-            virtual void visit(sptr_t<PopCommand> node);
-            virtual void visit(sptr_t<PushCommand> node);
-            virtual void visit(sptr_t<ResetCommand> node);
-            virtual void visit(sptr_t<SetLogicCommand> node);
+            void visit(const DeclareConstCommandPtr& node) override;
+            void visit(const DeclareFunCommandPtr& node) override;
+            void visit(const DeclareDatatypeCommandPtr& node) override;
+            void visit(const DeclareDatatypesCommandPtr& node) override;
+            void visit(const DeclareSortCommandPtr& node) override;
+            void visit(const DefineFunCommandPtr& node) override;
+            void visit(const DefineFunRecCommandPtr& node) override;
+            void visit(const DefineFunsRecCommandPtr& node) override;
+            void visit(const DefineSortCommandPtr& node) override;
+            void visit(const PopCommandPtr& node) override;
+            void visit(const PushCommandPtr& node) override;
+            void visit(const ResetCommandPtr& node) override;
+            void visit(const SetLogicCommandPtr& node) override;
 
-            virtual void visit(sptr_t<Logic> node);
-            virtual void visit(sptr_t<Theory> node);
-            virtual void visit(sptr_t<Script> node);
+            void visit(const LogicPtr& node) override;
+            void visit(const TheoryPtr& node) override;
+            void visit(const ScriptPtr& node) override;
 
-            virtual void visit(sptr_t<SortsAttribute> node);
-            virtual void visit(sptr_t<FunsAttribute> node);
+            void visit(const SortsAttributePtr& node) override;
+            void visit(const FunsAttributePtr& node) override;
 
-            virtual void visit(sptr_t<SortSymbolDeclaration> node);
-            virtual void visit(sptr_t<SpecConstFunDeclaration> node);
-            virtual void visit(sptr_t<MetaSpecConstFunDeclaration> node);
-            virtual void visit(sptr_t<SimpleFunDeclaration> node);
-            virtual void visit(sptr_t<ParametricFunDeclaration> node);
+            void visit(const SortSymbolDeclarationPtr& node) override;
+            void visit(const SpecConstFunDeclarationPtr& node) override;
+            void visit(const MetaSpecConstFunDeclarationPtr& node) override;
+            void visit(const SimpleFunDeclarationPtr& node) override;
+            void visit(const ParametricFunDeclarationPtr& node) override;
 
-            sptr_t<SymbolStack> load(sptr_t<Node> node);
+            SymbolStackPtr load(const NodePtr& node);
         };
 
         typedef std::shared_ptr<StackLoader> StackLoaderPtr;
         typedef std::shared_ptr<StackLoaderContext> StackLoaderContextPtr;
+        typedef std::shared_ptr<IStackLoaderContext> IStackLoaderContextPtr;
     }
 }
 

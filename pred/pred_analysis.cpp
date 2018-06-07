@@ -27,7 +27,7 @@ bool IndexAllocAnalysis::equals(const IndexAllocAnalysisPtr& other) {
     }
 
     for (const auto& predEntry : predicates) {
-        string name = predEntry.first;
+        const string& name = predEntry.first;
         if (other->predicates.find(name) == other->predicates.end())
             return false;
 
@@ -41,25 +41,25 @@ bool IndexAllocAnalysis::equals(const IndexAllocAnalysisPtr& other) {
     }
 
     for (const auto& indEntry : inductive) {
-        string name = indEntry.first;
+        const string& name = indEntry.first;
 
         if (other->inductive.find(name) == other->inductive.end())
             return false;
 
-        IndexAllocInductiveMap map = indEntry.second;
-        IndexAllocInductiveMap otherMap = other->inductive[name];
+        const IndexAllocInductiveMap& map = indEntry.second;
+        const IndexAllocInductiveMap& otherMap = other->inductive[name];
 
         for (const auto& icaseEntry : map) {
-            InductiveCasePtr icase = icaseEntry.first;
+            const InductiveCasePtr& icase = icaseEntry.first;
 
             if (otherMap.find(icase) == otherMap.end())
                 return false;
 
-            if (icaseEntry.second.size() != otherMap[icase].size())
+            if (icaseEntry.second.size() != otherMap.at(icase).size())
                 return false;
 
             for (size_t i = 0, sz = icaseEntry.second.size(); i < sz; i++) {
-                if (icaseEntry.second[i] != otherMap[icase][i])
+                if (icaseEntry.second[i] != otherMap.at(icase)[i])
                     return false;
             }
         }
@@ -71,8 +71,8 @@ bool IndexAllocAnalysis::equals(const IndexAllocAnalysisPtr& other) {
         if (other->base.find(name) == other->base.end())
             return false;
 
-        IndexAllocBaseMap map = baseEntry.second;
-        IndexAllocBaseMap otherMap = other->base[name];
+        const IndexAllocBaseMap& map = baseEntry.second;
+        const IndexAllocBaseMap& otherMap = other->base[name];
 
         for (const auto& bcaseEntry : map) {
             BaseCasePtr bcase = bcaseEntry.first;
@@ -80,11 +80,11 @@ bool IndexAllocAnalysis::equals(const IndexAllocAnalysisPtr& other) {
             if (otherMap.find(bcase) == otherMap.end())
                 return false;
 
-            if (bcaseEntry.second.size() != otherMap[bcase].size())
+            if (bcaseEntry.second.size() != otherMap.at(bcase).size())
                 return false;
 
             for (size_t i = 0, sz = bcaseEntry.second.size(); i < sz; i++) {
-                if (bcaseEntry.second[i] != otherMap[bcase][i])
+                if (bcaseEntry.second[i] != otherMap.at(bcase)[i])
                     return false;
             }
         }
@@ -136,7 +136,7 @@ bool IndexReachAnalysis::equals(const IndexReachAnalysisPtr& other) {
     }
 
     for (auto& predEntry : predicates) {
-        string name = predEntry.first;
+        const string& name = predEntry.first;
         if (other->predicates.find(name) == other->predicates.end())
             return false;
 
@@ -145,39 +145,39 @@ bool IndexReachAnalysis::equals(const IndexReachAnalysisPtr& other) {
     }
 
     for (const auto& indEntry : inductive) {
-        string name = indEntry.first;
+        const string& name = indEntry.first;
 
         if (other->inductive.find(name) == other->inductive.end())
             return false;
 
-        IndexReachInductiveMap map = indEntry.second;
-        IndexReachInductiveMap otherMap = other->inductive[name];
+        const IndexReachInductiveMap& map = indEntry.second;
+        const IndexReachInductiveMap& otherMap = other->inductive[name];
 
         for (const auto& icaseEntry : map) {
             InductiveCasePtr icase = icaseEntry.first;
             if (otherMap.find(icase) == otherMap.end())
                 return false;
 
-            if (!icaseEntry.second->equals(otherMap[icase]))
+            if (!icaseEntry.second->equals(otherMap.at(icase)))
                 return false;
         }
     }
 
     for (const auto& baseEntry : base) {
-        string name = baseEntry.first;
+        const string& name = baseEntry.first;
 
         if (other->base.find(name) == other->base.end())
             return false;
 
-        IndexReachBaseMap map = baseEntry.second;
-        IndexReachBaseMap otherMap = other->base[name];
+        const IndexReachBaseMap& map = baseEntry.second;
+        const IndexReachBaseMap& otherMap = other->base[name];
 
         for (const auto& bcaseEntry : map) {
-            BaseCasePtr bcase = bcaseEntry.first;
+            const BaseCasePtr& bcase = bcaseEntry.first;
             if (otherMap.find(bcase) == otherMap.end())
                 return false;
 
-            if (!bcaseEntry.second->equals(otherMap[bcase]))
+            if (!bcaseEntry.second->equals(otherMap.at(bcase)))
                 return false;
         }
     }
@@ -274,7 +274,7 @@ IndexReachabilityPtr pred::conj(const vector<IndexReachabilityPtr>& vec) {
     }
 
     result = vec[0]->clone();
-    for (unsigned long i = 1; i < vec.size(); i++) {
+    for (size_t i = 1, sz = vec.size(); i < sz; i++) {
         result->conj(vec[i]);
     }
 
@@ -373,7 +373,7 @@ vector<vector<Allocated>> pred::varToIndex(const vector<unordered_map<string, Al
 
 IndexReachabilityPtr pred::varToIndex(const StringReachabilityPtr& reach,
                                       const vector<SortedVariablePtr>& params) {
-    unordered_map<string, size_t> paramMap;
+    StringToIndexMap paramMap;
 
     for (size_t i = 0, sz = params.size(); i < sz; i++) {
         paramMap[params[i]->name] = i;
@@ -386,7 +386,7 @@ vector<IndexReachabilityPtr> pred::varToIndex(const vector<StringReachabilityPtr
                                               const vector<SortedVariablePtr>& params) {
     vector<IndexReachabilityPtr> result;
 
-    umap<string, unsigned long> paramMap;
+    StringToIndexMap paramMap;
     for (size_t i = 0, sz = params.size(); i < sz; i++) {
         paramMap[params[i]->name] = i;
     }

@@ -6,18 +6,22 @@
 #include "sep/sep_script.h"
 #include "transl/sep_translator.h"
 #include "util/global_values.h"
+#include "visitor/ast_predicate_unfolder.h"
 #include "visitor/ast_syntax_checker.h"
 #include "visitor/ast_sortedness_checker.h"
 
 #include <iostream>
+#include <chrono>
 
 using namespace std;
 using namespace inductor;
 using namespace smtlib;
 using namespace smtlib::ast;
+using namespace std::chrono;
+
 
 Execution::Execution()
-    : settings(make_shared<ExecutionSettings>()) {
+        : settings(make_shared<ExecutionSettings>()) {
     parseAttempted = false;
     parseSuccessful = false;
     syntaxCheckAttempted = false;
@@ -26,8 +30,8 @@ Execution::Execution()
     sortednessCheckSuccessful = false;
 }
 
-Execution::Execution(sptr_t<ExecutionSettings> settings)
-    : settings(make_shared<ExecutionSettings>(settings)) {
+Execution::Execution(const ExecutionSettingsPtr& settings)
+        : settings(make_shared<ExecutionSettings>(settings)) {
     if (settings->getInputMethod() == ExecutionSettings::InputMethod::INPUT_AST) {
         ast = settings->getInputAst();
         parseAttempted = true;
@@ -55,8 +59,8 @@ bool Execution::parse() {
     }
 
     if (settings->getInputMethod() == ExecutionSettings::InputMethod::INPUT_FILE) {
-        sptr_t<Parser> parser = make_shared<Parser>();
-        ast = parser->parse(settings->getInputFile().c_str());
+        ParserPtr parser = make_shared<Parser>();
+        ast = parser->parse(settings->getInputFile());
         if (ast) {
             parseSuccessful = true;
         } else {
@@ -78,7 +82,7 @@ bool Execution::checkSyntax() {
         return false;
     }
 
-    sptr_t<SyntaxChecker> chk = make_shared<SyntaxChecker>();
+    SyntaxCheckerPtr chk = make_shared<SyntaxChecker>();
     syntaxCheckSuccessful = chk->check(ast);
 
     if (!syntaxCheckSuccessful) {
@@ -104,7 +108,7 @@ bool Execution::checkSortedness() {
         return false;
     }
 
-    sptr_t<SortednessChecker> chk;
+    SortednessCheckerPtr chk;
 
     if (settings->getSortCheckContext())
         chk = make_shared<SortednessChecker>(settings->getSortCheckContext());
@@ -132,7 +136,13 @@ bool Execution::unfoldPredicates() {
         return false;
     }
 
-    // TODO
+    PredicateUnfolderContextPtr ctx = make_shared<PredicateUnfolderContext>(settings->getUnfoldLevel(),
+                                                                            settings->isUnfoldExistential(),
+                                                                            settings->getUnfoldOutputPath(),
+                                                                            settings->isCvcEmp());
+    PredicateUnfolderPtr unfolder = make_shared<PredicateUnfolder>(ctx);
+    unfolder->run(ast);
+
     return true;
 }
 
@@ -141,11 +151,22 @@ bool Execution::checkEntailment() {
         return false;
     }
 
-    sptr_t<Script> astScript = dynamic_pointer_cast<Script>(ast);
+    ScriptPtr astScript = dynamic_pointer_cast<Script>(ast);
     if(astScript) {
-        sptr_t<sep::Translator> transl = make_shared<sep::Translator>();
-        sptr_t<proof::EntailmentChecker> check = make_shared<proof::EntailmentChecker>();
+        sep::TranslatorPtr transl = make_shared<sep::Translator>();
+        proof::EntailmentCheckerPtr check = make_shared<proof::EntailmentChecker>();
+
+        milliseconds ms1 = duration_cast< milliseconds >(
+                system_clock::now().time_since_epoch()
+        );
+
         check->check(dynamic_pointer_cast<sep::Script>(transl->translate(astScript)));
+
+        milliseconds ms2 = duration_cast< milliseconds >(
+                system_clock::now().time_since_epoch()
+        );
+
+        cout << "Time: " << ms2.count()-ms1.count() << " ms" << endl << endl;
     }
 
     return true;
@@ -156,9 +177,9 @@ bool Execution::run() {
         return false;
     }
 
-    sptr_t<Script> astScript = dynamic_pointer_cast<Script>(ast);
+    ScriptPtr astScript = dynamic_pointer_cast<Script>(ast);
     if(astScript) {
-        sptr_t<sep::Translator> transl = make_shared<sep::Translator>();
+        sep::TranslatorPtr transl = make_shared<sep::Translator>();
         sptr_t<cvc::CVC4Interface> interf = make_shared<cvc::CVC4Interface>();
         bool res = interf->runScript(dynamic_pointer_cast<sep::Script>(transl->translate(astScript)));
 
@@ -167,4 +188,3 @@ bool Execution::run() {
 
     return true;
 }
-

@@ -16,30 +16,42 @@
 namespace smtlib {
     namespace ast {
         class SortednessChecker;
+        typedef std::shared_ptr<SortednessChecker> SortednessCheckerPtr;
 
+        /* ================================ ITermSorterContext ================================ */
         /** Context interface for term sorting */
         class ITermSorterContext {
         public:
-            virtual sptr_t<SymbolStack> getStack() = 0;
-            virtual sptr_t<SortednessChecker> getChecker() = 0;
-            virtual sptr_t<Configuration> getConfiguration() = 0;
+            virtual SymbolStackPtr getStack() = 0;
+            virtual SortednessCheckerPtr getChecker() = 0;
+            virtual ConfigurationPtr getConfiguration() = 0;
         };
 
+        typedef std::shared_ptr<ITermSorterContext> ITermSorterContextPtr;
+
+        /* ==================================== TermSorter ==================================== */
         /** Determines the sort of a term */
-        class TermSorter : public DummyVisitor1<sptr_t<Sort>> {
+        class TermSorter : public DummyVisitor1<SortPtr> {
         private:
-            sptr_t<ITermSorterContext> ctx;
+            ITermSorterContextPtr ctx;
 
-            static sptr_v<Sort> extractReturnSorts(sptr_v<FunInfo> infos, size_t arity, bool parametric);
-            static void extractReturnSorts(sptr_v<FunInfo> infos, size_t arity, bool parametric, sptr_v<Sort> &accum);
+            static std::vector<SortPtr> extractReturnSorts(const std::vector<FunEntryPtr>& entries,
+                                                           size_t arity, bool parametric);
 
-            static sptr_v<Sort> extractParamMatches(sptr_v<FunInfo> infos, size_t arity,
-                                                    sptr_t<Sort> sort, sptr_t<SymbolStack> stack);
+            static void extractReturnSorts(const std::vector<FunEntryPtr>& entries,
+                                           size_t arity, bool parametric,
+                                           std::vector<SortPtr>& accum);
 
-            static void extractParamMatches(sptr_v<FunInfo> infos, size_t arity, sptr_t<Sort> sort,
-                                            sptr_t<SymbolStack> stack, sptr_v<Sort> &accum);
+            static std::vector<SortPtr> extractParamMatches(const std::vector<FunEntryPtr>& entries,
+                                                            size_t arity, const SortPtr& sort,
+                                                            const SymbolStackPtr& stack);
 
-            static std::vector<std::string> extractParamNames(sptr_t<FunInfo> info);
+            static void extractParamMatches(const std::vector<FunEntryPtr>& entries,
+                                            size_t arity, const SortPtr& sort,
+                                            const SymbolStackPtr& stack,
+                                            std::vector<SortPtr>& accum);
+
+            static std::vector<std::string> extractParamNames(const FunEntryPtr& entry);
 
             /**
              * Attempts to unify two sorts
@@ -48,33 +60,34 @@ namespace smtlib {
              * \param params    Sort parameters occurring in sort1 and sort2
              * \param mapping   Mapping of sort parameters to sorts
              */
-            static bool unify(sptr_t<Sort> sort1, sptr_t<Sort> sort2,
-                              std::vector<std::string> &params,
-                              sptr_um2<std::string, Sort> &mapping);
+            static bool unify(const SortPtr& sort1, const SortPtr &sort2,
+                              const std::vector<std::string>& params,
+                              std::unordered_map<std::string, SortPtr>& mapping);
 
         public:
-            inline TermSorter(sptr_t<ITermSorterContext> ctx) : ctx(ctx) { }
+            inline explicit TermSorter(ITermSorterContextPtr ctx)
+                    : ctx(std::move(ctx)) {}
 
-            virtual void visit(sptr_t<SimpleIdentifier> node);
-            virtual void visit(sptr_t<QualifiedIdentifier> node);
-            virtual void visit(sptr_t<DecimalLiteral> node);
-            virtual void visit(sptr_t<NumeralLiteral> node);
-            virtual void visit(sptr_t<StringLiteral> node);
+            void visit(const SimpleIdentifierPtr& node) override;
+            void visit(const QualifiedIdentifierPtr& node) override;
+            void visit(const DecimalLiteralPtr& node) override;
+            void visit(const NumeralLiteralPtr& node) override;
+            void visit(const StringLiteralPtr& node) override;
 
-            virtual void visit(sptr_t<QualifiedTerm> node);
-            virtual void visit(sptr_t<LetTerm> node);
-            virtual void visit(sptr_t<ForallTerm> node);
-            virtual void visit(sptr_t<ExistsTerm> node);
-            virtual void visit(sptr_t<MatchTerm> node);
+            void visit(const QualifiedTermPtr& node) override;
+            void visit(const LetTermPtr& node) override;
+            void visit(const ForallTermPtr& node) override;
+            void visit(const ExistsTermPtr& node) override;
+            void visit(const MatchTermPtr& node) override;
+            void visit(const AnnotatedTermPtr& node) override;
 
-            virtual void visit(sptr_t<AnnotatedTerm> node);
-
-            sptr_t<Sort> run(sptr_t<Node> node) {
+            SortPtr run(const NodePtr& node) override {
                 return wrappedVisit(node);
             }
         };
+
+        typedef std::shared_ptr<TermSorter> TermSorterPtr;
     }
 }
-
 
 #endif //INDUCTOR_AST_TERM_SORTER_H

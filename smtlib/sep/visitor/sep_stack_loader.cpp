@@ -16,93 +16,91 @@
 using namespace std;
 using namespace smtlib::sep;
 
-void StackLoader::loadTheory(string theory) {
+void StackLoader::loadTheory(const string& theory) {
     string path = ctx->getConfiguration()->get(Configuration::Property::LOC_THEORIES) + theory
                   + ctx->getConfiguration()->get(Configuration::Property::FILE_EXT_THEORY);
     FILE *f = fopen(path.c_str(), "r");
     if (f) {
         fclose(f);
-        sptr_t<Parser> parser = make_shared<Parser>();
-        sptr_t<Translator> translator = make_shared<Translator>();
+        ParserPtr parser = make_shared<Parser>();
+        TranslatorPtr translator = make_shared<Translator>();
 
-        sptr_t<smtlib::ast::Node> ast = parser->parse(path);
+        smtlib::ast::NodePtr ast = parser->parse(path);
         if (auto theoryAst = dynamic_pointer_cast<smtlib::ast::Theory>(ast)) {
-            sptr_t<Theory> theorySmt = translator->translate(theoryAst);
+            TheoryPtr theorySmt = translator->translate(theoryAst);
             visit0(theorySmt);
         }
     }
 }
 
-void StackLoader::loadLogic(string logic) {
+void StackLoader::loadLogic(const string& logic) {
     string path = ctx->getConfiguration()->get(Configuration::Property::LOC_LOGICS) + logic
                   + ctx->getConfiguration()->get(Configuration::Property::FILE_EXT_LOGIC);
     FILE *f = fopen(path.c_str(), "r");
     if (f) {
         fclose(f);
 
-        sptr_t<Parser> parser = make_shared<Parser>();
-        sptr_t<Translator> translator = make_shared<Translator>();
+        ParserPtr parser = make_shared<Parser>();
+        TranslatorPtr translator = make_shared<Translator>();
 
-        sptr_t<smtlib::ast::Node> ast = parser->parse(path);
+        smtlib::ast::NodePtr ast = parser->parse(path);
         if (auto logicAst = dynamic_pointer_cast<smtlib::ast::Logic>(ast)) {
-            sptr_t<Logic> logicSmt = translator->translate(logicAst);
+            LogicPtr logicSmt = translator->translate(logicAst);
             visit0(logicSmt);
         }
     }
 }
 
-sptr_t<SortEntry> StackLoader::buildEntry(sptr_t<SortSymbolDeclaration> node) {
+SortEntryPtr StackLoader::buildEntry(const SortSymbolDeclarationPtr& node) {
     return make_shared<SortEntry>(node->identifier->toString(),
                                   node->arity, node->attributes, node);
 }
 
-sptr_t<SortEntry> StackLoader::buildEntry(sptr_t<DeclareSortCommand> node) {
+SortEntryPtr StackLoader::buildEntry(const DeclareSortCommandPtr& node) {
     return make_shared<SortEntry>(node->name, node->arity, node);
 }
 
-sptr_t<SortEntry> StackLoader::buildEntry(sptr_t<DefineSortCommand> node) {
+SortEntryPtr StackLoader::buildEntry(const DefineSortCommandPtr& node) {
     return make_shared<SortEntry>(node->name, node->parameters.size(), node->parameters,
                                   ctx->getStack()->expand(node->sort), node);
 }
 
-sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<SpecConstFunDeclaration> node) {
-    sptr_v<Sort> sig;
+FunEntryPtr StackLoader::buildEntry(const SpecConstFunDeclarationPtr& node) {
+    std::vector<SortPtr> sig;
     sig.push_back(ctx->getStack()->expand(node->sort));
     return make_shared<FunEntry>(node->constant->toString(), sig, node->attributes, node);
 }
 
-sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<MetaSpecConstFunDeclaration> node) {
-    sptr_v<Sort> sig;
+FunEntryPtr StackLoader::buildEntry(const MetaSpecConstFunDeclarationPtr& node) {
+    std::vector<SortPtr> sig;
     sig.push_back(ctx->getStack()->expand(node->sort));
     return make_shared<FunEntry>(node->constant->toString(), sig, node->attributes, node);
 }
 
-sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<SimpleFunDeclaration> node) {
-    sptr_v<Sort> &sig = node->signature;
-    sptr_v<Sort> newsig;
+FunEntryPtr StackLoader::buildEntry(const SimpleFunDeclarationPtr& node) {
+    std::vector<SortPtr> newsig;
 
-    for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
-        newsig.push_back(ctx->getStack()->expand(*sortIt));
+    for (const auto& sort : node->signature) {
+        newsig.push_back(ctx->getStack()->expand(sort));
     }
 
-    sptr_t<FunEntry> funEntry = make_shared<FunEntry>(node->identifier->toString(),
-                                                          newsig, node->attributes, node);
+    FunEntryPtr funEntry = make_shared<FunEntry>(node->identifier->toString(),
+                                                 newsig, node->attributes, node);
 
-    sptr_v<Attribute> attrs = node->attributes;
-    for (auto attr = attrs.begin(); attr != attrs.end(); attr++) {
-        if ((*attr)->toString() == KW_RIGHT_ASSOC) {
+    for (const auto& attr : node->attributes) {
+        if (attr->toString() == KW_RIGHT_ASSOC) {
             funEntry->assocR = true;
         }
 
-        if ((*attr)->toString() == KW_LEFT_ASSOC) {
+        if (attr->toString() == KW_LEFT_ASSOC) {
             funEntry->assocL = true;
         }
 
-        if ((*attr)->toString() == KW_CHAINABLE) {
+        if (attr->toString() == KW_CHAINABLE) {
             funEntry->chainable = true;
         }
 
-        if ((*attr)->toString() == KW_PAIRWISE) {
+        if (attr->toString() == KW_PAIRWISE) {
             funEntry->pairwise = true;
         }
     }
@@ -110,32 +108,29 @@ sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<SimpleFunDeclaration> node) {
     return funEntry;
 }
 
-sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<ParametricFunDeclaration> node) {
-    sptr_v<Sort> &sig = node->signature;
-    sptr_v<Sort> newsig;
-
-    for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
-        newsig.push_back(ctx->getStack()->expand(*sortIt));
+FunEntryPtr StackLoader::buildEntry(const ParametricFunDeclarationPtr& node) {
+    std::vector<SortPtr> newsig;
+    for (const auto& sort : node->signature) {
+        newsig.push_back(ctx->getStack()->expand(sort));
     }
 
-    sptr_t<FunEntry> funEntry = make_shared<FunEntry>(node->identifier->toString(), newsig,
-                                                          node->parameters, node->attributes, node);
+    FunEntryPtr funEntry = make_shared<FunEntry>(node->identifier->toString(), newsig,
+                                                 node->parameters, node->attributes, node);
 
-    sptr_v<Attribute> attrs = node->attributes;
-    for (auto attr = attrs.begin(); attr != attrs.end(); attr++) {
-        if ((*attr)->toString() == KW_RIGHT_ASSOC) {
+    for (const auto& attr : node->attributes) {
+        if (attr->toString() == KW_RIGHT_ASSOC) {
             funEntry->assocR = true;
         }
 
-        if ((*attr)->toString() == KW_LEFT_ASSOC) {
+        if (attr->toString() == KW_LEFT_ASSOC) {
             funEntry->assocL = true;
         }
 
-        if ((*attr)->toString() == KW_CHAINABLE) {
+        if (attr->toString() == KW_CHAINABLE) {
             funEntry->chainable = true;
         }
 
-        if ((*attr)->toString() == KW_PAIRWISE) {
+        if (attr->toString() == KW_PAIRWISE) {
             funEntry->pairwise = true;
         }
     }
@@ -143,32 +138,30 @@ sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<ParametricFunDeclaration> node) 
     return funEntry;
 }
 
-sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DeclareConstCommand> node) {
-    sptr_v<Sort> sig;
+FunEntryPtr StackLoader::buildEntry(const DeclareConstCommandPtr& node) {
+    std::vector<SortPtr> sig;
     sig.push_back(ctx->getStack()->expand(node->sort));
 
     return make_shared<FunEntry>(node->name, sig, node);
 }
 
-sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DeclareFunCommand> node) {
-    sptr_v<Sort> &sig = node->parameters;
-    sptr_v<Sort> newsig;
+FunEntryPtr StackLoader::buildEntry(const DeclareFunCommandPtr& node) {
+    std::vector<SortPtr> newsig;
 
-    for (auto sortIt = sig.begin(); sortIt != sig.end(); sortIt++) {
-        sptr_t<Sort> itsort = ctx->getStack()->expand(*sortIt);
+    for (const auto& sort : node->parameters) {
+        SortPtr itsort = ctx->getStack()->expand(sort);
         newsig.push_back(itsort);
     }
-    sptr_t<Sort> retsort = ctx->getStack()->expand(node->sort);
+    SortPtr retsort = ctx->getStack()->expand(node->sort);
     newsig.push_back(retsort);
 
     return make_shared<FunEntry>(node->name, newsig, node);
 }
 
-sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunCommand> node) {
-    sptr_v<Sort> newsig;
-    sptr_v<SortedVariable> &params = node->definition->signature->parameters;
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        newsig.push_back(ctx->getStack()->expand((*paramIt)->sort));
+FunEntryPtr StackLoader::buildEntry(const DefineFunCommandPtr& node) {
+    std::vector<SortPtr> newsig;
+    for (const auto& param : node->definition->signature->parameters) {
+        newsig.push_back(ctx->getStack()->expand(param->sort));
     }
     newsig.push_back(ctx->getStack()->expand(node->definition->signature->sort));
 
@@ -176,11 +169,10 @@ sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunCommand> node) {
                                  newsig, node->definition->body, node);
 }
 
-sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunRecCommand> node) {
-    sptr_v<Sort> newsig;
-    sptr_v<SortedVariable> &params = node->definition->signature->parameters;
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        newsig.push_back(ctx->getStack()->expand((*paramIt)->sort));
+FunEntryPtr StackLoader::buildEntry(const DefineFunRecCommandPtr& node) {
+    std::vector<SortPtr> newsig;
+    for (const auto& param : node->definition->signature->parameters) {
+        newsig.push_back(ctx->getStack()->expand(param->sort));
     }
     newsig.push_back(ctx->getStack()->expand(node->definition->signature->sort));
 
@@ -188,13 +180,12 @@ sptr_t<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunRecCommand> node) {
                                  newsig, node->definition->body, node);
 }
 
-sptr_v<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunsRecCommand> node) {
-    sptr_v<FunEntry> infos;
-    for (unsigned long i = 0; i < node->declarations.size(); i++) {
-        sptr_v<Sort> newsig;
-        sptr_v<SortedVariable> &params = node->declarations[i]->parameters;
-        for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-            newsig.push_back(ctx->getStack()->expand((*paramIt)->sort));
+std::vector<FunEntryPtr> StackLoader::buildEntry(const DefineFunsRecCommandPtr& node) {
+    std::vector<FunEntryPtr> infos;
+    for (size_t i = 0, sz = node->declarations.size(); i < sz; i++) {
+        std::vector<SortPtr> newsig;
+        for (const auto& param : node->declarations[i]->parameters) {
+            newsig.push_back(ctx->getStack()->expand(param->sort));
         }
         newsig.push_back(ctx->getStack()->expand(node->declarations[i]->sort));
 
@@ -205,43 +196,41 @@ sptr_v<FunEntry> StackLoader::buildEntry(sptr_t<DefineFunsRecCommand> node) {
     return infos;
 }
 
-sptr_t<DatatypeEntry> StackLoader::buildEntry(sptr_t<DeclareDatatypeCommand> node) {
+DatatypeEntryPtr StackLoader::buildEntry(const DeclareDatatypeCommandPtr& node) {
     string typeName = node->name;
-    sptr_t<DatatypeEntry> entry = make_shared<DatatypeEntry>(typeName, node);
+    DatatypeEntryPtr entry = make_shared<DatatypeEntry>(typeName, node);
 
-    sptr_t<ParametricDatatypeDeclaration> pdecl =
+    ParametricDatatypeDeclarationPtr pdecl =
         dynamic_pointer_cast<ParametricDatatypeDeclaration>(node->declaration);
 
     if (pdecl) {
         // Add datatype (parametric) sort info
         entry->sort = make_shared<SortEntry>(typeName, pdecl->parameters.size(), node);
 
-        // Build a sort representing the datatype (to be used in the signatures of the constructors and selectors)
-        sptr_t<Sort> typeSort = make_shared<Sort>(node->name);
+        // Build a sort representing the datatype
+        // (to be used in the signatures of the constructors and selectors)
+        SortPtr typeSort = make_shared<Sort>(node->name);
 
-        vector<string> params = pdecl->parameters;
-        for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-            typeSort->arguments.push_back(make_shared<Sort>(*paramIt));
+        for (const auto& param : pdecl->parameters) {
+            typeSort->arguments.push_back(make_shared<Sort>(param));
         }
 
         typeSort = ctx->getStack()->expand(typeSort);
 
-        sptr_v<ConstructorDeclaration> constructors = pdecl->constructors;
-        for (auto consIt = constructors.begin(); consIt != constructors.end(); consIt++) {
+        for (const auto& cons : pdecl->constructors) {
             // Start building function info for current constructor
-            string consName = (*consIt)->name;
-            sptr_v<Sort> consSig;
+            string consName = cons->name;
+            std::vector<SortPtr> consSig;
 
-            sptr_v<SelectorDeclaration> selectors = (*consIt)->selectors;
-            for (auto selIt = selectors.begin(); selIt != selectors.end(); selIt++) {
+            for (const auto& sel : cons->selectors) {
                 // Add sort of current selector to current constructor signature
-                consSig.push_back(ctx->getStack()->expand((*selIt)->sort));
+                consSig.push_back(ctx->getStack()->expand(sel->sort));
 
                 // Build function info for current selector
-                string selName = (*selIt)->name;
-                sptr_v<Sort> selSig;
+                string selName = sel->name;
+                std::vector<SortPtr> selSig;
                 selSig.push_back(typeSort);
-                selSig.push_back(ctx->getStack()->expand((*selIt)->sort));
+                selSig.push_back(ctx->getStack()->expand(sel->sort));
 
                 // Add selector function info
                 entry->funs.push_back(make_shared<FunEntry>(selName, selSig, pdecl->parameters, node));
@@ -257,29 +246,27 @@ sptr_t<DatatypeEntry> StackLoader::buildEntry(sptr_t<DeclareDatatypeCommand> nod
         entry->sort = make_shared<SortEntry>(typeName, 0, node);
 
         // Build a sort representing the datatype (to be used in the signatures of the constructors and selectors)
-        sptr_t<Sort> typeSort = make_shared<Sort>(node->name);
+        SortPtr typeSort = make_shared<Sort>(node->name);
         typeSort = ctx->getStack()->expand(typeSort);
 
-        sptr_t<SimpleDatatypeDeclaration> sdecl =
+        SimpleDatatypeDeclarationPtr sdecl =
             dynamic_pointer_cast<SimpleDatatypeDeclaration>(node->declaration);
 
-        sptr_v<ConstructorDeclaration> constructors = sdecl->constructors;
-
-        for (auto consIt = constructors.begin(); consIt != constructors.end(); consIt++) {
+        for (const auto& cons : sdecl->constructors) {
             // Start building function info for current constructor
-            string consName = (*consIt)->name;
-            sptr_v<Sort> consSig;
-            sptr_v<SelectorDeclaration> selectors = (*consIt)->selectors;
+            string consName = cons->name;
+            std::vector<SortPtr> consSig;
+            std::vector<SelectorDeclarationPtr> selectors = cons->selectors;
 
-            for (auto selIt = selectors.begin(); selIt != selectors.end(); selIt++) {
+            for (const auto& sel : cons->selectors) {
                 // Add sort of current selector to current constructor signature
-                consSig.push_back(ctx->getStack()->expand((*selIt)->sort));
+                consSig.push_back(ctx->getStack()->expand(sel->sort));
 
                 // Build function info for current selector
-                string selName = (*selIt)->name;
-                sptr_v<Sort> selSig;
+                string selName = sel->name;
+                std::vector<SortPtr> selSig;
                 selSig.push_back(typeSort);
-                selSig.push_back(ctx->getStack()->expand((*selIt)->sort));
+                selSig.push_back(ctx->getStack()->expand(sel->sort));
 
                 // Add selector function info
                 entry->funs.push_back(make_shared<FunEntry>(selName, selSig, node));
@@ -294,101 +281,89 @@ sptr_t<DatatypeEntry> StackLoader::buildEntry(sptr_t<DeclareDatatypeCommand> nod
     return entry;
 }
 
-sptr_v<DatatypeEntry> StackLoader::buildEntry(sptr_t<DeclareDatatypesCommand> node) {
-    sptr_v<DatatypeEntry> entries;
-    sptr_v<SortDeclaration> datatypeSorts = node->sorts;
+std::vector<DatatypeEntryPtr> StackLoader::buildEntry(const DeclareDatatypesCommandPtr& node) {
+    std::vector<DatatypeEntryPtr> entries;
+    std::vector<SortDeclarationPtr> datatypeSorts = node->sorts;
 
-    for (unsigned long i = 0; i < datatypeSorts.size(); i++) {
-        string typeName = datatypeSorts[i]->name;
-        unsigned long arity = (unsigned long) datatypeSorts[i]->arity;
-
+    for (const auto& sort : datatypeSorts) {
         // Create datatype entry
-        sptr_t<DatatypeEntry> entry = make_shared<DatatypeEntry>(typeName, node);
+        DatatypeEntryPtr entry = make_shared<DatatypeEntry>(sort->name, node);
 
         // Add datatype sort info
-        entry->sort = make_shared<SortEntry>(typeName, arity, node);
+        entry->sort = make_shared<SortEntry>(sort->name, (size_t) sort->arity, node);
 
         // Add new datatype entry to list
         entries.push_back(entry);
     }
 
-    for (unsigned long i = 0; i < datatypeSorts.size(); i++) {
-        sptr_t<DatatypeEntry> entry = entries[i];
-
-        sptr_t<ParametricDatatypeDeclaration> pdecl =
+    for (size_t i = 0, sz = datatypeSorts.size(); i < sz; i++) {
+        ParametricDatatypeDeclarationPtr pdecl =
             dynamic_pointer_cast<ParametricDatatypeDeclaration>(node->declarations[i]);
         if (pdecl) {
-            // Build a sort representing the datatype (to be used in the signatures of the constructors and selectors)
-            sptr_t<Sort> typeSort =
-                make_shared<Sort>(node->sorts[i]->name);
+            // Build a sort representing the datatype
+            // (to be used in the signatures of the constructors and selectors)
+            SortPtr typeSort = make_shared<Sort>(node->sorts[i]->name);
             typeSort = ctx->getStack()->expand(typeSort);
 
-            vector<string> params = pdecl->parameters;
-            for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-                typeSort->arguments.push_back(make_shared<Sort>(*paramIt));
+            for (const auto& param : pdecl->parameters) {
+                typeSort->arguments.push_back(make_shared<Sort>(param));
             }
 
-            sptr_v<ConstructorDeclaration> constructors = pdecl->constructors;
-
-            for (auto consIt = constructors.begin(); consIt != constructors.end(); consIt++) {
+            for (const auto& cons : pdecl->constructors) {
                 // Start building function info for current constructor
-                string consName = (*consIt)->name;
-                sptr_v<Sort> consSig;
-                sptr_v<SelectorDeclaration> selectors = (*consIt)->selectors;
+                string consName = cons->name;
+                std::vector<SortPtr> consSig;
 
-                for (auto selIt = selectors.begin(); selIt != selectors.end(); selIt++) {
+                for (const auto& sel : cons->selectors) {
                     // Add sort of current selector to current constructor signature
-                    consSig.push_back(ctx->getStack()->expand((*selIt)->sort));
+                    consSig.push_back(ctx->getStack()->expand(sel->sort));
 
                     // Build function info for current selector
-                    string selName = (*selIt)->name;
-                    sptr_v<Sort> selSig;
+                    string selName = sel->name;
+                    std::vector<SortPtr> selSig;
                     selSig.push_back(typeSort);
-                    selSig.push_back(ctx->getStack()->expand((*selIt)->sort));
+                    selSig.push_back(ctx->getStack()->expand(sel->sort));
 
                     // Add selector function info
-                    entry->funs.push_back(make_shared<FunEntry>(selName, selSig, pdecl->parameters, node));
+                    entries[i]->funs.push_back(make_shared<FunEntry>(selName, selSig, pdecl->parameters, node));
                 }
 
                 // Add constructor function info
                 consSig.push_back(typeSort);
-                entry->funs.push_back(make_shared<FunEntry>(consName, consSig, pdecl->parameters, node));
+                entries[i]->funs.push_back(make_shared<FunEntry>(consName, consSig, pdecl->parameters, node));
             }
         } else {
-            // Build a sort representing the datatype (to be used in the signatures of the constructors and selectors)
-            sptr_t<Sort> typeSort =
+            // Build a sort representing the datatype
+            // (to be used in the signatures of the constructors and selectors)
+            SortPtr typeSort =
                 make_shared<Sort>(node->sorts[i]->name);
             typeSort = ctx->getStack()->expand(typeSort);
 
-            sptr_t<SimpleDatatypeDeclaration> sdecl =
+            SimpleDatatypeDeclarationPtr sdecl =
                 dynamic_pointer_cast<SimpleDatatypeDeclaration>(node->declarations[i]);
 
-            sptr_v<ConstructorDeclaration> constructors = sdecl->constructors;
-
-            for (auto consIt = constructors.begin(); consIt != constructors.end(); consIt++) {
+            for (const auto& cons : sdecl->constructors) {
                 // Start building function info for current constructor
-                string consName = (*consIt)->name;
-                sptr_v<Sort> consSig;
+                string consName = cons->name;
+                std::vector<SortPtr> consSig;
 
-                sptr_v<SelectorDeclaration> selectors = (*consIt)->selectors;
-
-                for (auto selIt = selectors.begin(); selIt != selectors.end(); selIt++) {
+                for (const auto& sel : cons->selectors) {
                     // Add sort of current selector to current constructor signature
-                    consSig.push_back(ctx->getStack()->expand((*selIt)->sort));
+                    consSig.push_back(ctx->getStack()->expand(sel->sort));
 
                     // Build function info for current selector
-                    string selName = (*selIt)->name;
-                    sptr_v<Sort> selSig;
+                    string selName = sel->name;
+                    std::vector<SortPtr> selSig;
                     selSig.push_back(typeSort);
-                    selSig.push_back(ctx->getStack()->expand((*selIt)->sort));
+                    selSig.push_back(ctx->getStack()->expand(sel->sort));
 
                     // Add selector function info
-                    entry->funs.push_back(make_shared<FunEntry>(selName, selSig, node));
+                    entries[i]->funs.push_back(make_shared<FunEntry>(selName, selSig, node));
                 }
 
                 // Add constructor function info
                 consSig.push_back(typeSort);
-                entry->funs.push_back(make_shared<FunEntry>(consName, consSig, node));
+                entries[i]->funs.push_back(make_shared<FunEntry>(consName, consSig, node));
             }
         }
     }
@@ -396,95 +371,92 @@ sptr_v<DatatypeEntry> StackLoader::buildEntry(sptr_t<DeclareDatatypesCommand> no
     return entries;
 }
 
-void StackLoader::visit(sptr_t<DeclareConstCommand> node) {
-    sptr_t<FunEntry> entry = buildEntry(node);
+void StackLoader::visit(const DeclareConstCommandPtr& node) {
+    FunEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<DeclareFunCommand> node) {
-    sptr_t<FunEntry> entry = buildEntry(node);
+void StackLoader::visit(const DeclareFunCommandPtr& node) {
+    FunEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<DeclareDatatypeCommand> node) {
-    sptr_t<DatatypeEntry> entry = buildEntry(node);
+void StackLoader::visit(const DeclareDatatypeCommandPtr& node) {
+    DatatypeEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry->sort);
 
-    for (auto it = entry->funs.begin(); it != entry->funs.end(); it++) {
-        ctx->getStack()->tryAdd(*it);
+    for (const auto& fun : entry->funs) {
+        ctx->getStack()->tryAdd(fun);
     }
 }
 
-void StackLoader::visit(sptr_t<DeclareDatatypesCommand> node) {
-    sptr_v<DatatypeEntry> entries = buildEntry(node);
-    for (auto entryIt = entries.begin(); entryIt != entries.end(); entryIt++) {
-        ctx->getStack()->tryAdd((*entryIt)->sort);
+void StackLoader::visit(const DeclareDatatypesCommandPtr& node) {
+    std::vector<DatatypeEntryPtr> entries = buildEntry(node);
+    for (const auto& entry : entries) {
+        ctx->getStack()->tryAdd(entry->sort);
 
-        for (auto it = (*entryIt)->funs.begin(); it != (*entryIt)->funs.end(); it++) {
-            ctx->getStack()->tryAdd(*it);
+        for (const auto& fun : entry->funs) {
+            ctx->getStack()->tryAdd(fun);
         }
     }
 }
 
-void StackLoader::visit(sptr_t<DeclareSortCommand> node) {
-    sptr_t<SortEntry> entry = buildEntry(node);
+void StackLoader::visit(const DeclareSortCommandPtr& node) {
+    SortEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<DefineFunCommand> node) {
-    sptr_t<FunEntry> entry = buildEntry(node);
+void StackLoader::visit(const DefineFunCommandPtr& node) {
+    FunEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<DefineFunRecCommand> node) {
-    sptr_t<FunEntry> entry = buildEntry(node);
+void StackLoader::visit(const DefineFunRecCommandPtr& node) {
+    FunEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<DefineFunsRecCommand> node) {
-    sptr_v<FunEntry> entries = buildEntry(node);
-    for (auto entryIt = entries.begin(); entryIt != entries.end(); entryIt++) {
-        ctx->getStack()->tryAdd(*entryIt);
+void StackLoader::visit(const DefineFunsRecCommandPtr& node) {
+    std::vector<FunEntryPtr> entries = buildEntry(node);
+    for (const auto& entry : entries) {
+        ctx->getStack()->tryAdd(entry);
     }
 }
 
-void StackLoader::visit(sptr_t<DefineSortCommand> node) {
-    sptr_t<SortEntry> entry = buildEntry(node);
+void StackLoader::visit(const DefineSortCommandPtr& node) {
+    SortEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<PopCommand> node) {
-    ctx->getStack()->pop((unsigned long) node->levelCount);
+void StackLoader::visit(const PopCommandPtr& node) {
+    ctx->getStack()->pop((size_t) node->levelCount);
 }
 
-void StackLoader::visit(sptr_t<PushCommand> node) {
-    ctx->getStack()->push((unsigned long) node->levelCount);
+void StackLoader::visit(const PushCommandPtr& node) {
+    ctx->getStack()->push((size_t) node->levelCount);
 }
 
-void StackLoader::visit(sptr_t<ResetCommand> node) {
+void StackLoader::visit(const ResetCommandPtr& node) {
     ctx->getStack()->reset();
     ctx->setCurrentLogic("");
     ctx->getCurrentTheories().clear();
 }
 
-void StackLoader::visit(sptr_t<SetLogicCommand> node) {
-    if (ctx->getCurrentLogic() == "") {
+void StackLoader::visit(const SetLogicCommandPtr& node) {
+    if (ctx->getCurrentLogic().empty()) {
         string logic = node->logic;
         ctx->setCurrentLogic(logic);
         loadLogic(logic);
     }
 }
 
-void StackLoader::visit(sptr_t<Logic> node) {
-    sptr_v<Attribute> attrs = node->attributes;
-    for (auto attrIt = attrs.begin(); attrIt != attrs.end(); attrIt++) {
-        sptr_t<Attribute> attr = *attrIt;
+void StackLoader::visit(const LogicPtr& node) {
+    for (const auto& attr : node->attributes) {
         if (auto theoriesAttr = dynamic_pointer_cast<TheoriesAttribute>(attr)) {
-            vector<string> theories = theoriesAttr->theories;
-
-            for (auto theoryIt = theories.begin(); theoryIt != theories.end(); theoryIt++) {
-                string theory = *theoryIt;
-                auto found = find(ctx->getCurrentTheories().begin(), ctx->getCurrentTheories().end(), theory);
+            for (const auto& theory : theoriesAttr->theories) {
+                auto found = find(ctx->getCurrentTheories().begin(),
+                                  ctx->getCurrentTheories().end(),
+                                  theory);
 
                 if (found == ctx->getCurrentTheories().end()) {
                     ctx->getCurrentTheories().push_back(theory);
@@ -495,11 +467,8 @@ void StackLoader::visit(sptr_t<Logic> node) {
     }
 }
 
-void StackLoader::visit(sptr_t<Theory> node) {
-    sptr_v<Attribute> attrs = node->attributes;
-    for (auto attrIt = attrs.begin(); attrIt != attrs.end(); attrIt++) {
-        sptr_t<Attribute> attr = *attrIt;
-
+void StackLoader::visit(const TheoryPtr& node) {
+    for (const auto& attr : node->attributes) {
         if (auto sortsAttr = dynamic_pointer_cast<SortsAttribute>(attr)) {
             visit0(sortsAttr);
         }
@@ -510,50 +479,48 @@ void StackLoader::visit(sptr_t<Theory> node) {
     }
 }
 
-void StackLoader::visit(sptr_t<Script> node) {
+void StackLoader::visit(const ScriptPtr& node) {
     visit0(node->commands);
 }
 
-void StackLoader::visit(sptr_t<SortsAttribute> node) {
-    auto decls = node->declarations;
-    for (auto declIt = decls.begin(); declIt != decls.end(); declIt++) {
-        visit0(*declIt);
+void StackLoader::visit(const SortsAttributePtr& node) {
+    for (const auto& decl : node->declarations) {
+        visit0(decl);
     }
 }
 
-void StackLoader::visit(sptr_t<FunsAttribute> node) {
-    auto decls = node->declarations;
-    for (auto declIt = decls.begin(); declIt != decls.end(); declIt++) {
-        visit0(*declIt);
+void StackLoader::visit(const FunsAttributePtr& node) {
+    for (const auto& decl : node->declarations) {
+        visit0(decl);
     }
 }
 
-void StackLoader::visit(sptr_t<SortSymbolDeclaration> node) {
-    sptr_t<SortEntry> entry = buildEntry(node);
+void StackLoader::visit(const SortSymbolDeclarationPtr& node) {
+    SortEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<SpecConstFunDeclaration> node) {
-    sptr_t<FunEntry> entry = buildEntry(node);
+void StackLoader::visit(const SpecConstFunDeclarationPtr& node) {
+    FunEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<MetaSpecConstFunDeclaration> node) {
-    sptr_t<FunEntry> entry = buildEntry(node);
+void StackLoader::visit(const MetaSpecConstFunDeclarationPtr& node) {
+    FunEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<SimpleFunDeclaration> node) {
-    sptr_t<FunEntry> entry = buildEntry(node);
+void StackLoader::visit(const SimpleFunDeclarationPtr& node) {
+    FunEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-void StackLoader::visit(sptr_t<ParametricFunDeclaration> node) {
-    sptr_t<FunEntry> entry = buildEntry(node);
+void StackLoader::visit(const ParametricFunDeclarationPtr& node) {
+    FunEntryPtr entry = buildEntry(node);
     ctx->getStack()->tryAdd(entry);
 }
 
-sptr_t<SymbolStack> StackLoader::load(sptr_t<Node> node) {
+SymbolStackPtr StackLoader::load(const NodePtr& node) {
     if (node) {
         visit0(node);
     }

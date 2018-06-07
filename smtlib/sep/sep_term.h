@@ -25,14 +25,16 @@ namespace smtlib {
             IdentifierPtr identifier;
             std::vector<TermPtr> terms;
 
-            inline explicit QualifiedTerm(const IdentifierPtr& identifier)
-                    : identifier(identifier) {}
+            inline explicit QualifiedTerm(IdentifierPtr identifier)
+                    : identifier(std::move(identifier)) {}
 
             /**
              * \param identifier    Qualified identifier
              * \param terms         List of terms
              */
-            QualifiedTerm(const IdentifierPtr& identifier, const std::vector<TermPtr>& terms);
+            inline QualifiedTerm(IdentifierPtr identifier, std::vector<TermPtr> terms)
+                    : identifier(std::move(identifier))
+                    , terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -51,7 +53,9 @@ namespace smtlib {
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            LetTerm(const std::vector<VariableBindingPtr>& bindings, const TermPtr& term);
+            inline LetTerm(std::vector<VariableBindingPtr> bindings, TermPtr term)
+                    : bindings(std::move(bindings))
+                    , term(std::move(term)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -70,7 +74,9 @@ namespace smtlib {
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            ForallTerm(const std::vector<SortedVariablePtr>& bindings, const TermPtr& term);
+            inline ForallTerm(std::vector<SortedVariablePtr> bindings, TermPtr term)
+                    : bindings(std::move(bindings))
+                    , term(std::move(term)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -89,7 +95,9 @@ namespace smtlib {
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            ExistsTerm(const std::vector<SortedVariablePtr>& bindings, const TermPtr& term);
+            inline ExistsTerm(std::vector<SortedVariablePtr> bindings, TermPtr term)
+                    : bindings(std::move(bindings))
+                    , term(std::move(term)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -108,7 +116,9 @@ namespace smtlib {
              * @param term      Term to be matched
              * @param cases     Match cases
              */
-            MatchTerm(const TermPtr& term, const std::vector<MatchCasePtr>& cases);
+            inline MatchTerm(TermPtr term, std::vector<MatchCasePtr> cases)
+                    : term(std::move(term))
+                    , cases(std::move(cases)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -127,7 +137,9 @@ namespace smtlib {
              * \param term  Inner term
              * \param attr  Attributes
              */
-            AnnotatedTerm(const TermPtr& term, const std::vector<AttributePtr>& attributes);
+            inline AnnotatedTerm(TermPtr term, std::vector<AttributePtr> attributes)
+                    : term(std::move(term))
+                    , attributes(std::move(attributes)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -168,7 +180,8 @@ namespace smtlib {
             /**
              * @param term  Inner term
              */
-            inline explicit NotTerm(const TermPtr& term) : term(term) {}
+            inline explicit NotTerm(TermPtr term)
+                    : term(std::move(term)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -185,7 +198,8 @@ namespace smtlib {
             /**
              * @param terms Inner terms
              */
-            explicit ImpliesTerm(const std::vector<TermPtr>& terms);
+            inline explicit ImpliesTerm(std::vector<TermPtr> terms)
+                    : terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -205,7 +219,8 @@ namespace smtlib {
             /**
              * @param terms Inner terms
              */
-            explicit AndTerm(const std::vector<TermPtr>& terms);
+            inline explicit AndTerm(std::vector<TermPtr> terms)
+                    : terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -222,7 +237,8 @@ namespace smtlib {
             /**
              * @param terms Inner terms
              */
-            explicit OrTerm(const std::vector<TermPtr>& terms);
+            inline explicit OrTerm(std::vector<TermPtr> terms)
+                    : terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -240,7 +256,8 @@ namespace smtlib {
             /**
              * @param terms Inner terms
              */
-            explicit XorTerm(const std::vector<TermPtr>& terms);
+            inline explicit XorTerm(std::vector<TermPtr> terms)
+                    : terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -257,7 +274,8 @@ namespace smtlib {
             /**
              * @param terms Inner terms
              */
-            explicit EqualsTerm(const std::vector<TermPtr>& terms);
+            inline explicit EqualsTerm(std::vector<TermPtr> terms)
+                    : terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -274,7 +292,8 @@ namespace smtlib {
             /**
              * @param terms Inner terms
              */
-            explicit DistinctTerm(const std::vector<TermPtr>& terms);
+            inline explicit DistinctTerm(std::vector<TermPtr> terms)
+                    : terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -295,10 +314,10 @@ namespace smtlib {
              * @param thenTerm  Term for 'then' branch
              * @param elseTerm  Term for 'else' branch
              */
-            inline IteTerm(const TermPtr& testTerm,
-                           const TermPtr& thenTerm,
-                           const TermPtr& elseTerm)
-                    : testTerm(testTerm), thenTerm(thenTerm), elseTerm(elseTerm) {}
+            inline IteTerm(TermPtr testTerm, TermPtr thenTerm, TermPtr elseTerm)
+                    : testTerm(std::move(testTerm))
+                    , thenTerm(std::move(thenTerm))
+                    , elseTerm(std::move(elseTerm)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -330,7 +349,8 @@ namespace smtlib {
             /**
              * @param terms Inner terms
              */
-            explicit SepTerm(const std::vector<TermPtr>& terms);
+            inline explicit SepTerm(std::vector<TermPtr> terms)
+                    : terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -344,7 +364,8 @@ namespace smtlib {
         public:
             std::vector<TermPtr> terms;
 
-            explicit WandTerm(const std::vector<TermPtr>& terms);
+            explicit WandTerm(std::vector<TermPtr> terms)
+                    : terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -363,9 +384,9 @@ namespace smtlib {
              * @param leftTerm      Left-hand side of the 'points-to'
              * @param rightTerm     Right-hand side of the 'points-to'
              */
-            inline PtoTerm(const TermPtr& leftTerm,
-                           const TermPtr& rightTerm)
-                    : leftTerm(leftTerm), rightTerm(rightTerm) {}
+            inline PtoTerm(TermPtr leftTerm, TermPtr rightTerm)
+                    : leftTerm(std::move(leftTerm))
+                    , rightTerm(std::move(rightTerm)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -385,7 +406,8 @@ namespace smtlib {
             /**
              * @param sort  Sort of the 'nil' predicate
              */
-            inline explicit NilTerm(const SortPtr& sort) : sort(sort) {}
+            inline explicit NilTerm(SortPtr sort)
+                    : sort(std::move(sort)) {}
 
             void accept(Visitor0* visitor) override;
 

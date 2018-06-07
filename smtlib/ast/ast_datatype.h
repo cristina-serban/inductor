@@ -25,8 +25,9 @@ namespace smtlib {
              * \param symbol    Datatype (sort) name
              * \param arity     Arity
              */
-            inline SortDeclaration(const SymbolPtr& symbol, const NumeralLiteralPtr& arity)
-                    : symbol(symbol), arity(arity) { }
+            inline SortDeclaration(SymbolPtr symbol, NumeralLiteralPtr arity)
+                    : symbol(std::move(symbol))
+                    , arity(std::move(arity)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -45,8 +46,9 @@ namespace smtlib {
              * \param symbol    Selector name
              * \param sort      Selector sort
              */
-            inline SelectorDeclaration(const SymbolPtr& symbol, const SortPtr& sort)
-                    : symbol(symbol), sort(sort) { }
+            inline SelectorDeclaration(SymbolPtr symbol, SortPtr sort)
+                    : symbol(std::move(symbol))
+                    , sort(std::move(sort)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -65,8 +67,9 @@ namespace smtlib {
              * \param symbol        Constructor name
              * \param selectors     Selectors for the constructor
              */
-            ConstructorDeclaration(const SymbolPtr& symbol,
-                                   const std::vector<SelectorDeclarationPtr>& selectors);
+            inline ConstructorDeclaration(SymbolPtr symbol, std::vector<SelectorDeclarationPtr> selectors)
+                    : symbol(std::move(symbol))
+                    , selectors(std::move(selectors)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -75,7 +78,7 @@ namespace smtlib {
 
         /* ================================ DatatypeDeclaration =============================== */
         /** A datatype declaration (used by the declare-datatype and declare-datatypes commands). */
-        class DatatypeDeclaration : public Node { };
+        class DatatypeDeclaration : public Node {};
 
         /* ============================= SimpleDatatypeDeclaration ============================ */
         /** A simple (non-parametric) datatype declaration. */
@@ -87,7 +90,8 @@ namespace smtlib {
             /**
              * \param constructors  Constructors for this datatype
              */
-            explicit SimpleDatatypeDeclaration(const std::vector<ConstructorDeclarationPtr>& constructors);
+            inline explicit SimpleDatatypeDeclaration(std::vector<ConstructorDeclarationPtr> constructors)
+                    : constructors(std::move(constructors)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -106,8 +110,10 @@ namespace smtlib {
              * \param params        Parameters for the declaration
              * \param constructors  Constructors for this datatype
              */
-            ParametricDatatypeDeclaration(const std::vector<SymbolPtr> parameters,
-                                          const std::vector<ConstructorDeclarationPtr> constructors);
+            inline ParametricDatatypeDeclaration(std::vector<SymbolPtr> parameters,
+                                                 std::vector<ConstructorDeclarationPtr> constructors)
+                    : parameters(std::move(parameters))
+                    , constructors(std::move(constructors)) {}
 
             void accept(Visitor0* visitor) override;
 

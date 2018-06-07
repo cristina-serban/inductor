@@ -1,7 +1,7 @@
 #include "logger.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 void Logger::message(const char* msg) {
     fprintf(stdout, "%s\n", msg);
@@ -31,8 +31,8 @@ void Logger::sortednessError(const char* fun, const char* msg) {
     fprintf(stderr, "%s: Well-sortedness errors\n\n%s", fun, msg);
 }
 
-void Logger::parsingError(unsigned int rowLeft, unsigned int colLeft,
-                          unsigned int rowRight, unsigned int colRight,
+void Logger::parsingError(int rowLeft, int colLeft,
+                          int rowRight, int colRight,
                           const char* filename, const char* msg) {
 
     fprintf(stderr, "In %s from %d:%d to %d:%d - %s\n",

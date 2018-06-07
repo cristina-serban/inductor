@@ -6,39 +6,39 @@ using namespace std;
 using namespace smtlib;
 using namespace smtlib::sep;
 
-unordered_map<string, string> &VariableRenamerContext::getRenamingMap() {
+RenamingMap& VariableRenamerContext::getRenamingMap() {
     return renamingMap;
 };
 
-void VariableRenamer::visit(sptr_t<SimpleIdentifier> node) {
+void VariableRenamer::visit(const SimpleIdentifierPtr& node) {
     string name = node->name;
 
-    auto &renamingMap = ctx->getRenamingMap();
+    auto& renamingMap = ctx->getRenamingMap();
     auto it = renamingMap.find(name);
 
     if (it != renamingMap.end()) {
-        node->name = renamingMap[name];
+        node->name = it->second;
     }
 }
 
-void VariableRenamer::visit(sptr_t<SortedVariable> node) {
+void VariableRenamer::visit(const SortedVariablePtr& node) {
     string name = node->name;
 
-    auto &renamingMap = ctx->getRenamingMap();
+    auto& renamingMap = ctx->getRenamingMap();
     auto it = renamingMap.find(name);
 
     if (it != renamingMap.end()) {
-        node->name = renamingMap[name];
+        node->name = it->second;
     }
 }
 
-void VariableRenamer::visit(sptr_t<VariableBinding> node) {
+void VariableRenamer::visit(const VariableBindingPtr& node) {
     string name = node->name;
 
-    auto &renamingMap = ctx->getRenamingMap();
+    auto& renamingMap = ctx->getRenamingMap();
     auto it = renamingMap.find(name);
 
     if (it != renamingMap.end()) {
-        node->name = renamingMap[name];
+        node->name = it->second;
     }
 }

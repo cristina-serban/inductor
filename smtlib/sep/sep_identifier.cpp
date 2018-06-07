@@ -7,10 +7,6 @@ using namespace smtlib::sep;
 
 /* ==================================== SimpleIdentifier ==================================== */
 
-SimpleIdentifier::SimpleIdentifier(const string& name, const vector<IndexPtr>& indices) : name(name) {
-    this->indices.insert(this->indices.end(), indices.begin(), indices.end());
-}
-
 void SimpleIdentifier::accept(Visitor0 *visitor) {
     visitor->visit(shared_from_this());
 }

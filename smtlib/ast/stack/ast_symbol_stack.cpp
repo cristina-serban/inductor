@@ -7,22 +7,22 @@ SymbolStack::SymbolStack() {
     push();
 }
 
-sptr_t<SymbolTable> SymbolStack::getTopLevel() {
+SymbolTablePtr SymbolStack::getTopLevel() {
     return stack[stack.size() - 1];
 }
 
-sptr_v<SymbolTable> &SymbolStack::getStack() {
+std::vector<SymbolTablePtr>& SymbolStack::getLevels() {
     return stack;
 }
 
 bool SymbolStack::push() {
-    unsigned long size = stack.size();
+    size_t size = stack.size();
     stack.push_back(make_shared<SymbolTable>());
     return (stack.size() == size + 1);
 }
 
-bool SymbolStack::push(unsigned long levels) {
-    unsigned long size = stack.size();
+bool SymbolStack::push(size_t levels) {
+    size_t size = stack.size();
     for (int i = 0; i < levels; i++)
         stack.push_back(make_shared<SymbolTable>());
     return (stack.size() == size + levels);
@@ -32,19 +32,19 @@ bool SymbolStack::pop() {
     if (stack.size() <= 1) {
         return false;
     } else {
-        unsigned long size = stack.size();
+        size_t size = stack.size();
         stack.erase(stack.begin() + (stack.size() - 1));
         return (stack.size() == size - 1);
     }
 }
 
-bool SymbolStack::pop(unsigned long levels) {
+bool SymbolStack::pop(size_t levels) {
     if (stack.size() <= 1 + levels || levels == 0) {
         return false;
     } else {
-        unsigned long size = stack.size();
+        size_t size = stack.size();
         stack.erase(stack.begin() + (stack.size() - levels), stack.begin() + (stack.size() - 1));
-        return (stack.size() == size - 1);
+        return (stack.size() == size - levels);
     }
 }
 
@@ -53,69 +53,64 @@ void SymbolStack::reset() {
     getTopLevel()->reset();
 }
 
-sptr_t<SortInfo> SymbolStack::getSortInfo(string name) {
-    sptr_t<SortInfo> null;
-    for (auto lvlIt = stack.begin(); lvlIt != stack.end(); lvlIt++) {
-        sptr_t<SortInfo> info = (*lvlIt)->getSortInfo(name);
-        if (info)
-            return info;
+SortEntryPtr SymbolStack::getSortEntry(const string& name) {
+    for (const auto& lvl : stack) {
+        SortEntryPtr entry = lvl->getSortEntry(name);
+        if (entry)
+            return entry;
     }
-    return null;
+    return SortEntryPtr();
 }
 
-sptr_v<FunInfo> SymbolStack::getFunInfo(string name) {
-    sptr_v<FunInfo> result;
-    for (auto lvlIt = stack.begin(); lvlIt != stack.end(); lvlIt++) {
-        sptr_v<FunInfo> infos = (*lvlIt)->getFunInfo(name);
-        result.insert(result.end(), infos.begin(), infos.end());
+std::vector<FunEntryPtr> SymbolStack::getFunEntry(const string& name) {
+    std::vector<FunEntryPtr> result;
+    for (const auto& lvl : stack) {
+        std::vector<FunEntryPtr> entries = lvl->getFunEntry(name);
+        result.insert(result.end(), entries.begin(), entries.end());
     }
     return result;
 }
 
-sptr_t<VarInfo> SymbolStack::getVarInfo(string name) {
-    sptr_t<VarInfo> null;
-    for (auto lvlIt = stack.begin(); lvlIt != stack.end(); lvlIt++) {
-        sptr_t<VarInfo> info = (*lvlIt)->getVarInfo(name);
-        if (info)
-            return info;
+VarEntryPtr SymbolStack::getVarEntry(const string& name) {
+    for (const auto& lvl : stack) {
+        VarEntryPtr entry = lvl->getVarEntry(name);
+        if (entry)
+            return entry;
     }
-    return null;
+    return VarEntryPtr();
 }
 
-sptr_t<SortInfo> SymbolStack::findDuplicate(sptr_t<SortInfo> info) {
-    sptr_t<SortInfo> null;
-    for (auto lvlIt = stack.begin(); lvlIt != stack.end(); lvlIt++) {
-        sptr_t<SortInfo> dup = (*lvlIt)->getSortInfo(info->name);
+SortEntryPtr SymbolStack::findDuplicate(const SortEntryPtr& entry) {
+    for (const auto& lvl : stack) {
+        SortEntryPtr dup = lvl->getSortEntry(entry->name);
         if (dup)
             return dup;
     }
-    return null;
+    return SortEntryPtr();
 }
 
-sptr_t<FunInfo> SymbolStack::findDuplicate(sptr_t<FunInfo> info) {
-    sptr_t<FunInfo> null;
-    sptr_v<FunInfo> knownFuns = getFunInfo(info->name);
-    for (auto funIt = knownFuns.begin(); funIt != knownFuns.end(); funIt++) {
-        if (info->params.size() == 0 && (*funIt)->params.size() == 0) {
-            if (equal(info->signature, (*funIt)->signature)) {
-                return (*funIt);
+FunEntryPtr SymbolStack::findDuplicate(const FunEntryPtr& entry) {
+    std::vector<FunEntryPtr> knownFuns = getFunEntry(entry->name);
+    for (const auto& fun : knownFuns) {
+        if (entry->params.empty() && fun->params.empty()) {
+            if (equal(entry->signature, fun->signature)) {
+                return fun;
             }
         } else {
-            if (equal(info->params, info->signature,
-                      (*funIt)->params, (*funIt)->signature)) {
-                return (*funIt);
+            if (equal(entry->params, entry->signature, fun->params, fun->signature)) {
+                return fun;
             }
         }
     }
-    return null;
+    return FunEntryPtr();
 }
 
-sptr_t<VarInfo> SymbolStack::findDuplicate(sptr_t<VarInfo> info) {
-    return getTopLevel()->getVarInfo(info->name);
+VarEntryPtr SymbolStack::findDuplicate(const VarEntryPtr& entry) {
+    return getTopLevel()->getVarEntry(entry->name);
 }
 
-sptr_t<Sort> SymbolStack::replace(sptr_t<Sort> sort,
-                                  unordered_map<string, sptr_t<Sort>> &mapping) {
+SortPtr SymbolStack::replace(const SortPtr& sort,
+                             unordered_map<string, SortPtr>& mapping) {
     if (mapping.empty())
         return sort;
 
@@ -125,14 +120,14 @@ sptr_t<Sort> SymbolStack::replace(sptr_t<Sort> sort,
         else
             return sort;
     } else {
-        sptr_v<Sort> newargs;
+        std::vector<SortPtr> newargs;
         bool changed = false;
-        sptr_v<Sort> argSorts = sort->arguments;
-        for (auto argIt = argSorts.begin(); argIt != argSorts.end(); argIt++) {
-            sptr_t<Sort> result = replace(*argIt, mapping);
+        std::vector<SortPtr>& argSorts = sort->arguments;
+        for (const auto& argSort : argSorts) {
+            SortPtr result = replace(argSort, mapping);
 
             newargs.push_back(result);
-            if (result.get() != (*argIt).get())
+            if (result.get() != argSort.get())
                 changed = true;
         }
 
@@ -144,18 +139,16 @@ sptr_t<Sort> SymbolStack::replace(sptr_t<Sort> sort,
     }
 }
 
-sptr_t<Sort> SymbolStack::expand(sptr_t<Sort> sort) {
+SortPtr SymbolStack::expand(const SortPtr& sort) {
     if (!sort)
         return sort;
 
-    sptr_t<Sort> null;
-
-    sptr_t<SortInfo> info = getSortInfo(sort->identifier->toString());
+    SortEntryPtr entry = getSortEntry(sort->identifier->toString());
     if (!sort->hasArgs()) {
-        if (info && info->definition) {
-            if (info->definition->params.empty()) {
-                sptr_t<Sort> newsort = make_shared<Sort>(info->definition->sort->identifier,
-                                                         info->definition->sort->arguments);
+        if (entry && entry->definition) {
+            if (entry->definition->params.empty()) {
+                SortPtr newsort = make_shared<Sort>(entry->definition->sort->identifier,
+                                                    entry->definition->sort->arguments);
                 newsort->rowLeft = sort->rowLeft;
                 newsort->colLeft = sort->colLeft;
                 newsort->rowRight = sort->rowRight;
@@ -164,20 +157,20 @@ sptr_t<Sort> SymbolStack::expand(sptr_t<Sort> sort) {
 
                 return newsort;
             } else {
-                return null;
+                return SortPtr();
             }
         } else {
             return sort;
         }
     } else {
-        if (info && info->definition) {
-            if (info->definition->params.size() == sort->arguments.size()) {
-                unordered_map<string, sptr_t<Sort>> mapping;
-                for (int i = 0; i < info->definition->params.size(); i++) {
-                    mapping[info->definition->params[i]->toString()] = sort->arguments[i];
+        if (entry && entry->definition) {
+            if (entry->definition->params.size() == sort->arguments.size()) {
+                unordered_map<string, SortPtr> mapping;
+                for (int i = 0; i < entry->definition->params.size(); i++) {
+                    mapping[entry->definition->params[i]->toString()] = sort->arguments[i];
                 }
 
-                sptr_t<Sort> newsort = replace(info->definition->sort, mapping);
+                SortPtr newsort = replace(entry->definition->sort, mapping);
                 newsort = expand(newsort);
                 newsort->rowLeft = sort->rowLeft;
                 newsort->colLeft = sort->colLeft;
@@ -187,27 +180,27 @@ sptr_t<Sort> SymbolStack::expand(sptr_t<Sort> sort) {
 
                 return newsort;
             } else {
-                return null;
+                return SortPtr();
             }
         } else {
-            if (info && info->arity != sort->arguments.size())
-                return null;
+            if (entry && entry->arity != sort->arguments.size())
+                return SortPtr();
 
-            sptr_v<Sort> newargs;
+            std::vector<SortPtr> newargs;
             bool changed = false;
-            sptr_v<Sort> argSorts = sort->arguments;
-            for (auto argIt = argSorts.begin(); argIt != argSorts.end(); argIt++) {
-                sptr_t<Sort> result = expand(*argIt);
+            std::vector<SortPtr>& argSorts = sort->arguments;
+            for (const auto& arg : argSorts) {
+                SortPtr result = expand(arg);
                 if (!result)
-                    return null;
+                    return SortPtr();
 
                 newargs.push_back(result);
-                if (result.get() != (*argIt).get())
+                if (result.get() != arg.get())
                     changed = true;
             }
 
             if (changed) {
-                sptr_t<Sort> newsort = make_shared<Sort>(sort->identifier, newargs);
+                SortPtr newsort = make_shared<Sort>(sort->identifier, newargs);
                 newsort->rowLeft = sort->rowLeft;
                 newsort->colLeft = sort->colLeft;
                 newsort->rowRight = sort->rowRight;
@@ -222,8 +215,7 @@ sptr_t<Sort> SymbolStack::expand(sptr_t<Sort> sort) {
     }
 }
 
-bool SymbolStack::equal(sptr_t<Sort> sort1,
-                        sptr_t<Sort> sort2) {
+bool SymbolStack::equal(const SortPtr& sort1, const SortPtr& sort2) {
     if (sort1 && sort2) {
         return sort1->toString() == sort2->toString();
     } else {
@@ -231,11 +223,9 @@ bool SymbolStack::equal(sptr_t<Sort> sort1,
     }
 }
 
-bool SymbolStack::equal(sptr_v<Symbol> &params1,
-                        sptr_t<Sort> sort1,
-                        sptr_v<Symbol> &params2,
-                        sptr_t<Sort> sort2,
-                        unordered_map<string, string> &mapping) {
+bool SymbolStack::equal(const std::vector<SymbolPtr>& params1, const SortPtr& sort1,
+                        const std::vector<SymbolPtr>& params2, const SortPtr& sort2,
+                        unordered_map<string, string>& mapping) {
     if (!sort1 || !sort2) {
         return false;
     }
@@ -243,14 +233,14 @@ bool SymbolStack::equal(sptr_v<Symbol> &params1,
     if (sort1->arguments.size() != sort2->arguments.size())
         return false;
 
-    if (sort1->arguments.size() == 0) {
+    if (sort1->arguments.empty()) {
         bool isParam1 = false;
         bool isParam2 = false;
 
         string str1 = sort1->toString();
         string str2 = sort2->toString();
 
-        for (unsigned long j = 0; j < params1.size(); j++) {
+        for (size_t j = 0, sz = params1.size(); j < sz; j++) {
             if (params1[j]->toString() == str1)
                 isParam1 = true;
             if (params2[j]->toString() == str2)
@@ -273,7 +263,7 @@ bool SymbolStack::equal(sptr_v<Symbol> &params1,
         if (sort1->identifier->toString() != sort2->identifier->toString())
             return false;
 
-        for (unsigned long k = 0; k < sort1->arguments.size(); k++) {
+        for (size_t k = 0, sz = sort1->arguments.size(); k < sz; k++) {
             if (!equal(params1, sort1->arguments[k], params2, sort2->arguments[k], mapping))
                 return false;
         }
@@ -282,12 +272,12 @@ bool SymbolStack::equal(sptr_v<Symbol> &params1,
     }
 }
 
-bool SymbolStack::equal(sptr_v<Sort> &signature1,
-                        sptr_v<Sort> &signature2) {
+bool SymbolStack::equal(const std::vector<SortPtr>& signature1,
+                        const std::vector<SortPtr>& signature2) {
     if (signature1.size() != signature2.size())
         return false;
 
-    for (unsigned long i = 0; i < signature1.size(); i++) {
+    for (size_t i = 0, sz = signature1.size(); i < sz; i++) {
         if (!equal(signature1[i], signature2[i]))
             return false;
     }
@@ -295,17 +285,17 @@ bool SymbolStack::equal(sptr_v<Sort> &signature1,
     return true;
 }
 
-bool SymbolStack::equal(sptr_v<Symbol> &params1,
-                        sptr_v<Sort> &signature1,
-                        sptr_v<Symbol> &params2,
-                        sptr_v<Sort> &signature2) {
+bool SymbolStack::equal(const std::vector<SymbolPtr>& params1,
+                        const std::vector<SortPtr>& signature1,
+                        const std::vector<SymbolPtr>& params2,
+                        const std::vector<SortPtr>& signature2) {
     if (params1.size() != params2.size() || signature1.size() != signature2.size())
         return false;
 
     unordered_map<string, string> mapping;
-    for (unsigned long i = 0; i < signature1.size(); i++) {
-        sptr_t<Sort> sort1 = signature1[i];
-        sptr_t<Sort> sort2 = signature2[i];
+    for (size_t i = 0, sz = signature1.size(); i < sz; i++) {
+        SortPtr sort1 = signature1[i];
+        SortPtr sort2 = signature2[i];
 
         if (!equal(params1, sort1, params2, sort2, mapping))
             return false;
@@ -314,23 +304,23 @@ bool SymbolStack::equal(sptr_v<Symbol> &params1,
     return mapping.size() == params1.size();
 }
 
-sptr_t<SortInfo> SymbolStack::tryAdd(sptr_t<SortInfo> info) {
-    sptr_t<SortInfo> dup = findDuplicate(info);
+SortEntryPtr SymbolStack::tryAdd(const SortEntryPtr& entry) {
+    SortEntryPtr dup = findDuplicate(entry);
     if (!dup)
-        getTopLevel()->add(info);
+        getTopLevel()->add(entry);
     return dup;
 }
 
-sptr_t<FunInfo> SymbolStack::tryAdd(sptr_t<FunInfo> info) {
-    sptr_t<FunInfo> dup = findDuplicate(info);
+FunEntryPtr SymbolStack::tryAdd(const FunEntryPtr& entry) {
+    FunEntryPtr dup = findDuplicate(entry);
     if (!dup)
-        getTopLevel()->add(info);
+        getTopLevel()->add(entry);
     return dup;
 }
 
-sptr_t<VarInfo> SymbolStack::tryAdd(sptr_t<VarInfo> info) {
-    sptr_t<VarInfo> dup = findDuplicate(info);
+VarEntryPtr SymbolStack::tryAdd(const VarEntryPtr& entry) {
+    VarEntryPtr dup = findDuplicate(entry);
     if (!dup)
-        getTopLevel()->add(info);
+        getTopLevel()->add(entry);
     return dup;
 }

@@ -3,7 +3,6 @@
  * \brief Proof rules and proof rule applications.
  */
 
-
 #ifndef INDUCTOR_PROOF_RULE_H
 #define INDUCTOR_PROOF_RULE_H
 
@@ -45,6 +44,9 @@ namespace proof {
     class RuleNode;
     typedef std::shared_ptr<RuleNode> RuleNodePtr;
 
+    class PairStmtNode;
+    typedef std::shared_ptr<PairStmtNode> PairStmtNodePtr;
+
     /* ================================= RuleApplication ================================== */
     class RuleApplication {
     protected:
@@ -55,7 +57,8 @@ namespace proof {
 
         inline RuleApplication() = default;
 
-        inline explicit RuleApplication(Rule rule) : rule(rule) { }
+        inline explicit RuleApplication(Rule rule)
+                : rule(rule) {}
 
         virtual inline ~RuleApplication() = default;
 
@@ -67,7 +70,10 @@ namespace proof {
     /* ============================== InfDescentApplication =============================== */
     class InfDescentApplication : public RuleApplication {
     public:
-        inline InfDescentApplication() : RuleApplication(Rule::INFINITE_DESCENT) {}
+        PairStmtNodePtr pivot;
+
+        inline InfDescentApplication()
+                : RuleApplication(Rule::INFINITE_DESCENT) {}
     };
 
     typedef std::shared_ptr<InfDescentApplication> InfDescentApplicationPtr;
@@ -75,7 +81,8 @@ namespace proof {
     /* ================================= AxiomApplication ================================= */
     class AxiomApplication : public RuleApplication {
     public:
-        inline AxiomApplication() : RuleApplication(Rule::AXIOM) {}
+        inline AxiomApplication()
+                : RuleApplication(Rule::AXIOM) {}
     };
 
     typedef std::shared_ptr<AxiomApplication> AxiomApplicationPtr;
@@ -87,7 +94,8 @@ namespace proof {
         std::vector<StatePtr> unfolded;
         RuleNodePtr ruleNode;
 
-        inline LeftUnfoldApplication() : RuleApplication(Rule::LEFT_UNFOLD) {}
+        inline LeftUnfoldApplication()
+                : RuleApplication(Rule::LEFT_UNFOLD) {}
     };
 
     typedef std::shared_ptr<LeftUnfoldApplication> LeftUnfoldApplicationPtr;
@@ -97,18 +105,24 @@ namespace proof {
     public:
         std::vector<size_t> indices;
 
-        inline RightUnfoldApplication() : RuleApplication(Rule::RIGHT_UNFOLD) {}
+        inline RightUnfoldApplication()
+                : RuleApplication(Rule::RIGHT_UNFOLD) {}
     };
 
     typedef std::shared_ptr<RightUnfoldApplication> RightUnfoldApplicationPtr;
 
     /* ================================ ReduceApplication ================================= */
+    typedef std::unordered_map<std::string, smtlib::sep::TermPtr> StateSubstitution;
+    typedef std::vector<StateSubstitution> StateSubstitutionVector;
+    typedef std::vector<StateSubstitutionVector> RightHandSubstitutionVector;
+
     class ReduceApplication : public RuleApplication {
     public:
-        std::vector<std::unordered_map<std::string, smtlib::sep::TermPtr>> subst;
+        RightHandSubstitutionVector subst;
         std::vector<bool> entails;
 
-        ReduceApplication() : RuleApplication(Rule::REDUCE) {}
+        ReduceApplication()
+                : RuleApplication(Rule::REDUCE) {}
     };
 
     typedef std::shared_ptr<ReduceApplication> ReduceApplicationPtr;
@@ -118,7 +132,8 @@ namespace proof {
     public:
         std::vector<std::vector<size_t>> matches;
 
-        inline SplitApplication() : RuleApplication(Rule::SPLIT) {}
+        inline SplitApplication()
+                : RuleApplication(Rule::SPLIT) {}
     };
 
     typedef std::shared_ptr<SplitApplication> SplitApplicationPtr;

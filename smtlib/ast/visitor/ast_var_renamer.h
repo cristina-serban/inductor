@@ -14,36 +14,45 @@
 
 namespace smtlib {
     namespace ast {
+        typedef std::unordered_map<std::string, std::string> RenamingMap;
+
         /* ============================= IVariableRenamerContext ============================== */
         /** Context interface for variable renaming */
         class IVariableRenamerContext {
         public:
-            virtual umap<std::string, std::string>& getRenamingMap() = 0;
+            virtual RenamingMap& getRenamingMap() = 0;
         };
+
+        typedef std::shared_ptr<IVariableRenamerContext> IVariableRenamerContextPtr;
 
         /* ============================== VariableRenamerContext ============================== */
         /** Implementation for the context interface */
         class VariableRenamerContext : public IVariableRenamerContext {
         private:
-            umap<std::string, std::string> renamingMap;
+            RenamingMap renamingMap;
         public:
-            virtual umap<std::string, std::string>& getRenamingMap();
+            RenamingMap& getRenamingMap() override;
         };
+
+        typedef std::shared_ptr<VariableRenamerContext> VariableRenamerContextPtr;
 
         /* ================================= VariableRenamer ================================== */
         /** Renames variables in the visited node based on a renaming map give by its context */
         class VariableRenamer : public DummyVisitor0,
                                 public std::enable_shared_from_this<VariableRenamer> {
         private:
-            sptr_t<IVariableRenamerContext> ctx;
+            IVariableRenamerContextPtr ctx;
 
         public:
-            inline VariableRenamer(sptr_t<IVariableRenamerContext> ctx) : ctx(ctx) {}
+            inline explicit VariableRenamer(IVariableRenamerContextPtr ctx)
+                    : ctx(std::move(ctx)) {}
 
-            virtual void visit(sptr_t<SimpleIdentifier> node);
-            virtual void visit(sptr_t<SortedVariable> node);
-            virtual void visit(sptr_t<VariableBinding> node);
+            void visit(const SimpleIdentifierPtr& node) override;
+            void visit(const SortedVariablePtr& node) override;
+            void visit(const VariableBindingPtr& node) override;
         };
+
+        typedef std::shared_ptr<VariableRenamer> VariableRenamerPtr;
     }
 }
 

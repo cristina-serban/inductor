@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <string>
 
 class Configuration {
@@ -23,27 +24,27 @@ private:
 
     static inline bool isTrimChar(char c) {
         bool value = TRIM_CHARS.find(c) != std::string::npos;
-        return TRIM_CHARS.find(c) != std::string::npos;
+        return value;
     }
 
     // trim from start
-    static inline std::string &ltrim(std::string &s) {
+    static inline void ltrim(std::string& s) {
         s.erase(s.begin(),
-                std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<char, bool>(Configuration::isTrimChar))));
-        return s;
+                std::find_if(s.begin(), s.end(),
+                             std::not1(std::ptr_fun<char, bool>(Configuration::isTrimChar))));
     }
 
     // trim from end
-    static inline std::string &rtrim(std::string &s) {
-        s.erase(
-            std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<char, bool>(Configuration::isTrimChar))).base(),
-            s.end());
-        return s;
+    static inline void rtrim(std::string& s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(),
+                             std::not1(std::ptr_fun<char, bool>(Configuration::isTrimChar))).base(),
+                s.end());
     }
 
     // trim from both ends
-    static inline std::string &trim(std::string &s) {
-        return ltrim(rtrim(s));
+    static inline void trim(std::string& s) {
+        rtrim(s);
+        ltrim(s);
     }
 
     std::map<Property, std::string> properties;
@@ -51,15 +52,17 @@ private:
 public:
     Configuration();
 
-    Configuration(std::string path);
+    explicit Configuration(const std::string& path);
 
     void populatePropNames();
 
     void loadDefaults();
 
-    void loadFile(std::string path);
+    void loadFile(const std::string& path);
 
     std::string get(Property key);
 };
+
+typedef std::shared_ptr<Configuration> ConfigurationPtr;
 
 #endif //INDUCTOR_CONFIGURATION_H

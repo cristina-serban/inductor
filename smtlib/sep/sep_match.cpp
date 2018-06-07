@@ -19,12 +19,6 @@ string QualifiedConstructor::toString() {
 
 /* ================================= QualifiedPattern ================================= */
 
-QualifiedPattern::QualifiedPattern(const ConstructorPtr& constructor,
-                                   const vector<string>& args)
-        : constructor(constructor) {
-    this->arguments.insert(this->arguments.begin(), args.begin(), args.end());
-}
-
 void QualifiedPattern::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }

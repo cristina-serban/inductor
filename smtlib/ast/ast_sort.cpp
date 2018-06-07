@@ -5,11 +5,6 @@
 using namespace std;
 using namespace smtlib::ast;
 
-Sort::Sort(const SimpleIdentifierPtr& identifier, const vector<SortPtr>& arguments)
-        : identifier(identifier) {
-    this->arguments.insert(this->arguments.end(), arguments.begin(), arguments.end());
-}
-
 bool Sort::hasArgs() {
     return !arguments.empty();
 }

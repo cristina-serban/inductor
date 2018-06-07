@@ -35,7 +35,8 @@ namespace smtlib {
             /**
              * \param term  Asserted term
              */
-            inline explicit AssertCommand(const TermPtr& term) : term(term) {}
+            inline explicit AssertCommand(TermPtr term)
+                    : term(std::move(term)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -64,7 +65,8 @@ namespace smtlib {
             /**
              * \param assumptions   List of assumptions
              */
-            explicit CheckSatAssumCommand(const std::vector<PropLiteralPtr>& assumptions);
+            inline explicit CheckSatAssumCommand(std::vector<PropLiteralPtr> assumptions)
+                    : assumptions(std::move(assumptions)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -83,8 +85,9 @@ namespace smtlib {
              * \param name  Name of the constant
              * \param sort  Sort of the constant
              */
-            inline DeclareConstCommand(const std::string& name, const SortPtr& sort)
-                    : name(name), sort(sort) {}
+            inline DeclareConstCommand(std::string name, SortPtr sort)
+                    : name(std::move(name))
+                    , sort(std::move(sort)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -103,9 +106,9 @@ namespace smtlib {
              * \param symbol        Datatype name
              * \param declaration   Datatype declaration
              */
-            inline DeclareDatatypeCommand(const std::string& name,
-                                          const DatatypeDeclarationPtr& declaration)
-                    : name(name), declaration(declaration) {}
+            inline DeclareDatatypeCommand(std::string name, DatatypeDeclarationPtr declaration)
+                    : name(std::move(name))
+                    , declaration(std::move(declaration)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -124,8 +127,10 @@ namespace smtlib {
              * \param sorts         Names and arities of the new datatypes
              * \param declarations  Declarations of the new datatypes
              */
-            DeclareDatatypesCommand(const std::vector<SortDeclarationPtr>& sorts,
-                                    const std::vector<DatatypeDeclarationPtr>& declarations);
+            inline DeclareDatatypesCommand(std::vector<SortDeclarationPtr> sorts,
+                                           std::vector<DatatypeDeclarationPtr> declarations)
+                    : sorts(std::move(sorts))
+                    , declarations(std::move(declarations)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -146,9 +151,12 @@ namespace smtlib {
              * \param params    Sorts of the parameters
              * \param sort      Sort of the return value
              */
-            DeclareFunCommand(const std::string& name,
-                              const std::vector<SortPtr>& parameters,
-                              const SortPtr& sort);
+            inline DeclareFunCommand(std::string name,
+                                     std::vector<SortPtr> parameters,
+                                     SortPtr sort)
+                    : name(std::move(name))
+                    , parameters(std::move(parameters))
+                    , sort(std::move(sort)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -161,14 +169,15 @@ namespace smtlib {
                                    public std::enable_shared_from_this<DeclareSortCommand> {
         public:
             std::string name;
-            unsigned int arity;
+            size_t arity;
 
             /**
              * \param name      Name of the sort
              * \param arity     Arity of the sort
              */
-            inline DeclareSortCommand(const std::string& name, unsigned int arity)
-                    : name(name), arity(arity) {}
+            inline DeclareSortCommand(std::string name, size_t arity)
+                    : name(std::move(name))
+                    , arity(arity) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -185,14 +194,15 @@ namespace smtlib {
             /**
              * \param definition    Function definition
              */
-            inline explicit DefineFunCommand(const FunctionDefinitionPtr& definition)
-                    : definition(definition) {}
+            inline explicit DefineFunCommand(FunctionDefinitionPtr definition)
+                    : definition(std::move(definition)) {}
 
             /**
              * \param signature    Function signature
              * \param body         Function body
              */
-            inline DefineFunCommand(const FunctionDeclarationPtr& signature, const TermPtr& body);
+            inline DefineFunCommand(FunctionDeclarationPtr signature, TermPtr body)
+                    : definition(std::make_shared<FunctionDefinition>(std::move(signature), std::move(body))) {}
 
             /**
              * \param symbol    Name of the function
@@ -200,10 +210,14 @@ namespace smtlib {
              * \param type      Sort of the return value
              * \param body      Function body
              */
-            DefineFunCommand(const std::string& name,
-                             const std::vector<SortedVariablePtr>& params,
-                             const SortPtr& sort,
-                             const TermPtr& body);
+            inline DefineFunCommand(std::string name,
+                                    std::vector<SortedVariablePtr> params,
+                                    SortPtr sort,
+                                    TermPtr body)
+                    : definition(std::make_shared<FunctionDefinition>(std::move(name),
+                                                                      std::move(params),
+                                                                      std::move(sort),
+                                                                      std::move(body))) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -220,15 +234,17 @@ namespace smtlib {
             /**
              * \param definition    Function definition
              */
-            inline explicit DefineFunRecCommand(const FunctionDefinitionPtr& definition)
-                    : definition(definition) {}
+            inline explicit DefineFunRecCommand(FunctionDefinitionPtr definition)
+                    : definition(std::move(definition)) {}
 
             /**
              * \param signature    Function signature
              * \param body         Function body
              */
-            DefineFunRecCommand(const FunctionDeclarationPtr& signature,
-                                const TermPtr& body);
+            inline DefineFunRecCommand(FunctionDeclarationPtr signature,
+                                       TermPtr body)
+                    : definition(std::make_shared<FunctionDefinition>(std::move(signature), std::move(body))) {}
+
 
             /**
              * \param symbol    Name of the function
@@ -236,10 +252,15 @@ namespace smtlib {
              * \param type      Sort of the return value
              * \param body      Function body
              */
-            DefineFunRecCommand(const std::string& name,
-                                const std::vector<SortedVariablePtr>& params,
-                                const SortPtr& sort,
-                                const TermPtr& body);
+            inline DefineFunRecCommand(std::string name,
+                                       std::vector<SortedVariablePtr> params,
+                                       SortPtr sort,
+                                       TermPtr body)
+                    : definition(std::make_shared<FunctionDefinition>(std::move(name),
+                                                                      std::move(params),
+                                                                      std::move(sort),
+                                                                      std::move(body))) {}
+
 
             void accept(Visitor0* visitor) override;
 
@@ -258,8 +279,10 @@ namespace smtlib {
              * \param declarations    Function declarations
              * \param bodies          Function bodies
              */
-            DefineFunsRecCommand(const std::vector<FunctionDeclarationPtr>& declarations,
-                                 const std::vector<TermPtr>& bodies);
+            inline DefineFunsRecCommand(std::vector<FunctionDeclarationPtr> declarations,
+                                        std::vector<TermPtr> bodies)
+                    : declarations(std::move(declarations))
+                    , bodies(std::move(bodies)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -280,9 +303,12 @@ namespace smtlib {
              * \param params    Sort parameters
              * \param sort      Definition of the new sort
              */
-            DefineSortCommand(const std::string& name,
-                              const std::vector<std::string>& parameters,
-                              const SortPtr& sort);
+            inline DefineSortCommand(std::string name,
+                                     std::vector<std::string> parameters,
+                                     SortPtr sort)
+                    : name(std::move(name))
+                    , sort(std::move(sort))
+                    , parameters(std::move(parameters)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -299,8 +325,8 @@ namespace smtlib {
             /**
              * \param   Message to print
              */
-            inline explicit EchoCommand(const std::string& message)
-                    : message(message) {}
+            inline explicit EchoCommand(std::string message)
+                    : message(std::move(message)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -353,8 +379,8 @@ namespace smtlib {
             /**
              * \param flag  Flag name
              */
-            inline explicit GetInfoCommand(const std::string& flag)
-                    : flag(flag) {}
+            inline explicit GetInfoCommand(std::string flag)
+                    : flag(std::move(flag)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -383,8 +409,8 @@ namespace smtlib {
             /**
              * \param option    Option name
              */
-            inline explicit GetOptionCommand(const std::string& option)
-                    : option(option) {}
+            inline explicit GetOptionCommand(std::string option)
+                    : option(std::move(option)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -437,7 +463,8 @@ namespace smtlib {
             /**
              * \param terms Terms to evaluate
              */
-            explicit GetValueCommand(const std::vector<TermPtr>& terms);
+            inline explicit GetValueCommand(std::vector<TermPtr> terms)
+                : terms(std::move(terms)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -514,8 +541,8 @@ namespace smtlib {
             /**
              * \param info    Info to set
              */
-            inline explicit SetInfoCommand(const AttributePtr& info)
-                    : info(info) {}
+            inline explicit SetInfoCommand(AttributePtr info)
+                    : info(std::move(info)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -532,8 +559,8 @@ namespace smtlib {
             /**
              * \param name  Name of the logic to set
              */
-            inline explicit SetLogicCommand(const std::string& logic)
-                    : logic(logic) {}
+            inline explicit SetLogicCommand(std::string logic)
+                    : logic(std::move(logic)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -550,8 +577,8 @@ namespace smtlib {
             /**
              * \param option    Option to set
              */
-            inline explicit SetOptionCommand(const AttributePtr& option)
-                    : option(option) {}
+            inline explicit SetOptionCommand(AttributePtr option)
+                    : option(std::move(option)) {}
 
             void accept(Visitor0* visitor) override;
 

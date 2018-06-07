@@ -30,14 +30,17 @@ namespace smtlib {
              * Constuctor for unindexed identifier.
              * \param symbol    Identifier symbol
              */
-            inline explicit SimpleIdentifier(const std::string& name) : name(name) {}
+            inline explicit SimpleIdentifier(std::string name)
+                    : name(std::move(name)) {}
 
             /**
              * Constuctor for indexed identifier.
              * \param symbol    Identifier symbol
              * \param indices   Identifier indices
              */
-            SimpleIdentifier(const std::string& name, const std::vector<IndexPtr>& indices);
+            inline SimpleIdentifier(std::string name, std::vector<IndexPtr> indices)
+                    : name(std::move(name))
+                    , indices(std::move(indices)) {}
 
             inline bool isIndexed() { return !indices.empty(); }
 
@@ -58,8 +61,9 @@ namespace smtlib {
              * \param identifier    SimpleIdentifier
              * \param sort          Result sort
              */
-            inline QualifiedIdentifier(const SimpleIdentifierPtr& identifier, const SortPtr& sort)
-                    : identifier(identifier), sort(sort) {}
+            inline QualifiedIdentifier(SimpleIdentifierPtr identifier, SortPtr sort)
+                    : identifier(std::move(identifier))
+                    , sort(std::move(sort)) {}
 
             void accept(Visitor0* visitor) override;
 

@@ -5,11 +5,7 @@
 using namespace std;
 using namespace smtlib::ast;
 
-Script::Script(const vector<CommandPtr>& commands) {
-    this->commands.insert(this->commands.end(), commands.begin(), commands.end());
-}
-
-void Script::accept(Visitor0* visitor){
+void Script::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 

@@ -9,7 +9,7 @@ using namespace std;
 using namespace pred;
 using namespace smtlib::sep;
 
-TermPtr replace(TermPtr& term, const unordered_map<string, TermPtr> arguments) {
+TermPtr replace(TermPtr& term, const unordered_map<string, TermPtr>& arguments) {
     for (const auto& arg : arguments) {
         TermReplacerContextPtr ctx = make_shared<TermReplacerContext>(
                 make_shared<SimpleIdentifier>(arg.first), arg.second);
@@ -34,21 +34,21 @@ unordered_map<string, TermPtr> getRenaming(const string& index,
 }
 
 /* ================================ InductivePredicate ================================ */
-InductivePredicate::InductivePredicate(const string& name,
-                                       const vector<SortedVariablePtr>& parameters)
-        : name(name), sort(make_shared<Sort>(SORT_BOOL)) {
-    this->parameters.insert(this->parameters.begin(), parameters.begin(), parameters.end());
-}
+InductivePredicate::InductivePredicate(string name,
+                                       vector<SortedVariablePtr> parameters)
+        : name(std::move(name))
+        , sort(make_shared<Sort>(SORT_BOOL))
+        , parameters(std::move(parameters)) {}
 
-InductivePredicate::InductivePredicate(const string& name,
-                                       const vector<SortedVariablePtr>& parameters,
-                                       const vector<BaseCasePtr>& baseCases,
-                                       const vector<InductiveCasePtr>& indCases)
-        : name(name), sort(make_shared<Sort>(SORT_BOOL)) {
-    this->parameters.insert(this->parameters.begin(), parameters.begin(), parameters.end());
-    this->baseCases.insert(this->baseCases.begin(), baseCases.begin(), baseCases.end());
-    this->indCases.insert(this->indCases.begin(), indCases.begin(), indCases.end());
-}
+InductivePredicate::InductivePredicate(string name,
+                                       vector<SortedVariablePtr> parameters,
+                                       vector<BaseCasePtr> baseCases,
+                                       vector<InductiveCasePtr> indCases)
+        : name(std::move(name))
+        , sort(make_shared<Sort>(SORT_BOOL))
+        , parameters(std::move(parameters))
+        , baseCases(std::move(baseCases))
+        , indCases(std::move(indCases)) {}
 
 bool InductivePredicate::isOnlySelfRecursive() {
     for (const auto& icase : indCases) {
@@ -67,7 +67,7 @@ InductivePredicatePtr InductivePredicate::clone() {
     vector<BaseCasePtr> newBaseCases;
     vector<InductiveCasePtr> newIndCases;
 
-    shared_ptr<Duplicator> duplicator = make_shared<Duplicator>();
+    DuplicatorPtr duplicator = make_shared<Duplicator>();
 
     for (const auto& param : parameters) {
         newParameters.push_back(dynamic_pointer_cast<SortedVariable>(duplicator->run(param)));
@@ -154,7 +154,7 @@ TermPtr Constraint::toTerm() {
 }
 
 ConstraintPtr Constraint::clone() {
-    shared_ptr<Duplicator> duplicator = make_shared<Duplicator>();
+    DuplicatorPtr duplicator = make_shared<Duplicator>();
     ConstraintPtr newExpr = make_shared<Constraint>();
 
     for (const auto& pformula : pure) {
@@ -212,16 +212,12 @@ void Constraint::replace(const unordered_map<string, TermPtr>& arguments) {
 }
 
 /* ===================================== BaseCase ===================================== */
-BaseCase::BaseCase(const vector<SortedVariablePtr>& bindings,
-                   const ConstraintPtr& constr) : constraint(constr) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-}
 
 BaseCasePtr BaseCase::clone() {
     vector<SortedVariablePtr> newBindings;
     ConstraintPtr newExpr;
 
-    shared_ptr<Duplicator> duplicator = make_shared<Duplicator>();
+    DuplicatorPtr duplicator = make_shared<Duplicator>();
 
     for (const auto& bind : bindings) {
         newBindings.push_back(dynamic_pointer_cast<SortedVariable>(duplicator->run(bind)));
@@ -259,42 +255,37 @@ void BaseCase::renameBindings(const string& index) {
 }
 
 /* ================================== InductiveCase =================================== */
-InductiveCase::InductiveCase(const vector<SortedVariablePtr>& bindings,
-                             const ConstraintPtr& constraint)
-        : constraint(constraint) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-}
+InductiveCase::InductiveCase(vector<SortedVariablePtr> bindings,
+                             ConstraintPtr constraint)
+        : constraint(std::move(constraint))
+        , bindings(std::move(bindings)) {}
 
-InductiveCase::InductiveCase(const ConstraintPtr& constraint,
-                             const vector<PredicateCallPtr>& calls)
-        : constraint(constraint) {
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
+InductiveCase::InductiveCase(ConstraintPtr constraint,
+                             vector<PredicateCallPtr> calls)
+        : constraint(std::move(constraint))
+        , calls(std::move(calls)) {}
 
-InductiveCase::InductiveCase(const vector<SortedVariablePtr>& bindings,
-                             const ConstraintPtr& constraint,
-                             const vector<PredicateCallPtr>& calls)
-        : constraint(constraint) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
+InductiveCase::InductiveCase(vector<SortedVariablePtr> bindings,
+                             ConstraintPtr constraint,
+                             vector<PredicateCallPtr> calls)
+        : constraint(std::move(constraint))
+        , bindings(std::move(bindings))
+        , calls(std::move(calls)) {}
 
-InductiveCase::InductiveCase(const vector<PredicateCallPtr>& calls) {
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
+InductiveCase::InductiveCase(vector<PredicateCallPtr> calls)
+        : calls(std::move(calls)) {}
 
-InductiveCase::InductiveCase(const vector<SortedVariablePtr>& bindings,
-                             const vector<PredicateCallPtr>& calls) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
+InductiveCase::InductiveCase(vector<SortedVariablePtr> bindings,
+                             vector<PredicateCallPtr> calls)
+        : bindings(std::move(bindings))
+        , calls(std::move(calls)) {}
 
 InductiveCasePtr InductiveCase::clone() {
     vector<SortedVariablePtr> newBindings;
     vector<PredicateCallPtr> newCalls;
     ConstraintPtr newExpr;
 
-    shared_ptr<Duplicator> duplicator = make_shared<Duplicator>();
+    DuplicatorPtr duplicator = make_shared<Duplicator>();
 
     for (const auto& bind : bindings) {
         newBindings.push_back(dynamic_pointer_cast<SortedVariable>(duplicator->run(bind)));
@@ -341,7 +332,7 @@ TermPtr InductiveCase::toTerm() {
         // (and pure1 pure2 ... ) or (and pure1 pure2 ... (sep sp1 sp2 ... ))
         AndTermPtr andExprTerm = dynamic_pointer_cast<AndTerm>(exprTerm);
         if (andExprTerm) {
-            unsigned long size = andExprTerm->terms.size();
+            size_t size = andExprTerm->terms.size();
             SepTermPtr sepLastTerm = dynamic_pointer_cast<SepTerm>(andExprTerm->terms[size - 1]);
 
             if (calls.size() == 1 && !sepLastTerm) {
@@ -418,17 +409,12 @@ void InductiveCase::renameBindings(const string& index) {
     unordered_map<string, TermPtr> renaming = getRenaming(index, bindings);
     this->replace(renaming);
 
-    for (size_t i = 0, n = bindings.size(); i < n; i++) {
+    for (size_t i = 0, sz = bindings.size(); i < sz; i++) {
         bindings[i]->name = renaming[bindings[i]->name]->toString();
     }
 }
 
 /* ================================== PredicateCall =================================== */
-
-PredicateCall::PredicateCall(const string& predicate,
-                             const vector<TermPtr>& arguments) : predicate(predicate) {
-    this->arguments.insert(this->arguments.begin(), arguments.begin(), arguments.end());
-}
 
 TermPtr PredicateCall::toTerm() {
     return make_shared<QualifiedTerm>(make_shared<SimpleIdentifier>(predicate), arguments);

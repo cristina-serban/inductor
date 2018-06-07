@@ -11,61 +11,64 @@ namespace smtlib {
         /* =============================== ITermReplacerContext =============================== */
         class IOccurrenceCheckerContext {
         public:
-            virtual sptr_t<FunctionDeclaration> getSignature() = 0;
+            virtual FunctionDeclarationPtr getSignature() = 0;
 
-            virtual sptr_t<SymbolStack> getStack() = 0;
+            virtual SymbolStackPtr getStack() = 0;
         };
 
         /* =============================== TermReplacerContext ================================ */
         class OccurrenceCheckerContext : public IOccurrenceCheckerContext {
-            sptr_t<FunctionDeclaration> signature;
-            sptr_t<SymbolStack> stack;
+            FunctionDeclarationPtr signature;
+            SymbolStackPtr stack;
 
         public:
-            inline OccurrenceCheckerContext(sptr_t<FunctionDeclaration> signature)
-                : signature(signature) { }
+            inline explicit OccurrenceCheckerContext(FunctionDeclarationPtr signature)
+                    : signature(std::move(signature)) {}
 
-            inline OccurrenceCheckerContext(sptr_t<FunctionDeclaration> signature,
-                                            sptr_t<SymbolStack> stack)
-                : signature(signature), stack(stack) { }
+            inline OccurrenceCheckerContext(FunctionDeclarationPtr signature,
+                                            SymbolStackPtr stack)
+                    : signature(std::move(signature))
+                    , stack(std::move(stack)) {}
 
-            inline virtual sptr_t<FunctionDeclaration> getSignature() {
+            inline FunctionDeclarationPtr getSignature() override {
                 return signature;
             }
 
-            inline void setSignature(sptr_t<FunctionDeclaration> signature) {
+            inline void setSignature(const FunctionDeclarationPtr& signature) {
                 this->signature = signature;
             }
 
-            inline virtual sptr_t<SymbolStack> getStack() {
+            inline SymbolStackPtr getStack() override {
                 return stack;
             }
 
-            inline void setSignature(sptr_t<SymbolStack> signature) {
+            inline void setSignature(const SymbolStackPtr& signature) {
                 this->stack = stack;
             }
         };
+
+        typedef std::shared_ptr<OccurrenceCheckerContext> OccurrenceCheckerContextPtr;
 
         /* =================================== TermReplacer =================================== */
         class OccurrenceChecker : public DummyVisitor0,
                                   public std::enable_shared_from_this<OccurrenceChecker> {
         private:
-            sptr_t<OccurrenceCheckerContext> ctx;
-            bool found;
+            OccurrenceCheckerContextPtr ctx;
+            bool found{};
 
-            bool checkSorts(sptr_v<Term> terms);
+            bool checkSorts(const std::vector<TermPtr>& terms);
         public:
-            inline OccurrenceChecker(sptr_t<OccurrenceCheckerContext> ctx) : ctx(ctx) { }
+            inline explicit OccurrenceChecker(OccurrenceCheckerContextPtr ctx)
+                    : ctx(std::move(ctx)) {}
 
-            virtual void visit(sptr_t<SimpleIdentifier> node);
-            virtual void visit(sptr_t<QualifiedIdentifier> node);
-            virtual void visit(sptr_t<QualifiedTerm> node);
+            void visit(const SimpleIdentifierPtr& node) override;
+            void visit(const QualifiedIdentifierPtr& node) override;
+            void visit(const QualifiedTermPtr& node) override;
 
-            bool check(sptr_t<Node> node);
+            bool check(const NodePtr& node);
         };
 
         typedef std::shared_ptr<OccurrenceChecker> OccurrenceCheckerPtr;
-        typedef std::shared_ptr<OccurrenceCheckerContext> OccurrenceCheckerContextPtr;
     }
 }
 

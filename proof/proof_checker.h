@@ -6,7 +6,7 @@
 #ifndef INDUCTOR_PROOF_ENT_CHECKER_H
 #define INDUCTOR_PROOF_ENT_CHECKER_H
 
-#include "proof_build.h"
+#include "proof_tree.h"
 #include "proof_rule.h"
 #include "proof_state.h"
 #include "proof_tree.h"
@@ -35,16 +35,18 @@ namespace proof {
 
         std::unordered_map<Rule, ApplyRuleCallback, RuleHash> ruleMap;
 
+        size_t cvc4calls;
+
     public:
         EntailmentChecker();
 
-        explicit EntailmentChecker(const pred::PredicateTablePtr& table);
+        explicit EntailmentChecker(pred::PredicateTablePtr table);
 
         /** Checks all entailments in a script */
         bool check(const smtlib::sep::ScriptPtr& script);
 
         /** Checks entailment for a pair */
-        bool check(PairPtr pair);
+        bool check(const PairPtr& pair);
 
     private:
         void initRuleMap();
@@ -60,7 +62,7 @@ namespace proof {
 
         bool tryAxiom(const PairStmtNodePtr& node);
 
-        bool tryInfDescent(const PairStmtNodePtr& node);
+        bool tryInfDescent(const PairStmtNodePtr& node, const InfDescentApplicationPtr& appl);
 
         bool tryUnfoldLeft(const PairStmtNodePtr& node, const LeftUnfoldApplicationPtr& appl);
 
@@ -101,27 +103,31 @@ namespace proof {
         void expandRight(const PairStmtNodePtr& node,
                          const std::vector<std::vector<StatePtr>>& right,
                          const std::vector<size_t>& origin,
-                         const RightUnfoldApplicationPtr& appl,
-                         const std::vector<PairPtr>& workset);
+                         const RightUnfoldApplicationPtr& appl);
 
-        void init(std::vector<size_t> &vect, size_t size);
+        void fillSubstitutions(const std::vector<smtlib::sep::SortedVariablePtr>& vars,
+                               const std::vector<smtlib::sep::SortedVariablePtr>& binds,
+                               proof::StateSubstitutionVector& stateSubst);
 
-        void inc(std::vector<size_t> &vect, size_t size, size_t maxDigit);
+        void init(std::vector<size_t>& vect, size_t size);
+
+        void inc(std::vector<size_t>& vect, size_t size, size_t maxDigit);
 
         std::vector<std::vector<size_t>> getChoiceFunctions(size_t tuples, size_t arity);
 
-        std::vector<std::vector<size_t>> getPathFunctions(std::vector<std::vector<size_t>> &choiceFuns,
+        std::vector<std::vector<size_t>> getPathFunctions(std::vector<std::vector<size_t>>& choiceFuns,
                                                           size_t tuples, size_t arity);
 
-        bool nextPathFunction(std::vector<size_t> &pathFun,
-                              std::vector<std::vector<size_t>> &choiceFuns,
+        bool nextPathFunction(std::vector<size_t>& pathFun,
+                              std::vector<std::vector<size_t>>& choiceFuns,
                               size_t tuples, size_t arity);
 
         bool canSplit(const PairStmtNodePtr& node);
 
         bool canSplit(const StatePtr& state);
-        bool canSplitByEmp(const StatePtr& state);
     };
+
+    typedef std::shared_ptr<EntailmentChecker> EntailmentCheckerPtr;
 }
 
 #endif //INDUCTOR_PROOF_ENT_CHECKER_H

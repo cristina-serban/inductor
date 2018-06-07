@@ -38,8 +38,9 @@ namespace smtlib {
              * \param identifier    Sort symbol identiier
              * \param arity         Sort arity
              */
-            inline SortSymbolDeclaration(const SimpleIdentifierPtr& identifier, long arity)
-                    : identifier(identifier), arity(arity) {}
+            inline SortSymbolDeclaration(SimpleIdentifierPtr identifier, long arity)
+                    : identifier(std::move(identifier))
+                    , arity(arity) {}
 
             /**
              * Constructs declaration with attributes.
@@ -47,9 +48,12 @@ namespace smtlib {
              * \param arity         Sort arity
              * \param attributes    Sort symbol declaration attributes
              */
-            SortSymbolDeclaration(const SimpleIdentifierPtr& identifier,
-                                  long arity,
-                                  const std::vector<AttributePtr>& attributes);
+            inline SortSymbolDeclaration(SimpleIdentifierPtr identifier,
+                                         long arity,
+                                         std::vector<AttributePtr> attributes)
+                    : identifier(std::move(identifier))
+                    , arity(arity)
+                    , attributes(std::move(attributes)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -82,9 +86,10 @@ namespace smtlib {
             * \param constant      Specification constant
             * \param sort          Function sort
             */
-            inline SpecConstFunDeclaration(const SpecConstantPtr& constant,
-                                           const SortPtr& sort)
-                    : constant(constant), sort(sort) {}
+            inline SpecConstFunDeclaration(SpecConstantPtr constant,
+                                           SortPtr sort)
+                    : constant(std::move(constant))
+                    , sort(std::move(sort)) {}
 
             /**
              * Constructs declaration with attributes.
@@ -92,9 +97,12 @@ namespace smtlib {
              * \param sort          Function sort
              * \param attributes    Function symbol declaration attributes
              */
-            SpecConstFunDeclaration(const SpecConstantPtr& constant,
-                                    const SortPtr& sort,
-                                    const std::vector<AttributePtr>& attributes);
+            inline SpecConstFunDeclaration(SpecConstantPtr constant,
+                                           SortPtr sort,
+                                           std::vector<AttributePtr> attributes)
+                    : constant(std::move(constant))
+                    , sort(std::move(sort))
+                    , attributes(std::move(attributes)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -118,9 +126,10 @@ namespace smtlib {
             * \param constant      Meta specification constant
             * \param sort          Function sort
             */
-            inline MetaSpecConstFunDeclaration(const MetaSpecConstantPtr& constant,
-                                               const SortPtr& sort)
-                    : constant(constant), sort(sort) {}
+            inline MetaSpecConstFunDeclaration(MetaSpecConstantPtr constant,
+                                               SortPtr sort)
+                    : constant(std::move(constant))
+                    , sort(std::move(sort)) {}
 
             /**
              * Constructs declaration with attributes.
@@ -128,9 +137,12 @@ namespace smtlib {
              * \param sort          Function sort
              * \param attributes    Function symbol declaration attributes
              */
-            MetaSpecConstFunDeclaration(const MetaSpecConstantPtr& constant,
-                                        const SortPtr& sort,
-                                        const std::vector<AttributePtr>& attributes);
+            inline MetaSpecConstFunDeclaration(MetaSpecConstantPtr constant,
+                                               SortPtr sort,
+                                               std::vector<AttributePtr> attributes)
+                    : constant(std::move(constant))
+                    , sort(std::move(sort))
+                    , attributes(std::move(attributes)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -158,8 +170,10 @@ namespace smtlib {
              * \param identifier    Function identifier
              * \param signature     Function signature
              */
-            SimpleFunDeclaration(const SimpleIdentifierPtr& identifier,
-                                 const std::vector<SortPtr>& signature);
+            inline SimpleFunDeclaration(SimpleIdentifierPtr identifier,
+                                        std::vector<SortPtr> signature)
+                    : identifier(std::move(identifier))
+                    , signature(std::move(signature)) {}
 
             /**
              * Constructs declaration with attributes.
@@ -167,9 +181,12 @@ namespace smtlib {
              * \param signature     Function signature
              * \param attributes    Function symbol declaration attributes
              */
-            SimpleFunDeclaration(const SimpleIdentifierPtr& identifier,
-                                 const std::vector<SortPtr>& signature,
-                                 const std::vector<AttributePtr>& attributes);
+            inline SimpleFunDeclaration(SimpleIdentifierPtr identifier,
+                                        std::vector<SortPtr> signature,
+                                        std::vector<AttributePtr> attributes)
+                    : identifier(std::move(identifier))
+                    , signature(std::move(signature))
+                    , attributes(std::move(attributes)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -195,9 +212,12 @@ namespace smtlib {
              * \param identifier    Function identifier
              * \param signature     Function signature
              */
-            ParametricFunDeclaration(const std::vector<std::string>& parameters,
-                                     const SimpleIdentifierPtr& identifier,
-                                     const std::vector<SortPtr>& signature);
+            inline ParametricFunDeclaration(std::vector<std::string> parameters,
+                                            SimpleIdentifierPtr identifier,
+                                            std::vector<SortPtr> signature)
+                    : parameters(std::move(parameters))
+                    , identifier(std::move(identifier))
+                    , signature(std::move(signature)) {}
 
             /**
              * Constructs declaration with attributes.
@@ -206,10 +226,14 @@ namespace smtlib {
              * \param signature     Function signature
              * \param attributes    Function symbol declaration attributes
              */
-            ParametricFunDeclaration(const std::vector<std::string>& parameters,
-                                     const SimpleIdentifierPtr& identifier,
-                                     const std::vector<SortPtr>& signature,
-                                     const std::vector<AttributePtr>& attributes);
+            inline ParametricFunDeclaration(std::vector<std::string> parameters,
+                                            SimpleIdentifierPtr identifier,
+                                            std::vector<SortPtr> signature,
+                                            std::vector<AttributePtr> attributes)
+                    : parameters(std::move(parameters))
+                    , identifier(std::move(identifier))
+                    , signature(std::move(signature))
+                    , attributes(std::move(attributes)) {}
 
             void accept(Visitor0* visitor) override;
 

@@ -24,7 +24,8 @@ namespace smtlib {
             /**
              * \param expressions     Subexpressions
              */
-            explicit CompSExpression(const std::vector<SExpressionPtr>& expressions);
+            inline explicit CompSExpression(std::vector<SExpressionPtr> expressions)
+                    : expressions(std::move(expressions)) {}
 
             void accept(Visitor0* visitor) override;
 

@@ -1,6 +1,6 @@
 /**
  * \file cvc_interface.h
- * \brief Interface with the CVC4 sovler.
+ * \brief Interface with the CVC4 solver.
  */
 
 #ifndef INDUCTOR_CVC_INTERFACE_H
@@ -8,8 +8,8 @@
 
 #include "cvc_term_translator.h"
 
+#include "proof/proof_rule.h"
 #include "sep/sep_script.h"
-#include "util/global_typedef.h"
 #include "visitor/sep_stack_loader.h"
 
 // CVC4 with `make install` (both standard and non-standard prefix)
@@ -20,7 +20,10 @@
 
 namespace smtlib {
     namespace cvc {
-        /** Interface with the CVC4 sovler */
+        typedef std::shared_ptr<CVC4::ExprManager> CVC4ExprManagerPtr;
+        typedef std::shared_ptr<CVC4::SmtEngine> CVC4SmtEnginePtr;
+
+        /** Interface with the CVC4 solver */
         class CVC4Interface : public ITermTranslatorContext,
                               public sep::IStackLoaderContext,
                               public std::enable_shared_from_this<CVC4Interface> {
@@ -34,7 +37,7 @@ namespace smtlib {
              * Stack of symbols obtained when loading a script.
              * Required for implementing IStackLoaderContext
              */
-            sptr_t<sep::SymbolStack> stack;
+            sep::SymbolStackPtr stack;
             /**
              * Currently loaded theories.
              * Required for implementing IStackLoaderContext
@@ -49,79 +52,90 @@ namespace smtlib {
              * A default configuration.
              * Required for implementing IStackLoaderContext
              */
-            sptr_t<Configuration> config;
+            ConfigurationPtr config;
 
             /** Already translated symbols */
-            umap<std::string, umap<std::string, CVC4::Expr>> symbols;
+            std::unordered_map<std::string, std::unordered_map<std::string, CVC4::Expr>> symbols;
 
             /** Already translated sorts */
-            umap<std::string, CVC4::Type> sorts;
+            std::unordered_map<std::string, CVC4::Type> sorts;
 
-            umap<std::string, CVC4::DatatypeType> datatypes;
-            umap<std::string, CVC4::DatatypeType> constructors;
-            umap<std::string, CVC4::DatatypeType> selectors;
+            std::unordered_map<std::string, CVC4::DatatypeType> datatypes;
+            std::unordered_map<std::string, CVC4::DatatypeType> constructors;
+            std::unordered_map<std::string, CVC4::DatatypeType> selectors;
 
             std::vector<std::pair<CVC4::Type, CVC4::Type>> ptoTypes;
 
             /** Already translated constructors */
-            umap<std::string, CVC4::Expr> ctors;
+            std::unordered_map<std::string, CVC4::Expr> ctors;
 
             /** Pointer to the term translator */
-            sptr_t<TermTranslator> termTranslator;
+            TermTranslatorPtr termTranslator;
 
             /** Resets everything to their initial states */
             void reset();
 
             /** Load a list of formal parameters, usually before translating the body of a function */
-            void load(sptr_v<sep::SortedVariable> params, std::vector<CVC4::Expr> formals);
+            void load(const std::vector<sep::SortedVariablePtr>& params,
+                      const std::vector<CVC4::Expr>& formals);
             /** Unload a list of formal parameters, usually after the body of a function has been translated */
-            void unload(sptr_v<sep::SortedVariable> params);
+            void unload(const std::vector<sep::SortedVariablePtr>& params);
 
             /* =================================== Translations =================================== */
             /** Translate a term */
-            CVC4::Expr translate(sptr_t<sep::Term> term);
+            CVC4::Expr translate(const sep::TermPtr& term);
 
             /** Translate a datatype */
-            CVC4::DatatypeType translateType(std::string name, sptr_t<sep::DatatypeDeclaration> decl);
+            CVC4::DatatypeType translateType(const std::string& name,
+                                             const sep::DatatypeDeclarationPtr& decl);
 
             /** Translate several, (possibly) mutually-recursive datatypes */
-            std::vector<CVC4::DatatypeType> translateType(sptr_v<sep::SortDeclaration> sorts,
-                                                          sptr_v<sep::DatatypeDeclaration> decls);
+            std::vector<CVC4::DatatypeType> translateType(const std::vector<sep::SortDeclarationPtr>& sorts,
+                                                          const std::vector<sep::DatatypeDeclarationPtr>& decls);
 
             /** Translate a datatype declaration */
-            CVC4::Datatype translate(std::string name, sptr_t<sep::DatatypeDeclaration> decl);
+            CVC4::Datatype translate(const std::string& name,
+                                     const sep::DatatypeDeclarationPtr& decl);
 
             /** Translate a simple datatype declaration */
-            CVC4::Datatype translate(std::string name, sptr_t<sep::SimpleDatatypeDeclaration> decl);
+            CVC4::Datatype translate(const std::string& name,
+                                     const sep::SimpleDatatypeDeclarationPtr& decl);
 
             /** Translate a parametric datatype declaration */
-            CVC4::Datatype translate(std::string name, sptr_t<sep::ParametricDatatypeDeclaration> decl);
+            CVC4::Datatype translate(const std::string& name,
+                                     const sep::ParametricDatatypeDeclarationPtr& decl);
 
             /** Translate a function type, based on its signature */
-            CVC4::FunctionType translate(sptr_v<sep::Sort> params, sptr_t<sep::Sort> ret);
+            CVC4::FunctionType translate(const std::vector<sep::SortPtr>& params,
+                                         const sep::SortPtr& ret);
 
             /** Translate a function type, based on its formal parameters and return sort */
-            CVC4::FunctionType translate(sptr_v<sep::SortedVariable> params, sptr_t<sep::Sort> ret);
+            CVC4::FunctionType translate(const std::vector<sep::SortedVariablePtr>& params,
+                                         const sep::SortPtr& ret);
 
             /** Translate a function variable, based on its based on its signature */
-            CVC4::Expr translate(std::string name, sptr_v<sep::Sort> params, sptr_t<sep::Sort> ret);
+            CVC4::Expr translate(const std::string& name,
+                                 const std::vector<sep::SortPtr>& params,
+                                 const sep::SortPtr& ret);
 
             /** Translate a function variable, based on its formal parameters and return sort */
-            CVC4::Expr translate(std::string name, sptr_v<sep::SortedVariable> params, sptr_t<sep::Sort> ret);
+            CVC4::Expr translate(const std::string& name,
+                                 const std::vector<sep::SortedVariablePtr>& params,
+                                 const sep::SortPtr& ret);
 
             /** Translate a list of formal parameters */
-            std::vector<CVC4::Expr> translate(sptr_v<sep::SortedVariable> params);
+            std::vector<CVC4::Expr> translate(const std::vector<sep::SortedVariablePtr>& params);
 
-            bool canTranslateSort(std::string sort);
+            bool canTranslateSort(const std::string& sort);
         public:
-            sptr_t<CVC4::ExprManager> manager;
-            sptr_t<CVC4::SmtEngine> engine;
+            CVC4ExprManagerPtr manager;
+            CVC4SmtEnginePtr engine;
 
             CVC4Interface();
 
             /* ==================================== Operations ==================================== */
             /** Assert a term */
-            void assertTerm(sptr_t<sep::Term> term);
+            void assertTerm(const sep::TermPtr& term);
 
             /** Check satisfiability */
             bool checkSat();
@@ -133,8 +147,8 @@ namespace smtlib {
              * \param right     Term on the right-hand side
              * \return Whether the entailment holds
              */
-            bool checkEntailment(sptr_v<sep::SortedVariable> vars,
-                                 sptr_t<sep::Term> left, sptr_t<sep::Term> right);
+            bool checkEntailment(const std::vector<sep::SortedVariablePtr>& vars,
+                                 const sep::TermPtr& left, const sep::TermPtr& right);
 
             /**
              * Check entailment between two terms.
@@ -144,9 +158,9 @@ namespace smtlib {
              * \param right     Term on the right-hand side
              * \return Whether the entailment holds
              */
-            bool checkEntailment(sptr_v<sep::SortedVariable> vars,
-                                 sptr_v<sep::SortedVariable> binds,
-                                 sptr_t<sep::Term> left, sptr_t<sep::Term> right);
+            bool checkEntailment(const std::vector<sep::SortedVariablePtr>& vars,
+                                 const std::vector<sep::SortedVariablePtr>& binds,
+                                 const sep::TermPtr& left, const sep::TermPtr& right);
 
             /**
              * Check entailment between two terms.
@@ -154,94 +168,107 @@ namespace smtlib {
              * \param binds     Existentially quantified variables
              * \param left      Term on the left-hand side
              * \param right     Term on the right-hand side
-             * \param subst     Substitution that maked the entailment valid
+             * \param stateSubst     Substitution that makes the entailment valid
              * \return Whether the entailment holds
              */
-            bool checkEntailment(sptr_v<sep::SortedVariable> vars,
-                                 sptr_v<sep::SortedVariable> binds,
-                                 sptr_t<sep::Term> left, sptr_t<sep::Term> right,
-                                 sptr_um2<std::string, sep::Term> &subst);
+            bool checkEntailment(const std::vector<sep::SortedVariablePtr>& vars,
+                                 const std::vector<sep::SortedVariablePtr>& binds,
+                                 const sep::TermPtr& left, const sep::TermPtr& right,
+                                 proof::StateSubstitutionVector& stateSubst);
 
             /* ====================================== Script ====================================== */
             /** Load a script (constants, functions, datatypes, sorts, etc.) */
-            void loadScript(sptr_t<sep::Script> script);
+            void loadScript(const sep::ScriptPtr& script);
 
             /** Run a script (make assertions, check satisfiability, etc.) */
-            bool runScript(sptr_t<sep::Script> script);
+            bool runScript(const sep::ScriptPtr& script);
+
+            /* ====================================== Sorts ======================================= */
+            /** Load a sort from a declare-sort command */
+            void loadSort(const sep::DeclareSortCommandPtr& cmd);
+
+            /** Load a sort from a define-sort command */
+            void loadSort(const sep::DefineSortCommandPtr& cmd);
 
             /* ==================================== Datatypes ===================================== */
             /** Load a datatype from a command */
-            void loadDatatype(sptr_t<sep::DeclareDatatypeCommand> cmd);
+            void loadDatatype(const sep::DeclareDatatypeCommandPtr& cmd);
 
             /** Load several, (possibly) mutually-recursive datatypes from a command */
-            void loadDatatypes(sptr_t<sep::DeclareDatatypesCommand> cmd);
+            void loadDatatypes(const sep::DeclareDatatypesCommandPtr& cmd);
 
             /** Load a datatype from its definition */
-            void loadDatatype(std::string name, sptr_t<sep::DatatypeDeclaration> decl);
+            void loadDatatype(const std::string& name,
+                              const sep::DatatypeDeclarationPtr& decl);
 
             /** Load several, (possibly) mutually-recursive datatypes from their definitions */
-            void loadDatatypes(sptr_v<sep::SortDeclaration> sorts,
-                               sptr_v<sep::DatatypeDeclaration> decls);
+            void loadDatatypes(const std::vector<sep::SortDeclarationPtr>& sorts,
+                               const std::vector<sep::DatatypeDeclarationPtr>& decls);
 
             /* ==================================== Functions ===================================== */
             /** Load a function from a declare-fun command */
-            void loadFun(sptr_t<sep::DeclareFunCommand> cmd);
+            void loadFun(const sep::DeclareFunCommandPtr& cmd);
 
             /** Load a function from a define-fun command */
-            void loadFun(sptr_t<sep::DefineFunCommand> cmd);
+            void loadFun(const sep::DefineFunCommandPtr& cmd);
 
             /** Load a function from a define-fun-rec command */
-            void loadFun(sptr_t<sep::DefineFunRecCommand> cmd);
+            void loadFun(const sep::DefineFunRecCommandPtr& cmd);
 
             /** Load several, (possibly) mutually-recursive functions from a define-funs-rec command */
-            void loadFuns(sptr_t<sep::DefineFunsRecCommand> cmd);
+            void loadFuns(const sep::DefineFunsRecCommandPtr& cmd);
 
             /** Load a function from its declaration */
-            void loadFun(std::string name, sptr_v<sep::Sort> params, sptr_t<sep::Sort> sort);
+            void loadFun(const std::string& name,
+                         const std::vector<sep::SortPtr>& params,
+                         const sep::SortPtr& sort);
 
             /** Load a function from its definition */
-            void loadFun(std::string name, sptr_v<sep::SortedVariable> params,
-                         sptr_t<sep::Sort> sort, sptr_t<sep::Term> body);
+            void loadFun(const std::string& name,
+                         const std::vector<sep::SortedVariablePtr>& params,
+                         const sep::SortPtr& sort, const sep::TermPtr& body);
 
             /** Load several, (possibly) mutually-recursive functions from their definitions*/
-            void loadFuns(sptr_v<sep::FunctionDeclaration> decls, sptr_v<sep::Term> bodies);
+            void loadFuns(const std::vector<sep::FunctionDeclarationPtr>& decls,
+                          const std::vector<sep::TermPtr>& bodies);
 
             /* =============================== IStackLoaderContext ================================ */
-            inline virtual sptr_t<sep::SymbolStack> getStack() { return stack; }
+            inline sep::SymbolStackPtr getStack() override { return stack; }
 
-            inline virtual std::vector<std::string> &getCurrentTheories() { return currentTheories; }
+            inline std::vector<std::string>& getCurrentTheories() override { return currentTheories; }
 
-            inline virtual std::string getCurrentLogic() { return currentLogic; }
-            inline virtual void setCurrentLogic(std::string logic) { this->currentLogic = logic; }
+            inline std::string getCurrentLogic() override { return currentLogic; }
+            inline void setCurrentLogic(const std::string& logic) override { this->currentLogic = logic; }
 
-            inline virtual sptr_t<Configuration> getConfiguration() { return config; }
-            inline virtual void setConfiguration(sptr_t<Configuration> config) { this->config = config; }
+            inline ConfigurationPtr getConfiguration() override { return config; }
+            inline virtual void setConfiguration(const ConfigurationPtr& config) { this->config = config; }
 
             /* ============================== ITermTranslatorContext ============================== */
-            inline virtual CVC4::Expr getEmpLocArg() { return empLocArg; }
-            inline virtual CVC4::Expr getEmpDataArg() { return empDataArg; }
+            inline CVC4::Expr getEmpLocArg() override { return empLocArg; }
+            inline CVC4::Expr getEmpDataArg() override { return empDataArg; }
 
-            void setEmpArgs(sptr_t<sep::Term> loc, sptr_t<sep::Term> data);
+            void setEmpArgs(sep::TermPtr loc, sep::TermPtr data);
 
-            inline virtual umap<std::string, umap<std::string, CVC4::Expr>> &getSymbols() { return symbols; }
-            inline void setSymbols(umap<std::string, umap<std::string, CVC4::Expr>> symbols) { this->symbols = symbols; }
+            inline CVCSymbolMap& getSymbols() override { return symbols; }
+            inline void setSymbols(const CVCSymbolMap& symbols) { this->symbols = symbols; }
 
-            inline virtual umap<std::string, CVC4::Type> &getSorts() { return sorts; }
-            inline void setSorts(umap<std::string, CVC4::Type> sorts) { this->sorts = sorts; }
+            inline CVCSortMap& getSorts() override { return sorts; }
+            inline void setSorts(const CVCSortMap& sorts) { this->sorts = sorts; }
 
-            virtual CVC4::Type translateSort(sptr_t<sep::Sort> sort);
-            virtual std::vector<CVC4::Type> translateSorts(sptr_v<sep::Sort> sorts);
+            CVC4::Type translateSort(const sep::SortPtr& sort) override;
+            std::vector<CVC4::Type> translateSorts(const std::vector<sep::SortPtr>& sorts) override;
 
-            virtual CVC4::Expr translateBind(sptr_t<sep::SortedVariable> bind);
-            virtual CVC4::Expr translateBinds(sptr_v<sep::SortedVariable> binds);
+            CVC4::Expr translateBind(const sep::SortedVariablePtr& bind) override;
+            CVC4::Expr translateBinds(const std::vector<sep::SortedVariablePtr>& binds) override;
 
-            virtual bool isDatatypeConstructor(std::string name);
-            virtual bool isDatatypeSelector(std::string name);
+            bool isDatatypeConstructor(const std::string& name) override;
+            bool isDatatypeSelector(const std::string& name) override;
 
-            virtual CVC4::DatatypeType getDatatypeForConstructor(std::string name);
-            virtual CVC4::DatatypeType getDatatypeForSelector(std::string name);
+            CVC4::DatatypeType getDatatypeForConstructor(const std::string& name) override;
 
-            virtual void addPtoType(std::pair<CVC4::Type, CVC4::Type> ptoType);
+            CVC4::DatatypeType getDatatypeForSelector(const std::string& name) override;
+
+            void addPtoType(const std::pair<CVC4::Type, CVC4::Type>& ptoType) override;
 
         };
 

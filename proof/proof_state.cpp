@@ -15,57 +15,6 @@ using namespace smtlib::sep;
 
 /* ====================================== State ======================================= */
 
-State::State(const vector<SortedVariablePtr>& bindings,
-             const ConstraintPtr& expr,
-             const vector<PredicateCallPtr>& calls) : constraint(expr) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
-
-State::State(const ConstraintPtr& expr,
-             const vector<PredicateCallPtr>& calls) : constraint(expr) {
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
-
-State::State(const vector<SortedVariablePtr>& bindings,
-             const ConstraintPtr& expr) : constraint(expr) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-}
-
-State::State(const ConstraintPtr& expr) : constraint(expr) {}
-
-State::State(const vector<SortedVariablePtr>& bindings,
-             const vector<PredicateCallPtr>& calls) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
-
-State::State(const vector<PredicateCallPtr>& calls) {
-    this->calls.insert(this->calls.begin(), calls.begin(), calls.end());
-}
-
-State::State(const vector<SortedVariablePtr>& bindings,
-             const ConstraintPtr& expr,
-             const PredicateCallPtr& call) : constraint(expr) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-    this->calls.push_back(call);
-}
-
-State::State(const ConstraintPtr& expr,
-             const PredicateCallPtr& call) : constraint(expr) {
-    this->calls.push_back(call);
-}
-
-State::State(const vector<SortedVariablePtr>& bindings,
-             const PredicateCallPtr& call) {
-    this->bindings.insert(this->bindings.begin(), bindings.begin(), bindings.end());
-    this->calls.push_back(call);
-}
-
-State::State(const PredicateCallPtr& call) {
-    this->calls.push_back(call);
-}
-
 void State::addVariables(const vector<SortedVariablePtr>& variables) {
     this->variables.insert(this->variables.begin(), variables.begin(), variables.end());
 }
@@ -180,16 +129,22 @@ void State::merge(const StatePtr& state, size_t origin) {
 
 void State::substitute(const unordered_map<string, TermPtr>& subst) {
     for (size_t i = 0, sz = bindings.size(); i < sz; i++) {
-        string name = bindings[i]->name;
-        string replacement = subst.at(name)->toString();
+        const string& name = bindings[i]->name;
+        const TermPtr& replacement = subst.at(name);
+        const string& replacementName = replacement->toString();
+
+        /*if(dynamic_pointer_cast<NilTerm>(replacement)) {
+            nilVariables.push_back(bindings[i]);
+            continue;
+        }*/
 
         if (subst.find(name) != subst.end()) {
             bool found = bindings.end() != find_if(bindings.begin(), bindings.end(),
                                                    [&](const SortedVariablePtr& bind) {
-                                                       return (bind->name == replacement);
+                                                       return (bind->name == replacementName);
                                                    });
             if (!found) {
-                variables.push_back(make_shared<SortedVariable>(replacement, bindings[i]->sort));
+                variables.push_back(make_shared<SortedVariable>(replacementName, bindings[i]->sort));
             }
 
             bindings.erase(bindings.begin() + i);
@@ -380,20 +335,27 @@ TermPtr State::toTerm() {
 }
 
 string State::toString() {
-    return toTerm()->toString();
+    stringstream ss;
+    ss << toTerm()->toString();
+
+    if(!nilVariables.empty()) {
+        ss << " [nil:";
+        for (const auto& var : nilVariables) {
+            ss << " " << var->name;
+        }
+        ss << "]";
+    }
+
+    return ss.str();
 }
 
 /* ======================================= Pair ======================================= */
-
-Pair::Pair(const StatePtr& left, const vector<StatePtr>& right) : left(left) {
-    this->right.insert(this->right.begin(), right.begin(), right.end());
-}
 
 PairPtr Pair::clone() {
     PairPtr newPair = make_shared<Pair>();
     newPair->left = left->clone();\
 
-    for (auto& rstate : right) {
+    for (StatePtr& rstate : right) {
         newPair->right.push_back(rstate->clone());
     }
 
@@ -541,7 +503,7 @@ bool proof::equals(const vector<TermPtr>& v1, const vector<TermPtr>& v2) {
     }
 
     // Check that every element in one vector is equal to one in the other vector
-    for (const auto& elem : vstr1) {
+    for (const string& elem : vstr1) {
         bool eq = vstr2.end() != find_if(vstr2.begin(), vstr2.end(),
                                          [&](const string& str) { return (elem == str); });
         if (!eq) {
@@ -549,7 +511,7 @@ bool proof::equals(const vector<TermPtr>& v1, const vector<TermPtr>& v2) {
         }
     }
 
-    for (const auto& elem : vstr2) {
+    for (const string& elem : vstr2) {
         bool eq = vstr1.end() != find_if(vstr1.begin(), vstr1.end(),
                                          [&](const string& str) { return (elem == str); });
         if (!eq) {

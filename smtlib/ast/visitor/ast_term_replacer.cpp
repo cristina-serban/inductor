@@ -6,20 +6,20 @@ using namespace std;
 using namespace smtlib;
 using namespace smtlib::ast;
 
-void TermReplacer::visit(sptr_t<QualifiedTerm> node) {
+void TermReplacer::visit(const QualifiedTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t  i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<LetTerm> node) {
+void TermReplacer::visit(const LetTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -29,7 +29,7 @@ void TermReplacer::visit(sptr_t<LetTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<ForallTerm> node) {
+void TermReplacer::visit(const ForallTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -39,7 +39,7 @@ void TermReplacer::visit(sptr_t<ForallTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<ExistsTerm> node) {
+void TermReplacer::visit(const ExistsTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -49,7 +49,7 @@ void TermReplacer::visit(sptr_t<ExistsTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<MatchTerm> node) {
+void TermReplacer::visit(const MatchTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -57,14 +57,14 @@ void TermReplacer::visit(sptr_t<MatchTerm> node) {
 
     node->term = wrappedVisit(node->term);
 
-    for (size_t i = 0, n = node->cases.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->cases.size(); i < sz; i++) {
         node->cases[i]->term = wrappedVisit(node->cases[i]->term);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<AnnotatedTerm> node) {
+void TermReplacer::visit(const AnnotatedTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;

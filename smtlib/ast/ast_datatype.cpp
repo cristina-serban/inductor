@@ -32,12 +32,6 @@ string SelectorDeclaration::toString() {
 
 /* =============================== ConstructorDeclaration ============================== */
 
-ConstructorDeclaration::ConstructorDeclaration(const SymbolPtr& symbol,
-                                               const vector<SelectorDeclarationPtr>& selectors)
-        : symbol(symbol) {
-    this->selectors.insert(this->selectors.begin(), selectors.begin(), selectors.end());
-}
-
 void ConstructorDeclaration::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -55,10 +49,6 @@ string ConstructorDeclaration::toString() {
 }
 
 /* ================================ DatatypeDeclaration =============================== */
-
-SimpleDatatypeDeclaration::SimpleDatatypeDeclaration(const vector<ConstructorDeclarationPtr>& constructors) {
-    this->constructors.insert(this->constructors.begin(), constructors.begin(), constructors.end());
-}
 
 void SimpleDatatypeDeclaration::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
@@ -80,12 +70,6 @@ string SimpleDatatypeDeclaration::toString() {
 }
 
 /* =========================== ParametricDatatypeDeclaration ========================== */
-
-ParametricDatatypeDeclaration::ParametricDatatypeDeclaration(const vector<SymbolPtr> parameters,
-                                                             const vector<ConstructorDeclarationPtr> constructors) {
-    this->parameters.insert(this->parameters.begin(), parameters.begin(), parameters.end());
-    this->constructors.insert(this->constructors.begin(), constructors.begin(), constructors.end());
-}
 
 void ParametricDatatypeDeclaration::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());

@@ -26,8 +26,8 @@ StatePtr proof::toState(const PredicateTablePtr& table, const TermPtr& term) {
     return state;
 }
 
-sptr_v<State> proof::toState(const InductivePredicatePtr& pred) {
-    sptr_v<State> result;
+std::vector<StatePtr> proof::toState(const InductivePredicatePtr& pred) {
+    std::vector<StatePtr> result;
     for (const auto& bcase : pred->baseCases) {
         result.push_back(toState(bcase));
     }
@@ -70,8 +70,7 @@ void proof::removePure(const StatePtr& state) {
         return;
 
     if (state->constraint->spatial.empty()) {
-        ConstraintPtr null;
-        state->constraint = null;
+        state->constraint = ConstraintPtr();
     } else {
         state->constraint->pure.clear();
     }
@@ -82,7 +81,7 @@ vector<string> proof::getAllocated(const StatePtr& state) {
 
     if (state->constraint) {
         for (const auto& sconstr : state->constraint->spatial) {
-            if (auto pto = dynamic_pointer_cast<PtoTerm>(sconstr)) {
+            if (PtoTermPtr pto = dynamic_pointer_cast<PtoTerm>(sconstr)) {
                 result.push_back(pto->leftTerm->toString());
             }
         }
@@ -111,8 +110,7 @@ void proof::removeSpatial(const StatePtr& state) {
         return;
 
     if (state->constraint->pure.empty()) {
-        ConstraintPtr null;
-        state->constraint = null;
+        state->constraint = ConstraintPtr();
     } else {
         state->constraint->spatial.clear();
     }

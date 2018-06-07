@@ -6,8 +6,6 @@
 #ifndef PROOFSTRAT_AST_ABSTRACT_H
 #define PROOFSTRAT_AST_ABSTRACT_H
 
-#include "util/global_typedef.h"
-
 #include <string>
 #include <memory>
 
@@ -20,13 +18,19 @@ namespace strat {
             int rowRight;
             int colLeft;
             int colRight;
-            sptr_t<std::string> filename;
+            std::shared_ptr<std::string> filename;
 
-            Node() : rowLeft(0), colLeft(0), rowRight(0), colRight(0) { }
+            Node()
+                    : rowLeft(0)
+                    , colLeft(0)
+                    , rowRight(0)
+                    , colRight(0) {}
 
             /** Get string representation of the node */
             virtual std::string toString() = 0;
         };
+
+        typedef std::shared_ptr<Node> NodePtr;
     }
 }
 

@@ -6,7 +6,7 @@ using namespace std;
 using namespace smtlib;
 using namespace smtlib::sep;
 
-void TermReplacer::visit(sptr_t<SimpleIdentifier> node) {
+void TermReplacer::visit(const SimpleIdentifierPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -14,7 +14,7 @@ void TermReplacer::visit(sptr_t<SimpleIdentifier> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<QualifiedIdentifier> node) {
+void TermReplacer::visit(const QualifiedIdentifierPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -22,7 +22,7 @@ void TermReplacer::visit(sptr_t<QualifiedIdentifier> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<DecimalLiteral> node) {
+void TermReplacer::visit(const DecimalLiteralPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -30,7 +30,7 @@ void TermReplacer::visit(sptr_t<DecimalLiteral> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<NumeralLiteral> node) {
+void TermReplacer::visit(const NumeralLiteralPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -38,7 +38,7 @@ void TermReplacer::visit(sptr_t<NumeralLiteral> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<StringLiteral> node) {
+void TermReplacer::visit(const StringLiteralPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -46,20 +46,20 @@ void TermReplacer::visit(sptr_t<StringLiteral> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<QualifiedTerm> node) {
+void TermReplacer::visit(const QualifiedTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<LetTerm> node) {
+void TermReplacer::visit(const LetTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -69,7 +69,7 @@ void TermReplacer::visit(sptr_t<LetTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<ForallTerm> node) {
+void TermReplacer::visit(const ForallTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -79,7 +79,7 @@ void TermReplacer::visit(sptr_t<ForallTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<ExistsTerm> node) {
+void TermReplacer::visit(const ExistsTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -89,7 +89,7 @@ void TermReplacer::visit(sptr_t<ExistsTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<MatchTerm> node) {
+void TermReplacer::visit(const MatchTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -97,14 +97,14 @@ void TermReplacer::visit(sptr_t<MatchTerm> node) {
 
     node->term = wrappedVisit(node->term);
 
-    for (size_t i = 0, n = node->cases.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->cases.size(); i < sz; i++) {
         node->cases[i]->term = wrappedVisit(node->cases[i]->term);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<AnnotatedTerm> node) {
+void TermReplacer::visit(const AnnotatedTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -114,7 +114,7 @@ void TermReplacer::visit(sptr_t<AnnotatedTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<TrueTerm> node) {
+void TermReplacer::visit(const TrueTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -122,7 +122,7 @@ void TermReplacer::visit(sptr_t<TrueTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<FalseTerm> node) {
+void TermReplacer::visit(const FalseTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -130,7 +130,7 @@ void TermReplacer::visit(sptr_t<FalseTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<NotTerm> node) {
+void TermReplacer::visit(const NotTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -140,85 +140,85 @@ void TermReplacer::visit(sptr_t<NotTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<ImpliesTerm> node) {
+void TermReplacer::visit(const ImpliesTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<AndTerm> node) {
+void TermReplacer::visit(const AndTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<OrTerm> node) {
+void TermReplacer::visit(const OrTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<XorTerm> node) {
+void TermReplacer::visit(const XorTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<EqualsTerm> node) {
+void TermReplacer::visit(const EqualsTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<DistinctTerm> node) {
+void TermReplacer::visit(const DistinctTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<IteTerm> node) {
+void TermReplacer::visit(const IteTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -230,7 +230,7 @@ void TermReplacer::visit(sptr_t<IteTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<EmpTerm> node) {
+void TermReplacer::visit(const EmpTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -238,33 +238,33 @@ void TermReplacer::visit(sptr_t<EmpTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<SepTerm> node) {
+void TermReplacer::visit(const SepTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<WandTerm> node) {
+void TermReplacer::visit(const WandTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
     }
 
-    for (size_t i = 0, n = node->terms.size(); i < n; i++) {
+    for (size_t i = 0, sz = node->terms.size(); i < sz; i++) {
         node->terms[i] = wrappedVisit(node->terms[i]);
     }
 
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<PtoTerm> node) {
+void TermReplacer::visit(const PtoTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;
@@ -275,7 +275,7 @@ void TermReplacer::visit(sptr_t<PtoTerm> node) {
     ret = node;
 }
 
-void TermReplacer::visit(sptr_t<NilTerm> node) {
+void TermReplacer::visit(const NilTermPtr& node) {
     if (node->toString() == ctx->getTerm()->toString()) {
         ret = ctx->getReplacement();
         return;

@@ -17,7 +17,8 @@ namespace smtlib {
     namespace ast {
         /* ================================== SortedVariable ================================== */
         /** A sorted variable. */
-        struct SortedVariable : public Node, public std::enable_shared_from_this<SortedVariable> {
+        struct SortedVariable : public Node,
+                                public std::enable_shared_from_this<SortedVariable> {
             SymbolPtr symbol;
             SortPtr sort;
 
@@ -25,8 +26,9 @@ namespace smtlib {
              * \param symbol    Variable name
              * \param sort      Variable sort
              */
-            inline SortedVariable(const SymbolPtr& symbol, const SortPtr& sort)
-                    : symbol(symbol), sort(sort) {}
+            inline SortedVariable(SymbolPtr symbol, SortPtr sort)
+                    : symbol(std::move(symbol))
+                    , sort(std::move(sort)) {}
 
             void accept(Visitor0 *visitor) override;
 
@@ -35,7 +37,8 @@ namespace smtlib {
 
         /* ================================= VariableBinding ================================== */
         /** A variable binding. */
-        struct VariableBinding : public Node, public std::enable_shared_from_this<VariableBinding> {
+        struct VariableBinding : public Node,
+                                 public std::enable_shared_from_this<VariableBinding> {
             SymbolPtr symbol;
             TermPtr term;
 
@@ -43,8 +46,9 @@ namespace smtlib {
              * \param symbol    Variable name
              * \param term      Binding
              */
-            VariableBinding(const SymbolPtr& symbol, const TermPtr& term)
-                    : symbol(symbol), term(term) {}
+            VariableBinding(SymbolPtr symbol, TermPtr term)
+                    : symbol(std::move(symbol))
+                    , term(std::move(term)) {}
 
             void accept(Visitor0 *visitor) override;
 

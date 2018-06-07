@@ -30,14 +30,18 @@ int smt_yyparse(SmtPrsr);
 void ast_print(AstPtr ptr);
 
 void ast_setAst(SmtPrsr parser, AstPtr ast);
-void ast_reportError(SmtPrsr parser, unsigned int rowLeft, unsigned int colLeft,
-                     unsigned int rowRight, unsigned int colRight, const char* msg);
+void ast_reportError(SmtPrsr parser,
+                     int rowLeft, int colLeft,
+                     int rowRight, int colRight,
+                     const char* msg);
 
 AstList ast_listCreate();
 void ast_listAdd(AstList list, AstPtr item);
 void ast_listDelete(AstList list);
 
-void ast_setLocation(SmtPrsr parser, AstPtr ptr, int rowLeft, int colLeft, int rowRight, int colRight);
+void ast_setLocation(SmtPrsr parser, AstPtr ptr,
+                     int rowLeft, int colLeft,
+                     int rowRight, int colRight);
 
 int ast_bool_value(AstPtr ptr);
 

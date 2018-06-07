@@ -6,7 +6,8 @@
 #ifndef PROOFSTRAT_STRATEGY_H
 #define PROOFSTRAT_STRATEGY_H
 
-#include "../proof/proof_rule.h"
+#include "proof/proof_rule.h"
+#include "strat/ast/ast_file.h"
 
 #include <map>
 #include <string>
@@ -21,6 +22,8 @@ namespace strat {
 
     /** A proof strategy */
     class Strategy {
+    private:
+        proof::Rule toRule(const std::string& rulename);
     public:
         /** States of the strategy automaton */
         std::vector<std::string> states;
@@ -34,13 +37,20 @@ namespace strat {
         /** Transitions */
         TransitionMap transitions;
 
-        inline Strategy() { }
+        inline Strategy() = default;
 
         inline Strategy(std::vector<std::string> states,
                         std::string init,
                         std::vector<std::string> final,
-                        TransitionMap transitions) :
-            states(states), init(init), final(final), transitions(transitions) { }
+                        TransitionMap transitions)
+                : states(std::move(states))
+                , init(std::move(init))
+                , final(std::move(final))
+                , transitions(std::move(transitions)) {}
+
+        void load(const std::string& filename);
+
+        void load(const ast::FilePtr& file);
 
         bool isFinal(const std::string& state);
 

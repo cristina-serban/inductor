@@ -19,8 +19,8 @@ public:
 
     static void error(const char *fun, const char *msg);
 
-    static void parsingError(unsigned int rowLeft, unsigned int colLeft,
-                             unsigned int rowRight, unsigned int colRight,
+    static void parsingError(int rowLeft, int colLeft,
+                             int rowRight, int colRight,
                              const char *filename, const char *msg);
 
     static void syntaxError(const char *fun, const char *msg);

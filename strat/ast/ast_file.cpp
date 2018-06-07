@@ -5,16 +5,16 @@
 using namespace strat::ast;
 using namespace std;
 
-File::File(vector<sptr_t<Rule>> &rules,
-           sptr_t<Automaton> automaton) : automaton(automaton) {
-    this->rules.insert(this->rules.begin(), rules.begin(), rules.end());
-}
+File::File(vector<RulePtr> rules,
+           AutomatonPtr automaton)
+        : automaton(std::move(automaton))
+        , rules(std::move(rules)) {}
 
 string File::toString() {
     stringstream ss;
     ss << "Rules";
-    for (auto ruleIt = rules.begin(); ruleIt != rules.end(); ruleIt++) {
-        ss << " " << (*ruleIt)->toString();
+    for (const auto& rule : rules) {
+        ss << " " << rule->toString();
     }
     ss << endl;
 

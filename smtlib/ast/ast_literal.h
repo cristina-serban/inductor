@@ -23,7 +23,8 @@ namespace smtlib {
         protected:
             Literal() = default;
 
-            explicit Literal(const T& value) : value(value) {}
+            explicit Literal(T value)
+                    : value(std::move(value)) {}
         };
 
         /* ================================== NumeralLiteral ================================== */
@@ -39,7 +40,8 @@ namespace smtlib {
             unsigned int base;
         
             inline NumeralLiteral(long value, unsigned int base)
-                    : Literal(value), base(base) {}
+                    : Literal(value)
+                    , base(base) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -55,7 +57,8 @@ namespace smtlib {
                                public SpecConstant,
                                public std::enable_shared_from_this<DecimalLiteral> {
         public:
-            inline explicit DecimalLiteral(double value) : Literal(value) {}
+            inline explicit DecimalLiteral(double value)
+                    : Literal(value) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -71,7 +74,8 @@ namespace smtlib {
                               public SpecConstant,
                               public std::enable_shared_from_this<StringLiteral> {
         public:
-            inline explicit StringLiteral(const std::string& value) : Literal(value) {}
+            inline explicit StringLiteral(std::string value)
+                    : Literal(std::move(value)) {}
 
             void accept(Visitor0* visitor) override;
 

@@ -23,6 +23,9 @@ namespace proof {
         /** Free variables */
         std::vector<smtlib::sep::SortedVariablePtr> variables;
 
+        /** Variables mapped to nil by some substitution */
+        std::vector<smtlib::sep::SortedVariablePtr> nilVariables;
+
         /** Non-inductive expression */
         pred::ConstraintPtr constraint;
 
@@ -34,34 +37,58 @@ namespace proof {
 
         inline State() = default;
 
-        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-              const pred::ConstraintPtr& constraint,
-              const std::vector<pred::PredicateCallPtr>& calls);
+        inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                     pred::ConstraintPtr constraint,
+                     std::vector<pred::PredicateCallPtr> calls)
+                : constraint(std::move(constraint))
+                , bindings(std::move(bindings))
+                , calls(std::move(calls)) {}
 
-        State(const pred::ConstraintPtr& constraint,
-              const std::vector<pred::PredicateCallPtr>& calls);
+        inline State(pred::ConstraintPtr constraint,
+                     std::vector<pred::PredicateCallPtr> calls)
+                : constraint(std::move(constraint))
+                , calls(std::move(calls)) {}
 
-        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-              const pred::ConstraintPtr& constraint);
+        inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                     pred::ConstraintPtr constraint)
+                : constraint(std::move(constraint))
+                , bindings(std::move(bindings)) {}
 
-        explicit State(const pred::ConstraintPtr& constraint);
+        explicit State(pred::ConstraintPtr constraint)
+                : constraint(std::move(constraint)) {}
 
-        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-              const std::vector<pred::PredicateCallPtr>& calls);
+        inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                     std::vector<pred::PredicateCallPtr> calls)
+                : bindings(std::move(bindings))
+                , calls(std::move(calls)) {}
 
-        explicit State(const std::vector<pred::PredicateCallPtr>& calls);
+        explicit State(std::vector<pred::PredicateCallPtr> calls)
+                : calls(std::move(calls)) {}
 
-        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-              const pred::ConstraintPtr& constraint,
-              const pred::PredicateCallPtr& call);
+        inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                     pred::ConstraintPtr constraint,
+                     pred::PredicateCallPtr call)
+                : bindings(std::move(bindings))
+                , constraint(std::move(constraint)){
+            calls.push_back(std::move(call));
+        }
 
-        State(const pred::ConstraintPtr& constraint,
-              const pred::PredicateCallPtr& call);
+        inline State(pred::ConstraintPtr constraint,
+                     pred::PredicateCallPtr call)
+                : constraint(std::move(constraint)) {
+            calls.push_back(std::move(call));
+        }
 
-        State(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-              const pred::PredicateCallPtr& call);
 
-        explicit State(const pred::PredicateCallPtr& call);
+        inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                     pred::PredicateCallPtr call)
+                : bindings(std::move(bindings)) {
+            calls.push_back(std::move(call));
+        }
+
+        explicit State(pred::PredicateCallPtr call) {
+            calls.push_back(std::move(call));
+        }
 
         void addVariables(const std::vector<smtlib::sep::SortedVariablePtr>& variables);
 
@@ -96,7 +123,9 @@ namespace proof {
 
         inline Pair() = default;
 
-        Pair(const StatePtr& left, const std::vector<StatePtr>& right);
+        Pair(StatePtr left, std::vector<StatePtr> right)
+                : left(std::move(left))
+                , right(std::move(right)) {}
 
         PairPtr clone();
 

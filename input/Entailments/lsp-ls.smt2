@@ -1,4 +1,4 @@
-; A list segment with at least one element is a list segment
+; A list segment is a list segment of even length or a list segment of odd length
 
 (set-logic SEPLOGLIA)
 
@@ -13,6 +13,24 @@
         (or (pto x y)
             (exists ((z Int))
                 (sep (pto x z) (lsp z y)))
+        )
+)
+
+(define-funs-rec ((lse ((x Int) (y Int)) Bool) (lso ((x Int) (y Int)) Bool))
+        ((or (and ( = x y) emp)
+            (exists ((z Int))
+                (sep (pto x z) (lso z y)))
+        )
+
+        (or (pto x y)
+            (exists ((z Int))
+                (sep (pto x z) (lse z y)))
+        ))
+)
+
+(define-fun-rec lspeo ((x Int) (y Int)) Bool
+        (or (exists ((z Int)) (sep (pto x z) (lse z y)))
+            (exists ((z Int)) (sep (pto x z) (lso z y)))
         )
 )
 

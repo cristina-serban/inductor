@@ -1,21 +1,44 @@
-Rules LU RU RD SP ID AX
+Rules LU RU RD RI SP ID AX
 
-Automaton Strat
-States q1 q2 q3 q4 q5 q6
-Initial state q1
-Final states q6
+Automaton Default
+States q0 q1 q2 q3 q4 q5
+Initial state q0
+Final states q5
 
 Transitions
-(q1, LU) -> q2
-(q2, RU) -> q2
-(q2, RD) -> q1
-(q2, RD) -> q3
-(q2, RD) -> q4
-(q2, RD) -> q5
-(q3, SP) -> q1
-(q3, SP) -> q4
-(q3, SP) -> q5
-(q4, LU) -> q5
-(q5, RU) -> q5
-(q5, ID) -> q6
-(q5, AX) -> q6
+(q0, LU) -> q1
+(q0, LU) -> q4
+(q0, RU) -> q1
+(q0, RU) -> q4
+(q0, RD) -> q2
+(q0, AX) -> q5
+(q0, ID) -> q5
+(q1, RU) -> q1
+(q1, RD) -> q0
+(q1, RD) -> q1
+(q1, RD) -> q2
+(q1, RD) -> q3
+(q1, RD) -> q4
+(q2, RI) -> q0
+(q2, RI) -> q2
+(q2, RI) -> q1
+(q2, RI) -> q3
+(q2, RI) -> q4
+(q2, SP) -> q0
+(q2, SP) -> q1
+(q2, SP) -> q3
+(q2, SP) -> q4
+(q2, LU) -> q1
+(q2, LU) -> q4
+(q2, RU) -> q1
+(q2, RU) -> q4
+(q2, RD) -> q2
+(q2, AX) -> q5
+(q2, ID) -> q5
+(q3, LU) -> q4
+(q3, RU) -> q4
+(q3, AX) -> q5
+(q3, ID) -> q5
+(q4, RU) -> q4
+(q4, AX) -> q5
+(q4, ID) -> q5

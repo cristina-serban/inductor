@@ -34,56 +34,56 @@ using namespace std;
 using namespace smtlib;
 using namespace smtlib::sep;
 
-sptr_t<sep::Attribute> Translator::translate(sptr_t<ast::Attribute> attr) {
-    string keyword = attr->keyword->toString();
-    sptr_t<ast::AttributeValue> value = attr->value;
+sep::AttributePtr Translator::translate(const ast::AttributePtr& attr) {
+    string keyword = std::move(attr->keyword->toString());
+    ast::AttributeValuePtr value = attr->value;
 
     if (value) {
-        sptr_t<ast::Symbol> val1 = dynamic_pointer_cast<ast::Symbol>(value);
+        ast::SymbolPtr val1 = dynamic_pointer_cast<ast::Symbol>(value);
         if (val1) {
             return make_shared<sep::SymbolAttribute>(keyword, val1->value);
         }
 
-        sptr_t<ast::BooleanValue> val2 = dynamic_pointer_cast<ast::BooleanValue>(value);
+        ast::BooleanValuePtr val2 = dynamic_pointer_cast<ast::BooleanValue>(value);
         if (val2) {
             return make_shared<sep::BooleanAttribute>(keyword, val2->value);
         }
 
-        sptr_t<ast::NumeralLiteral> val3 = dynamic_pointer_cast<ast::NumeralLiteral>(value);
+        ast::NumeralLiteralPtr val3 = dynamic_pointer_cast<ast::NumeralLiteral>(value);
         if (val3) {
-            return make_shared<sep::NumeralAttribute>(keyword, translate(val3));
+            return make_shared<sep::NumeralAttribute>(keyword, std::move(translate(val3)));
         }
 
-        sptr_t<ast::DecimalLiteral> val4 = dynamic_pointer_cast<ast::DecimalLiteral>(value);
+        ast::DecimalLiteralPtr val4 = dynamic_pointer_cast<ast::DecimalLiteral>(value);
         if (val4) {
-            return make_shared<sep::DecimalAttribute>(keyword, translate(val4));
+            return make_shared<sep::DecimalAttribute>(keyword, std::move(translate(val4)));
         }
 
-        sptr_t<ast::StringLiteral> val5 = dynamic_pointer_cast<ast::StringLiteral>(value);
+        ast::StringLiteralPtr val5 = dynamic_pointer_cast<ast::StringLiteral>(value);
         if (val5) {
-            return make_shared<sep::StringAttribute>(keyword, translate(val5));
+            return make_shared<sep::StringAttribute>(keyword, std::move(translate(val5)));
         }
 
-        sptr_t<ast::CompAttributeValue> val6 = dynamic_pointer_cast<ast::CompAttributeValue>(value);
+        ast::CompAttributeValuePtr val6 = dynamic_pointer_cast<ast::CompAttributeValue>(value);
 
         if (val6 && keyword == KW_THEORIES) {
-            auto newTheories = translateToString<ast::AttributeValue>(val6->values);
-            return make_shared<sep::TheoriesAttribute>(newTheories);
+            auto newTheories = std::move(translateToString<ast::AttributeValue>(val6->values));
+            return make_shared<sep::TheoriesAttribute>(std::move(newTheories));
         }
 
         if (val6 && keyword == KW_SORTS) {
-            auto newSorts = translateToSmtCast<ast::AttributeValue,
-                ast::SortSymbolDeclaration, sep::SortSymbolDeclaration>(val6->values);
-            return make_shared<sep::SortsAttribute>(newSorts);
+            auto newSorts = std::move(translateToSmtCast<ast::AttributeValue,
+                    ast::SortSymbolDeclaration, sep::SortSymbolDeclaration>(val6->values));
+            return make_shared<sep::SortsAttribute>(std::move(newSorts));
         }
 
         if (val6 && keyword == KW_FUNS) {
-            auto newFuns = translateToSmtCast<ast::AttributeValue,
-                ast::FunSymbolDeclaration, sep::FunSymbolDeclaration>(val6->values);
-            return make_shared<sep::FunsAttribute>(newFuns);
+            auto newFuns = std::move(translateToSmtCast<ast::AttributeValue,
+                    ast::FunSymbolDeclaration, sep::FunSymbolDeclaration>(val6->values));
+            return make_shared<sep::FunsAttribute>(std::move(newFuns));
         }
 
-        sptr_t<ast::SExpression> val7 = dynamic_pointer_cast<ast::SExpression>(value);
+        ast::SExpressionPtr val7 = dynamic_pointer_cast<ast::SExpression>(value);
         if (val7) {
             make_shared<sep::SExpressionAttribute>(keyword, translate(val7));
         }
@@ -92,19 +92,19 @@ sptr_t<sep::Attribute> Translator::translate(sptr_t<ast::Attribute> attr) {
         return make_shared<sep::SimpleAttribute>(attr->keyword->value);
     }
 
-    sptr_t<sep::Attribute> null;
+    sep::AttributePtr null;
     return null;
 }
 
-sptr_t<sep::Symbol> Translator::translate(sptr_t<ast::Symbol> symbol) {
+sep::SymbolPtr Translator::translate(const ast::SymbolPtr& symbol) {
     return make_shared<sep::Symbol>(symbol->value);
 }
 
-sptr_t<sep::Keyword> Translator::translate(sptr_t<ast::Keyword> keyword) {
+sep::KeywordPtr Translator::translate(const ast::KeywordPtr& keyword) {
     return make_shared<sep::Keyword>(keyword->value);
 }
 
-sptr_t<sep::MetaSpecConstant> Translator::translate(sptr_t<ast::MetaSpecConstant> constant) {
+sep::MetaSpecConstantPtr Translator::translate(const ast::MetaSpecConstantPtr& constant) {
     ast::MetaSpecConstant::Type type = constant->type;
 
     if (type == ast::MetaSpecConstant::Type::NUMERAL) {
@@ -116,332 +116,327 @@ sptr_t<sep::MetaSpecConstant> Translator::translate(sptr_t<ast::MetaSpecConstant
     }
 }
 
-sptr_t<sep::BooleanValue> Translator::translate(sptr_t<ast::BooleanValue> value) {
+sep::BooleanValuePtr Translator::translate(const ast::BooleanValuePtr& value) {
     return make_shared<sep::BooleanValue>(value->value);
 }
 
-sptr_t<sep::PropLiteral> Translator::translate(sptr_t<ast::PropLiteral> literal) {
-    return make_shared<sep::PropLiteral>(literal->symbol->toString(),
-                                         literal->negated);
+sep::PropLiteralPtr Translator::translate(const ast::PropLiteralPtr& literal) {
+    return make_shared<sep::PropLiteral>(std::move(literal->symbol->toString()), literal->negated);
 }
 
-sptr_t<sep::Logic> Translator::translate(sptr_t<ast::Logic> logic) {
-    auto newAttrs = translateToSmt<ast::Attribute, sep::Attribute>(logic->attributes);
-    return make_shared<sep::Logic>(logic->name->value, newAttrs);
+sep::LogicPtr Translator::translate(const ast::LogicPtr& logic) {
+    auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(logic->attributes));
+    return make_shared<sep::Logic>(logic->name->value, std::move(newAttrs));
 }
 
-sptr_t<sep::Script> Translator::translate(sptr_t<ast::Script> script) {
-    auto newCmds = translateToSmt<ast::Command, sep::Command>(script->commands);
-    return make_shared<sep::Script>(newCmds);
+sep::ScriptPtr Translator::translate(const ast::ScriptPtr& script) {
+    auto newCmds = std::move(translateToSmt<ast::Command, sep::Command>(script->commands));
+    return make_shared<sep::Script>(std::move(newCmds));
 }
 
-sptr_t<sep::Theory> Translator::translate(sptr_t<ast::Theory> theory) {
-    auto newAttrs = translateToSmt<ast::Attribute, sep::Attribute>(theory->attributes);
-    return make_shared<sep::Theory>(theory->name->value, newAttrs);
+sep::TheoryPtr Translator::translate(const ast::TheoryPtr& theory) {
+    auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(theory->attributes));
+    return make_shared<sep::Theory>(theory->name->value, std::move(newAttrs));
 }
 
-sptr_t<sep::Command> Translator::translate(sptr_t<ast::Command> cmd) {
-    sptr_t<ast::AssertCommand> cmd1 = dynamic_pointer_cast<ast::AssertCommand>(cmd);
+sep::CommandPtr Translator::translate(const ast::CommandPtr& cmd) {
+    ast::AssertCommandPtr cmd1 = dynamic_pointer_cast<ast::AssertCommand>(cmd);
     if (cmd1) {
         return translate(cmd1);
     }
 
-    sptr_t<ast::CheckSatCommand> cmd2 = dynamic_pointer_cast<ast::CheckSatCommand>(cmd);
+    ast::CheckSatCommandPtr cmd2 = dynamic_pointer_cast<ast::CheckSatCommand>(cmd);
     if (cmd2) {
         return translate(cmd2);
     }
 
-    sptr_t<ast::CheckSatAssumCommand> cmd3 = dynamic_pointer_cast<ast::CheckSatAssumCommand>(cmd);
+    ast::CheckSatAssumCommandPtr cmd3 = dynamic_pointer_cast<ast::CheckSatAssumCommand>(cmd);
     if (cmd3) {
         return translate(cmd3);
     }
 
-    sptr_t<ast::DeclareConstCommand> cmd4 = dynamic_pointer_cast<ast::DeclareConstCommand>(cmd);
+    ast::DeclareConstCommandPtr cmd4 = dynamic_pointer_cast<ast::DeclareConstCommand>(cmd);
     if (cmd4) {
         return translate(cmd4);
     }
 
-    sptr_t<ast::DeclareDatatypeCommand> cmd5 = dynamic_pointer_cast<ast::DeclareDatatypeCommand>(cmd);
+    ast::DeclareDatatypeCommandPtr cmd5 = dynamic_pointer_cast<ast::DeclareDatatypeCommand>(cmd);
     if (cmd5) {
         return translate(cmd5);
     }
 
-    sptr_t<ast::DeclareDatatypesCommand> cmd6 = dynamic_pointer_cast<ast::DeclareDatatypesCommand>(cmd);
+    ast::DeclareDatatypesCommandPtr cmd6 = dynamic_pointer_cast<ast::DeclareDatatypesCommand>(cmd);
     if (cmd6) {
         return translate(cmd6);
     }
 
-    sptr_t<ast::DeclareFunCommand> cmd7 = dynamic_pointer_cast<ast::DeclareFunCommand>(cmd);
+    ast::DeclareFunCommandPtr cmd7 = dynamic_pointer_cast<ast::DeclareFunCommand>(cmd);
     if (cmd7) {
         return translate(cmd7);
     }
 
-    sptr_t<ast::DeclareSortCommand> cmd8 = dynamic_pointer_cast<ast::DeclareSortCommand>(cmd);
+    ast::DeclareSortCommandPtr cmd8 = dynamic_pointer_cast<ast::DeclareSortCommand>(cmd);
     if (cmd8) {
         return translate(cmd8);
     }
 
-    sptr_t<ast::DefineFunCommand> cmd9 = dynamic_pointer_cast<ast::DefineFunCommand>(cmd);
+    ast::DefineFunCommandPtr cmd9 = dynamic_pointer_cast<ast::DefineFunCommand>(cmd);
     if (cmd9) {
         return translate(cmd9);
     }
 
-    sptr_t<ast::DefineFunRecCommand> cmd10 = dynamic_pointer_cast<ast::DefineFunRecCommand>(cmd);
+    ast::DefineFunRecCommandPtr cmd10 = dynamic_pointer_cast<ast::DefineFunRecCommand>(cmd);
     if (cmd10) {
         return translate(cmd10);
     }
 
-    sptr_t<ast::DefineFunsRecCommand> cmd11 = dynamic_pointer_cast<ast::DefineFunsRecCommand>(cmd);
+    ast::DefineFunsRecCommandPtr cmd11 = dynamic_pointer_cast<ast::DefineFunsRecCommand>(cmd);
     if (cmd11) {
         return translate(cmd11);
     }
 
-    sptr_t<ast::DefineSortCommand> cmd12 = dynamic_pointer_cast<ast::DefineSortCommand>(cmd);
+    ast::DefineSortCommandPtr cmd12 = dynamic_pointer_cast<ast::DefineSortCommand>(cmd);
     if (cmd12) {
         return translate(cmd12);
     }
 
-    sptr_t<ast::EchoCommand> cmd13 = dynamic_pointer_cast<ast::EchoCommand>(cmd);
+    ast::EchoCommandPtr cmd13 = dynamic_pointer_cast<ast::EchoCommand>(cmd);
     if (cmd13) {
         return translate(cmd13);
     }
 
-    sptr_t<ast::ExitCommand> cmd14 = dynamic_pointer_cast<ast::ExitCommand>(cmd);
+    ast::ExitCommandPtr cmd14 = dynamic_pointer_cast<ast::ExitCommand>(cmd);
     if (cmd14) {
         return translate(cmd14);
     }
 
-    sptr_t<ast::GetAssertsCommand> cmd15 = dynamic_pointer_cast<ast::GetAssertsCommand>(cmd);
+    ast::GetAssertsCommandPtr cmd15 = dynamic_pointer_cast<ast::GetAssertsCommand>(cmd);
     if (cmd15) {
         return translate(cmd15);
     }
 
-    sptr_t<ast::GetAssignsCommand> cmd16 = dynamic_pointer_cast<ast::GetAssignsCommand>(cmd);
+    ast::GetAssignsCommandPtr cmd16 = dynamic_pointer_cast<ast::GetAssignsCommand>(cmd);
     if (cmd16) {
         return translate(cmd16);
     }
 
-    sptr_t<ast::GetInfoCommand> cmd17 = dynamic_pointer_cast<ast::GetInfoCommand>(cmd);
+    ast::GetInfoCommandPtr cmd17 = dynamic_pointer_cast<ast::GetInfoCommand>(cmd);
     if (cmd17) {
         return translate(cmd17);
     }
 
-    sptr_t<ast::GetModelCommand> cmd18 = dynamic_pointer_cast<ast::GetModelCommand>(cmd);
+    ast::GetModelCommandPtr cmd18 = dynamic_pointer_cast<ast::GetModelCommand>(cmd);
     if (cmd18) {
         return translate(cmd18);
     }
 
-    sptr_t<ast::GetOptionCommand> cmd19 = dynamic_pointer_cast<ast::GetOptionCommand>(cmd);
+    ast::GetOptionCommandPtr cmd19 = dynamic_pointer_cast<ast::GetOptionCommand>(cmd);
     if (cmd19) {
         return translate(cmd19);
     }
 
-    sptr_t<ast::GetProofCommand> cmd20 = dynamic_pointer_cast<ast::GetProofCommand>(cmd);
+    ast::GetProofCommandPtr cmd20 = dynamic_pointer_cast<ast::GetProofCommand>(cmd);
     if (cmd20) {
         return translate(cmd20);
     }
 
-    sptr_t<ast::GetUnsatAssumsCommand> cmd21 = dynamic_pointer_cast<ast::GetUnsatAssumsCommand>(cmd);
+    ast::GetUnsatAssumsCommandPtr cmd21 = dynamic_pointer_cast<ast::GetUnsatAssumsCommand>(cmd);
     if (cmd21) {
         return translate(cmd21);
     }
 
-    sptr_t<ast::GetUnsatCoreCommand> cmd22 = dynamic_pointer_cast<ast::GetUnsatCoreCommand>(cmd);
+    ast::GetUnsatCoreCommandPtr cmd22 = dynamic_pointer_cast<ast::GetUnsatCoreCommand>(cmd);
     if (cmd22) {
         return translate(cmd22);
     }
 
-    sptr_t<ast::GetValueCommand> cmd23 = dynamic_pointer_cast<ast::GetValueCommand>(cmd);
+    ast::GetValueCommandPtr cmd23 = dynamic_pointer_cast<ast::GetValueCommand>(cmd);
     if (cmd23) {
         return translate(cmd23);
     }
 
-    sptr_t<ast::PopCommand> cmd24 = dynamic_pointer_cast<ast::PopCommand>(cmd);
+    ast::PopCommandPtr cmd24 = dynamic_pointer_cast<ast::PopCommand>(cmd);
     if (cmd24) {
         return translate(cmd24);
     }
 
-    sptr_t<ast::PushCommand> cmd25 = dynamic_pointer_cast<ast::PushCommand>(cmd);
+    ast::PushCommandPtr cmd25 = dynamic_pointer_cast<ast::PushCommand>(cmd);
     if (cmd25) {
         return translate(cmd25);
     }
 
-    sptr_t<ast::ResetCommand> cmd26 = dynamic_pointer_cast<ast::ResetCommand>(cmd);
+    ast::ResetCommandPtr cmd26 = dynamic_pointer_cast<ast::ResetCommand>(cmd);
     if (cmd26) {
         return translate(cmd26);
     }
 
-    sptr_t<ast::ResetAssertsCommand> cmd27 = dynamic_pointer_cast<ast::ResetAssertsCommand>(cmd);
+    ast::ResetAssertsCommandPtr cmd27 = dynamic_pointer_cast<ast::ResetAssertsCommand>(cmd);
     if (cmd27) {
         return translate(cmd27);
     }
 
-    sptr_t<ast::SetInfoCommand> cmd28 = dynamic_pointer_cast<ast::SetInfoCommand>(cmd);
+    ast::SetInfoCommandPtr cmd28 = dynamic_pointer_cast<ast::SetInfoCommand>(cmd);
     if (cmd28) {
         return translate(cmd28);
     }
 
-    sptr_t<ast::SetLogicCommand> cmd29 = dynamic_pointer_cast<ast::SetLogicCommand>(cmd);
+    ast::SetLogicCommandPtr cmd29 = dynamic_pointer_cast<ast::SetLogicCommand>(cmd);
     if (cmd29) {
         return translate(cmd29);
     }
 
-    sptr_t<ast::SetOptionCommand> cmd30 = dynamic_pointer_cast<ast::SetOptionCommand>(cmd);
+    ast::SetOptionCommandPtr cmd30 = dynamic_pointer_cast<ast::SetOptionCommand>(cmd);
     if (cmd30) {
         return translate(cmd30);
     }
 
-    sptr_t<sep::Command> null;
-    return null;
+    return sep::CommandPtr();
 }
 
-sptr_t<sep::AssertCommand> Translator::translate(sptr_t<ast::AssertCommand> cmd) {
-    return make_shared<sep::AssertCommand>(translate(cmd->term));
+sep::AssertCommandPtr Translator::translate(const ast::AssertCommandPtr& cmd) {
+    return make_shared<sep::AssertCommand>(std::move(translate(cmd->term)));
 }
 
-sptr_t<sep::CheckSatCommand> Translator::translate(sptr_t<ast::CheckSatCommand> cmd) {
+sep::CheckSatCommandPtr Translator::translate(const ast::CheckSatCommandPtr& cmd) {
     return make_shared<sep::CheckSatCommand>();
 }
 
-sptr_t<sep::CheckSatAssumCommand> Translator::translate(sptr_t<ast::CheckSatAssumCommand> cmd) {
-    auto newAssums = translateToSmt<ast::PropLiteral, sep::PropLiteral>(cmd->assumptions);
-    return make_shared<sep::CheckSatAssumCommand>(newAssums);
+sep::CheckSatAssumCommandPtr Translator::translate(const ast::CheckSatAssumCommandPtr& cmd) {
+    auto newAssums = std::move(translateToSmt<ast::PropLiteral, sep::PropLiteral>(cmd->assumptions));
+    return make_shared<sep::CheckSatAssumCommand>(std::move(newAssums));
 }
 
-sptr_t<sep::DeclareConstCommand> Translator::translate(sptr_t<ast::DeclareConstCommand> cmd) {
+sep::DeclareConstCommandPtr Translator::translate(const ast::DeclareConstCommandPtr& cmd) {
     return make_shared<sep::DeclareConstCommand>(cmd->symbol->value,
-                                                 translate(cmd->sort));
+                                                 std::move(translate(cmd->sort)));
 }
 
-sptr_t<sep::DeclareDatatypeCommand> Translator::translate(sptr_t<ast::DeclareDatatypeCommand> cmd) {
-    return make_shared<sep::DeclareDatatypeCommand>(cmd->symbol->toString(),
-                                                    translate(cmd->declaration));
+sep::DeclareDatatypeCommandPtr Translator::translate(const ast::DeclareDatatypeCommandPtr& cmd) {
+    return make_shared<sep::DeclareDatatypeCommand>(std::move(cmd->symbol->toString()),
+                                                    std::move(translate(cmd->declaration)));
 }
 
-sptr_t<sep::DeclareDatatypesCommand> Translator::translate(sptr_t<ast::DeclareDatatypesCommand> cmd) {
-    auto newSorts = translateToSmt<ast::SortDeclaration, sep::SortDeclaration>(cmd->sorts);
-    auto newDecls = translateToSmt<ast::DatatypeDeclaration, sep::DatatypeDeclaration>(cmd->declarations);
+sep::DeclareDatatypesCommandPtr Translator::translate(const ast::DeclareDatatypesCommandPtr& cmd) {
+    auto newSorts = std::move(translateToSmt<ast::SortDeclaration, sep::SortDeclaration>(cmd->sorts));
+    auto newDecls = std::move(translateToSmt<ast::DatatypeDeclaration, sep::DatatypeDeclaration>(cmd->declarations));
 
-    return make_shared<sep::DeclareDatatypesCommand>(newSorts, newDecls);
+    return make_shared<sep::DeclareDatatypesCommand>(std::move(newSorts), std::move(newDecls));
 }
 
-sptr_t<sep::DeclareFunCommand> Translator::translate(sptr_t<ast::DeclareFunCommand> cmd) {
-    auto newParams = translateToSmt<ast::Sort, sep::Sort>(cmd->parameters);
+sep::DeclareFunCommandPtr Translator::translate(const ast::DeclareFunCommandPtr& cmd) {
+    auto newParams = std::move(translateToSmt<ast::Sort, sep::Sort>(cmd->parameters));
     return make_shared<sep::DeclareFunCommand>(cmd->symbol->value,
-                                               newParams,
-                                               translate(cmd->sort));
+                                               std::move(newParams),
+                                               std::move(translate(cmd->sort)));
 }
 
-sptr_t<sep::DeclareSortCommand> Translator::translate(sptr_t<ast::DeclareSortCommand> cmd) {
-    return make_shared<sep::DeclareSortCommand>(cmd->symbol->value,
-                                                cmd->arity->value);
+sep::DeclareSortCommandPtr Translator::translate(const ast::DeclareSortCommandPtr& cmd) {
+    return make_shared<sep::DeclareSortCommand>(cmd->symbol->value, cmd->arity->value);
 }
 
-sptr_t<sep::DefineFunCommand> Translator::translate(sptr_t<ast::DefineFunCommand> cmd) {
-    return make_shared<sep::DefineFunCommand>(translate(cmd->definition));
+sep::DefineFunCommandPtr Translator::translate(const ast::DefineFunCommandPtr& cmd) {
+    return make_shared<sep::DefineFunCommand>(std::move(translate(cmd->definition)));
 }
 
-sptr_t<sep::DefineFunRecCommand> Translator::translate(sptr_t<ast::DefineFunRecCommand> cmd) {
-    return make_shared<sep::DefineFunRecCommand>(translate(cmd->definition));
+sep::DefineFunRecCommandPtr Translator::translate(const ast::DefineFunRecCommandPtr& cmd) {
+    return make_shared<sep::DefineFunRecCommand>(std::move(translate(cmd->definition)));
 }
 
-sptr_t<sep::DefineFunsRecCommand> Translator::translate(sptr_t<ast::DefineFunsRecCommand> cmd) {
-    auto newDecls = translateToSmt<ast::FunctionDeclaration, sep::FunctionDeclaration>(cmd->declarations);
-    auto newBodies = translateToSmt<ast::Term, sep::Term>(cmd->bodies);
+sep::DefineFunsRecCommandPtr Translator::translate(const ast::DefineFunsRecCommandPtr& cmd) {
+    auto newDecls = std::move(translateToSmt<ast::FunctionDeclaration, sep::FunctionDeclaration>(cmd->declarations));
+    auto newBodies = std::move(translateToSmt<ast::Term, sep::Term>(cmd->bodies));
 
-    return make_shared<sep::DefineFunsRecCommand>(newDecls, newBodies);
+    return make_shared<sep::DefineFunsRecCommand>(std::move(newDecls), std::move(newBodies));
 }
 
-sptr_t<sep::DefineSortCommand> Translator::translate(sptr_t<ast::DefineSortCommand> cmd) {
-    sptr_v<ast::Symbol> params = cmd->parameters;
+sep::DefineSortCommandPtr Translator::translate(const ast::DefineSortCommandPtr& cmd) {
     vector<string> newParams;
-
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        newParams.push_back((*paramIt)->value);
+    for (const auto& param : cmd->parameters) {
+        newParams.push_back(param->value);
     }
 
     return make_shared<sep::DefineSortCommand>(cmd->symbol->value,
-                                               newParams,
-                                               translate(cmd->sort));
+                                               std::move(newParams),
+                                               std::move(translate(cmd->sort)));
 }
 
-sptr_t<sep::EchoCommand> Translator::translate(sptr_t<ast::EchoCommand> cmd) {
+sep::EchoCommandPtr Translator::translate(const ast::EchoCommandPtr& cmd) {
     return make_shared<sep::EchoCommand>(cmd->message);
 }
 
-sptr_t<sep::ExitCommand> Translator::translate(sptr_t<ast::ExitCommand> cmd) {
+sep::ExitCommandPtr Translator::translate(const ast::ExitCommandPtr& cmd) {
     return make_shared<sep::ExitCommand>();
 }
 
-sptr_t<sep::GetAssertsCommand> Translator::translate(sptr_t<ast::GetAssertsCommand> cmd) {
+sep::GetAssertsCommandPtr Translator::translate(const ast::GetAssertsCommandPtr& cmd) {
     return make_shared<sep::GetAssertsCommand>();
 }
 
-sptr_t<sep::GetAssignsCommand> Translator::translate(sptr_t<ast::GetAssignsCommand> cmd) {
+sep::GetAssignsCommandPtr Translator::translate(const ast::GetAssignsCommandPtr& cmd) {
     return make_shared<sep::GetAssignsCommand>();
 }
 
-sptr_t<sep::GetInfoCommand> Translator::translate(sptr_t<ast::GetInfoCommand> cmd) {
+sep::GetInfoCommandPtr Translator::translate(const ast::GetInfoCommandPtr& cmd) {
     return make_shared<sep::GetInfoCommand>(cmd->flag->value);
 }
 
-sptr_t<sep::GetModelCommand> Translator::translate(sptr_t<ast::GetModelCommand> cmd) {
+sep::GetModelCommandPtr Translator::translate(const ast::GetModelCommandPtr& cmd) {
     return make_shared<sep::GetModelCommand>();
 }
 
-sptr_t<sep::GetOptionCommand> Translator::translate(sptr_t<ast::GetOptionCommand> cmd) {
+sep::GetOptionCommandPtr Translator::translate(const ast::GetOptionCommandPtr& cmd) {
     return make_shared<sep::GetOptionCommand>(cmd->option->value);
 }
 
-sptr_t<sep::GetProofCommand> Translator::translate(sptr_t<ast::GetProofCommand> cmd) {
+sep::GetProofCommandPtr Translator::translate(const ast::GetProofCommandPtr& cmd) {
     return make_shared<sep::GetProofCommand>();
 }
 
-sptr_t<sep::GetUnsatAssumsCommand> Translator::translate(sptr_t<ast::GetUnsatAssumsCommand> cmd) {
+sep::GetUnsatAssumsCommandPtr Translator::translate(const ast::GetUnsatAssumsCommandPtr& cmd) {
     return make_shared<sep::GetUnsatAssumsCommand>();
 }
 
-sptr_t<sep::GetUnsatCoreCommand> Translator::translate(sptr_t<ast::GetUnsatCoreCommand> cmd) {
+sep::GetUnsatCoreCommandPtr Translator::translate(const ast::GetUnsatCoreCommandPtr& cmd) {
     return make_shared<sep::GetUnsatCoreCommand>();
 }
 
-sptr_t<sep::GetValueCommand> Translator::translate(sptr_t<ast::GetValueCommand> cmd) {
-    auto newTerms = translateToSmt<ast::Term, sep::Term>(cmd->terms);
-    return make_shared<sep::GetValueCommand>(newTerms);
+sep::GetValueCommandPtr Translator::translate(const ast::GetValueCommandPtr& cmd) {
+    auto newTerms = std::move(translateToSmt<ast::Term, sep::Term>(cmd->terms));
+    return make_shared<sep::GetValueCommand>(std::move(newTerms));
 }
 
-sptr_t<sep::PopCommand> Translator::translate(sptr_t<ast::PopCommand> cmd) {
+sep::PopCommandPtr Translator::translate(const ast::PopCommandPtr& cmd) {
     return make_shared<sep::PopCommand>(cmd->numeral->value);
 }
 
-sptr_t<sep::PushCommand> Translator::translate(sptr_t<ast::PushCommand> cmd) {
+sep::PushCommandPtr Translator::translate(const ast::PushCommandPtr& cmd) {
     return make_shared<sep::PushCommand>(cmd->numeral->value);
 }
 
-sptr_t<sep::ResetCommand> Translator::translate(sptr_t<ast::ResetCommand> cmd) {
+sep::ResetCommandPtr Translator::translate(const ast::ResetCommandPtr& cmd) {
     return make_shared<sep::ResetCommand>();
 }
 
-sptr_t<sep::ResetAssertsCommand> Translator::translate(sptr_t<ast::ResetAssertsCommand> cmd) {
+sep::ResetAssertsCommandPtr Translator::translate(const ast::ResetAssertsCommandPtr& cmd) {
     return make_shared<sep::ResetAssertsCommand>();
 }
 
-sptr_t<sep::SetInfoCommand> Translator::translate(sptr_t<ast::SetInfoCommand> cmd) {
-    return make_shared<sep::SetInfoCommand>(translate(cmd->info));
+sep::SetInfoCommandPtr Translator::translate(const ast::SetInfoCommandPtr& cmd) {
+    return make_shared<sep::SetInfoCommand>(std::move(translate(cmd->info)));
 }
 
-sptr_t<sep::SetLogicCommand> Translator::translate(sptr_t<ast::SetLogicCommand> cmd) {
-    return make_shared<sep::SetLogicCommand>(cmd->logic->toString());
+sep::SetLogicCommandPtr Translator::translate(const ast::SetLogicCommandPtr& cmd) {
+    return make_shared<sep::SetLogicCommand>(std::move(cmd->logic->toString()));
 }
 
-sptr_t<sep::SetOptionCommand> Translator::translate(sptr_t<ast::SetOptionCommand> cmd) {
-    return make_shared<sep::SetOptionCommand>(translate(cmd->option));
+sep::SetOptionCommandPtr Translator::translate(const ast::SetOptionCommandPtr& cmd) {
+    return make_shared<sep::SetOptionCommand>(std::move(translate(cmd->option)));
 }
 
-sptr_t<sep::Term> Translator::translate(sptr_t<ast::Term> term) {
-    sptr_t<ast::SimpleIdentifier> term1 = dynamic_pointer_cast<ast::SimpleIdentifier>(term);
+sep::TermPtr Translator::translate(const ast::TermPtr& term) {
+    ast::SimpleIdentifierPtr term1 = dynamic_pointer_cast<ast::SimpleIdentifier>(term);
     if (term1) {
-        string symbol = term1->symbol->toString();
+        string symbol = std::move(term1->symbol->toString());
 
         if (symbol == "true") {
             return make_shared<sep::TrueTerm>();
@@ -455,443 +450,434 @@ sptr_t<sep::Term> Translator::translate(sptr_t<ast::Term> term) {
             return translate(term1);
     }
 
-    sptr_t<ast::QualifiedIdentifier> term2 = dynamic_pointer_cast<ast::QualifiedIdentifier>(term);
+    ast::QualifiedIdentifierPtr term2 = dynamic_pointer_cast<ast::QualifiedIdentifier>(term);
     if (term2) {
         if (term2->identifier->toString() == "nil") {
-            return make_shared<sep::NilTerm>(translate(term2->sort));
+            return make_shared<sep::NilTerm>(std::move(translate(term2->sort)));
         } else {
             return translate(term2);
         }
     }
 
-    sptr_t<ast::NumeralLiteral> term3 = dynamic_pointer_cast<ast::NumeralLiteral>(term);
+    ast::NumeralLiteralPtr term3 = dynamic_pointer_cast<ast::NumeralLiteral>(term);
     if (term3) {
         return make_shared<sep::NumeralLiteral>(term3->value, term3->base);
     }
 
-    sptr_t<ast::DecimalLiteral> term4 = dynamic_pointer_cast<ast::DecimalLiteral>(term);
+    ast::DecimalLiteralPtr term4 = dynamic_pointer_cast<ast::DecimalLiteral>(term);
     if (term4) {
         return make_shared<sep::DecimalLiteral>(term4->value);
     }
 
-    sptr_t<ast::StringLiteral> term5 = dynamic_pointer_cast<ast::StringLiteral>(term);
+    ast::StringLiteralPtr term5 = dynamic_pointer_cast<ast::StringLiteral>(term);
     if (term5) {
         return make_shared<sep::StringLiteral>(term5->value);
     }
 
-    sptr_t<ast::QualifiedTerm> term6 = dynamic_pointer_cast<ast::QualifiedTerm>(term);
+    ast::QualifiedTermPtr term6 = dynamic_pointer_cast<ast::QualifiedTerm>(term);
     if (term6) {
-        string identifier = term6->identifier->toString();
+        string identifier = std::move(term6->identifier->toString());
         if (identifier == "not") {
-            sptr_v<ast::Term> terms = term6->terms;
-            if (terms.size() == 1) {
-                return make_shared<sep::NotTerm>(translate(terms[0]));
+            if (term6->terms.size() == 1) {
+                return make_shared<sep::NotTerm>(translate(term6->terms[0]));
             }
         } else if (identifier == "=>" || identifier == "and"
                    || identifier == "or" || identifier == "xor"
                    || identifier == "=" || identifier == "distinct"
                    || identifier == "sep" || identifier == "wand") {
-            sptr_v<ast::Term> terms = term6->terms;
-            sptr_v<sep::Term> newTerms;
 
-            for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-                newTerms.push_back(translate(*termIt));
+            std::vector<sep::TermPtr> newTerms;
+            for (const auto& t : term6->terms) {
+                newTerms.push_back(std::move(translate(t)));
             }
 
             if (identifier == "=>") {
-                return make_shared<sep::ImpliesTerm>(newTerms);
+                return make_shared<sep::ImpliesTerm>(std::move(newTerms));
             } else if (identifier == "and") {
-                return make_shared<sep::AndTerm>(newTerms);
+                return make_shared<sep::AndTerm>(std::move(newTerms));
             } else if (identifier == "or") {
-                return make_shared<sep::OrTerm>(newTerms);
+                return make_shared<sep::OrTerm>(std::move(newTerms));
             } else if (identifier == "xor") {
-                return make_shared<sep::XorTerm>(newTerms);
+                return make_shared<sep::XorTerm>(std::move(newTerms));
             } else if (identifier == "=") {
-                return make_shared<sep::EqualsTerm>(newTerms);
+                return make_shared<sep::EqualsTerm>(std::move(newTerms));
             } else if (identifier == "distinct") {
-                return make_shared<sep::DistinctTerm>(newTerms);
+                return make_shared<sep::DistinctTerm>(std::move(newTerms));
             } else if (identifier == "sep") {
-                return make_shared<sep::SepTerm>(newTerms);
+                return make_shared<sep::SepTerm>(std::move(newTerms));
             } else if (identifier == "wand") {
-                return make_shared<sep::WandTerm>(newTerms);
+                return make_shared<sep::WandTerm>(std::move(newTerms));
             }
         } else if (identifier == "ite") {
-            sptr_v<ast::Term> terms = term6->terms;
-            if (terms.size() == 3) {
-                return make_shared<sep::IteTerm>(translate(terms[0]),
-                                                 translate(terms[1]),
-                                                 translate(terms[2]));
+            if (term6->terms.size() == 3) {
+                return make_shared<sep::IteTerm>(std::move(translate(term6->terms[0])),
+                                                 std::move(translate(term6->terms[1])),
+                                                 std::move(translate(term6->terms[2])));
             }
         } else if (identifier == "pto") {
-            sptr_v<ast::Term> terms = term6->terms;
-            if (terms.size() == 2) {
-                return make_shared<sep::PtoTerm>(translate(terms[0]),
-                                                 translate(terms[1]));
+            if (term6->terms.size() == 2) {
+                return make_shared<sep::PtoTerm>(std::move(translate(term6->terms[0])),
+                                                 std::move(translate(term6->terms[1])));
             }
         } else {
-            sptr_v<ast::Term> terms = term6->terms;
-            sptr_v<sep::Term> newTerms;
-
-            for (auto termIt = terms.begin(); termIt != terms.end(); termIt++) {
-                newTerms.push_back(translate(*termIt));
+            std::vector<sep::TermPtr> newTerms;
+            for (const auto& t : term6->terms) {
+                newTerms.push_back(std::move(translate(t)));
             }
 
-            return make_shared<sep::QualifiedTerm>(translate(term6->identifier), newTerms);
+            return make_shared<sep::QualifiedTerm>(std::move(translate(term6->identifier)),
+                                                   std::move(newTerms));
         }
     }
 
-    sptr_t<ast::LetTerm> term7 = dynamic_pointer_cast<ast::LetTerm>(term);
+    ast::LetTermPtr term7 = dynamic_pointer_cast<ast::LetTerm>(term);
     if (term7) {
         return translate(term7);
     }
 
-    sptr_t<ast::ForallTerm> term8 = dynamic_pointer_cast<ast::ForallTerm>(term);
+    ast::ForallTermPtr term8 = dynamic_pointer_cast<ast::ForallTerm>(term);
     if (term8) {
         return translate(term8);
     }
 
-    sptr_t<ast::ExistsTerm> term9 = dynamic_pointer_cast<ast::ExistsTerm>(term);
+    ast::ExistsTermPtr term9 = dynamic_pointer_cast<ast::ExistsTerm>(term);
     if (term9) {
-        sptr_v<ast::SortedVariable> bindings = term9->bindings;
-        sptr_v<sep::SortedVariable> newBindings;
-
-        for (auto bindingIt = bindings.begin(); bindingIt != bindings.end(); bindingIt++) {
-            newBindings.push_back(translate(*bindingIt));
+        std::vector<sep::SortedVariablePtr> newBindings;
+        for (const auto& bind : term9->bindings) {
+            newBindings.push_back(std::move(translate(bind)));
         }
 
-        return make_shared<sep::ExistsTerm>(newBindings, translate(term9->term));
+        return make_shared<sep::ExistsTerm>(std::move(newBindings),
+                                            std::move(translate(term9->term)));
     }
 
-    sptr_t<ast::MatchTerm> term10 = dynamic_pointer_cast<ast::MatchTerm>(term);
+    ast::MatchTermPtr term10 = dynamic_pointer_cast<ast::MatchTerm>(term);
     if (term10) {
         return translate(term10);
     }
 
-    sptr_t<ast::AnnotatedTerm> term11 = dynamic_pointer_cast<ast::AnnotatedTerm>(term);
+    ast::AnnotatedTermPtr term11 = dynamic_pointer_cast<ast::AnnotatedTerm>(term);
     if (term11) {
         return translate(term11);
     }
 
-    sptr_t<sep::Term> null;
-    return null;
+    return sep::TermPtr();
 }
 
-sptr_t<sep::Index> Translator::translate(sptr_t<ast::Index> index) {
-    sptr_t<ast::Symbol> index1 = dynamic_pointer_cast<ast::Symbol>(index);
+sep::IndexPtr Translator::translate(const ast::IndexPtr& index) {
+    ast::SymbolPtr index1 = dynamic_pointer_cast<ast::Symbol>(index);
     if (index1) {
         return translate(index1);
     }
 
-    sptr_t<ast::NumeralLiteral> index2 = dynamic_pointer_cast<ast::NumeralLiteral>(index);
+    ast::NumeralLiteralPtr index2 = dynamic_pointer_cast<ast::NumeralLiteral>(index);
     if (index2) {
         return translate(index2);
     }
 
-    sptr_t<sep::Index> null;
+    sep::IndexPtr null;
     return null;
 }
 
-sptr_t<sep::Identifier> Translator::translate(sptr_t<ast::Identifier> id) {
-    sptr_t<ast::SimpleIdentifier> id1 = dynamic_pointer_cast<ast::SimpleIdentifier>(id);
+sep::IdentifierPtr Translator::translate(const ast::IdentifierPtr& id) {
+    ast::SimpleIdentifierPtr id1 = dynamic_pointer_cast<ast::SimpleIdentifier>(id);
     if (id1) {
         return translate(id1);
     }
 
-    sptr_t<ast::QualifiedIdentifier> id2 = dynamic_pointer_cast<ast::QualifiedIdentifier>(id);
+    ast::QualifiedIdentifierPtr id2 = dynamic_pointer_cast<ast::QualifiedIdentifier>(id);
     if (id2) {
         return translate(id2);
     }
 
-    sptr_t<sep::Identifier> null;
+    sep::IdentifierPtr null;
     return null;
 }
 
-sptr_t<sep::SimpleIdentifier> Translator::translate(sptr_t<ast::SimpleIdentifier> id) {
-    auto newIndices = translateToSmt<ast::Index, sep::Index>(id->indices);
-    return make_shared<sep::SimpleIdentifier>(id->symbol->value, newIndices);
+sep::SimpleIdentifierPtr Translator::translate(const ast::SimpleIdentifierPtr& id) {
+    auto newIndices = std::move(translateToSmt<ast::Index, sep::Index>(id->indices));
+    return make_shared<sep::SimpleIdentifier>(id->symbol->value,
+                                              std::move(newIndices));
 }
 
-sptr_t<sep::QualifiedIdentifier> Translator::translate(sptr_t<ast::QualifiedIdentifier> id) {
-    return make_shared<sep::QualifiedIdentifier>(translate(id->identifier),
-                                                 translate(id->sort));
+sep::QualifiedIdentifierPtr Translator::translate(const ast::QualifiedIdentifierPtr& id) {
+    return make_shared<sep::QualifiedIdentifier>(std::move(translate(id->identifier)),
+                                                 std::move(translate(id->sort)));
 }
 
-sptr_t<sep::Sort> Translator::translate(sptr_t<ast::Sort> sort) {
-    auto newArgs = translateToSmt<ast::Sort, sep::Sort>(sort->arguments);
-    return make_shared<sep::Sort>(sort->identifier->toString(), newArgs);
+sep::SortPtr Translator::translate(const ast::SortPtr& sort) {
+    auto newArgs = std::move(translateToSmt<ast::Sort, sep::Sort>(sort->arguments));
+    return make_shared<sep::Sort>(std::move(sort->identifier->toString()), std::move(newArgs));
 }
 
-sptr_t<sep::SortedVariable> Translator::translate(sptr_t<ast::SortedVariable> var) {
+sep::SortedVariablePtr Translator::translate(const ast::SortedVariablePtr& var) {
     return make_shared<sep::SortedVariable>(var->symbol->value,
-                                            translate(var->sort));
+                                            std::move(translate(var->sort)));
 }
 
-sptr_t<sep::VariableBinding> Translator::translate(sptr_t<ast::VariableBinding> binding) {
+sep::VariableBindingPtr Translator::translate(const ast::VariableBindingPtr& binding) {
     return make_shared<sep::VariableBinding>(binding->symbol->value,
-                                             translate(binding->term));
+                                             std::move(translate(binding->term)));
 }
 
-sptr_t<sep::FunctionDefinition> Translator::translate(sptr_t<ast::FunctionDefinition> def) {
-    return make_shared<sep::FunctionDefinition>(translate(def->signature),
-                                                translate(def->body));
+sep::FunctionDefinitionPtr Translator::translate(const ast::FunctionDefinitionPtr& def) {
+    return make_shared<sep::FunctionDefinition>(std::move(translate(def->signature)),
+                                                std::move(translate(def->body)));
 }
 
-sptr_t<sep::FunctionDeclaration> Translator::translate(sptr_t<ast::FunctionDeclaration> decl) {
+sep::FunctionDeclarationPtr Translator::translate(const ast::FunctionDeclarationPtr& decl) {
     auto newParams = translateToSmt<ast::SortedVariable, sep::SortedVariable>(decl->parameters);
     return make_shared<sep::FunctionDeclaration>(decl->symbol->value,
-                                                 newParams, translate(decl->sort));
+                                                 std::move(newParams),
+                                                 std::move(translate(decl->sort)));
 }
 
-sptr_t<sep::SpecConstant> Translator::translate(sptr_t<ast::SpecConstant> constant) {
-    sptr_t<ast::NumeralLiteral> const1 = dynamic_pointer_cast<ast::NumeralLiteral>(constant);
+sep::SpecConstantPtr Translator::translate(const ast::SpecConstantPtr& constant) {
+    ast::NumeralLiteralPtr const1 = dynamic_pointer_cast<ast::NumeralLiteral>(constant);
     if (const1) {
         return translate(const1);
     }
 
-    sptr_t<ast::DecimalLiteral> const2 = dynamic_pointer_cast<ast::DecimalLiteral>(constant);
+    ast::DecimalLiteralPtr const2 = dynamic_pointer_cast<ast::DecimalLiteral>(constant);
     if (const2) {
         return translate(const2);
     }
 
-    sptr_t<ast::StringLiteral> const3 = dynamic_pointer_cast<ast::StringLiteral>(constant);
+    ast::StringLiteralPtr const3 = dynamic_pointer_cast<ast::StringLiteral>(constant);
     if (const3) {
         return translate(const3);
     }
 }
 
-sptr_t<sep::DecimalLiteral> Translator::translate(sptr_t<ast::DecimalLiteral> literal) {
+sep::DecimalLiteralPtr Translator::translate(const ast::DecimalLiteralPtr& literal) {
     return make_shared<sep::DecimalLiteral>(literal->value);
 }
 
-sptr_t<sep::NumeralLiteral> Translator::translate(sptr_t<ast::NumeralLiteral> literal) {
+sep::NumeralLiteralPtr Translator::translate(const ast::NumeralLiteralPtr& literal) {
     return make_shared<sep::NumeralLiteral>(literal->value, literal->base);
 }
 
-sptr_t<sep::StringLiteral> Translator::translate(sptr_t<ast::StringLiteral> literal) {
+sep::StringLiteralPtr Translator::translate(const ast::StringLiteralPtr& literal) {
     return make_shared<sep::StringLiteral>(literal->value);
 }
 
-sptr_t<sep::SExpression> Translator::translate(sptr_t<ast::SExpression> exp) {
-    sptr_t<ast::Symbol> exp1 = dynamic_pointer_cast<ast::Symbol>(exp);
+sep::SExpressionPtr Translator::translate(const ast::SExpressionPtr& exp) {
+    ast::SymbolPtr exp1 = dynamic_pointer_cast<ast::Symbol>(exp);
     if (exp1) {
         return translate(exp1);
     }
 
-    sptr_t<ast::Keyword> exp2 = dynamic_pointer_cast<ast::Keyword>(exp);
+    ast::KeywordPtr exp2 = dynamic_pointer_cast<ast::Keyword>(exp);
     if (exp2) {
         return translate(exp2);
     }
 
-    sptr_t<ast::SpecConstant> exp3 = dynamic_pointer_cast<ast::SpecConstant>(exp);
+    ast::SpecConstantPtr exp3 = dynamic_pointer_cast<ast::SpecConstant>(exp);
     if (exp3) {
         return translate(exp3);
     }
 
-    sptr_t<ast::CompSExpression> exp4 = dynamic_pointer_cast<ast::CompSExpression>(exp);
+    ast::CompSExpressionPtr exp4 = dynamic_pointer_cast<ast::CompSExpression>(exp);
     if (exp4) {
         return translate(exp4);
     }
 }
 
-sptr_t<sep::CompSExpression> Translator::translate(sptr_t<ast::CompSExpression> exp) {
-    auto newExps = translateToSmt<ast::SExpression, sep::SExpression>(exp->expressions);
-    return make_shared<sep::CompSExpression>(newExps);
+sep::CompSExpressionPtr Translator::translate(const ast::CompSExpressionPtr& exp) {
+    auto newExps = std::move(translateToSmt<ast::SExpression, sep::SExpression>(exp->expressions));
+    return make_shared<sep::CompSExpression>(std::move(newExps));
 }
 
-sptr_t<sep::SortDeclaration> Translator::translate(sptr_t<ast::SortDeclaration> decl) {
-    return make_shared<sep::SortDeclaration>(decl->symbol->value,
-                                             decl->arity->value);
+sep::SortDeclarationPtr Translator::translate(const ast::SortDeclarationPtr& decl) {
+    return make_shared<sep::SortDeclaration>(decl->symbol->value, decl->arity->value);
 }
 
-sptr_t<sep::SelectorDeclaration> Translator::translate(sptr_t<ast::SelectorDeclaration> decl) {
+sep::SelectorDeclarationPtr Translator::translate(const ast::SelectorDeclarationPtr& decl) {
     return make_shared<sep::SelectorDeclaration>(decl->symbol->value,
-                                                 translate(decl->sort));
+                                                 std::move(translate(decl->sort)));
 }
 
-sptr_t<sep::ConstructorDeclaration> Translator::translate(sptr_t<ast::ConstructorDeclaration> decl) {
-    auto newSels = translateToSmt<ast::SelectorDeclaration, sep::SelectorDeclaration>(decl->selectors);
-    return make_shared<sep::ConstructorDeclaration>(decl->symbol->value, newSels);
+sep::ConstructorDeclarationPtr Translator::translate(const ast::ConstructorDeclarationPtr& decl) {
+    auto newSels = std::move(translateToSmt<ast::SelectorDeclaration, sep::SelectorDeclaration>(decl->selectors));
+    return make_shared<sep::ConstructorDeclaration>(decl->symbol->value, std::move(newSels));
 }
 
-sptr_t<sep::DatatypeDeclaration> Translator::translate(sptr_t<ast::DatatypeDeclaration> decl) {
-    sptr_t<ast::SimpleDatatypeDeclaration> decl1 = dynamic_pointer_cast<ast::SimpleDatatypeDeclaration>(decl);
+sep::DatatypeDeclarationPtr Translator::translate(const ast::DatatypeDeclarationPtr& decl) {
+    ast::SimpleDatatypeDeclarationPtr decl1 = dynamic_pointer_cast<ast::SimpleDatatypeDeclaration>(decl);
     if (decl1) {
         return translate(decl1);
     }
 
-    sptr_t<ast::ParametricDatatypeDeclaration> decl2 = dynamic_pointer_cast<ast::ParametricDatatypeDeclaration>(
-        decl);
+    ast::ParametricDatatypeDeclarationPtr decl2 = dynamic_pointer_cast<ast::ParametricDatatypeDeclaration>(
+            decl);
     if (decl2) {
         return translate(decl2);
     }
 
-    sptr_t<sep::SimpleDatatypeDeclaration> null;
+    sep::SimpleDatatypeDeclarationPtr null;
     return null;
 }
 
-sptr_t<sep::SimpleDatatypeDeclaration> Translator::translate(sptr_t<ast::SimpleDatatypeDeclaration> decl) {
-    auto newCons = translateToSmt<ast::ConstructorDeclaration, sep::ConstructorDeclaration>(decl->constructors);
-    return make_shared<sep::SimpleDatatypeDeclaration>(newCons);
+sep::SimpleDatatypeDeclarationPtr Translator::translate(const ast::SimpleDatatypeDeclarationPtr& decl) {
+    auto newCons = std::move(
+            translateToSmt<ast::ConstructorDeclaration, sep::ConstructorDeclaration>(decl->constructors));
+    return make_shared<sep::SimpleDatatypeDeclaration>(std::move(newCons));
 }
 
-sptr_t<sep::ParametricDatatypeDeclaration> Translator::translate(
-    sptr_t<ast::ParametricDatatypeDeclaration> decl) {
-    sptr_v<ast::Symbol> params = decl->parameters;
+sep::ParametricDatatypeDeclarationPtr Translator::translate(const ast::ParametricDatatypeDeclarationPtr& decl) {
     vector<string> newParams;
-
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        newParams.push_back((*paramIt)->value);
+    for (const auto& param : decl->parameters) {
+        newParams.push_back(param->value);
     }
 
-    auto newCons = translateToSmt<ast::ConstructorDeclaration, sep::ConstructorDeclaration>(decl->constructors);
-    return make_shared<sep::ParametricDatatypeDeclaration>(newParams, newCons);
+    auto newCons = std::move(
+            translateToSmt<ast::ConstructorDeclaration, sep::ConstructorDeclaration>(decl->constructors));
+    return make_shared<sep::ParametricDatatypeDeclaration>(std::move(newParams), std::move(newCons));
 }
 
-sptr_t<sep::SortSymbolDeclaration> Translator::translate(sptr_t<ast::SortSymbolDeclaration> decl) {
-    auto newAttrs = translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes);
-    return make_shared<sep::SortSymbolDeclaration>(translate(decl->identifier),
+sep::SortSymbolDeclarationPtr Translator::translate(const ast::SortSymbolDeclarationPtr& decl) {
+    auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes));
+    return make_shared<sep::SortSymbolDeclaration>(std::move(translate(decl->identifier)),
                                                    decl->arity->value,
-                                                   newAttrs);
+                                                   std::move(newAttrs));
 }
 
-sptr_t<sep::FunSymbolDeclaration> Translator::translate(sptr_t<ast::FunSymbolDeclaration> decl) {
-    sptr_t<ast::SpecConstFunDeclaration> decl1 = dynamic_pointer_cast<ast::SpecConstFunDeclaration>(decl);
-    if(decl1) {
+sep::FunSymbolDeclarationPtr Translator::translate(const ast::FunSymbolDeclarationPtr& decl) {
+    ast::SpecConstFunDeclarationPtr decl1 = dynamic_pointer_cast<ast::SpecConstFunDeclaration>(decl);
+    if (decl1) {
         return translate(decl1);
     }
 
-    sptr_t<ast::MetaSpecConstFunDeclaration> decl2 = dynamic_pointer_cast<ast::MetaSpecConstFunDeclaration>(decl);
-    if(decl2) {
+    ast::MetaSpecConstFunDeclarationPtr decl2 = dynamic_pointer_cast<ast::MetaSpecConstFunDeclaration>(decl);
+    if (decl2) {
         return translate(decl2);
     }
 
-    sptr_t<ast::SimpleFunDeclaration> decl3 = dynamic_pointer_cast<ast::SimpleFunDeclaration>(decl);
-    if(decl3) {
+    ast::SimpleFunDeclarationPtr decl3 = dynamic_pointer_cast<ast::SimpleFunDeclaration>(decl);
+    if (decl3) {
         return translate(decl3);
     }
 
-    sptr_t<ast::ParametricFunDeclaration> decl4 = dynamic_pointer_cast<ast::ParametricFunDeclaration>(decl);
-    if(decl4) {
+    ast::ParametricFunDeclarationPtr decl4 = dynamic_pointer_cast<ast::ParametricFunDeclaration>(decl);
+    if (decl4) {
         return translate(decl4);
     }
 
-    sptr_t<sep::FunSymbolDeclaration> null;
-    return null;
+    return sep::FunSymbolDeclarationPtr();
 }
 
-sptr_t<sep::SpecConstFunDeclaration> Translator::translate(sptr_t<ast::SpecConstFunDeclaration> decl) {
-    auto newAttrs = translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes);
-    return make_shared<sep::SpecConstFunDeclaration>(translate(decl->constant),
-                                                     translate(decl->sort),
-                                                     newAttrs);
+sep::SpecConstFunDeclarationPtr Translator::translate(const ast::SpecConstFunDeclarationPtr& decl) {
+    auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes));
+    return make_shared<sep::SpecConstFunDeclaration>(std::move(translate(decl->constant)),
+                                                     std::move(translate(decl->sort)),
+                                                     std::move(newAttrs));
 }
 
-sptr_t<sep::MetaSpecConstFunDeclaration> Translator::translate(sptr_t<ast::MetaSpecConstFunDeclaration> decl) {
-    auto newAttrs = translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes);
-    return make_shared<sep::MetaSpecConstFunDeclaration>(translate(decl->constant),
-                                                         translate(decl->sort),
-                                                         newAttrs);
+sep::MetaSpecConstFunDeclarationPtr Translator::translate(const ast::MetaSpecConstFunDeclarationPtr& decl) {
+    auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes));
+    return make_shared<sep::MetaSpecConstFunDeclaration>(std::move(translate(decl->constant)),
+                                                         std::move(translate(decl->sort)),
+                                                         std::move(newAttrs));
 }
 
-sptr_t<sep::SimpleFunDeclaration> Translator::translate(sptr_t<ast::SimpleFunDeclaration> decl) {
+sep::SimpleFunDeclarationPtr Translator::translate(const ast::SimpleFunDeclarationPtr& decl) {
     auto newSign = translateToSmt<ast::Sort, sep::Sort>(decl->signature);
     auto newAttrs = translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes);
 
-    return make_shared<sep::SimpleFunDeclaration>(translate(decl->identifier), newSign, newAttrs);
+    return make_shared<sep::SimpleFunDeclaration>(std::move(translate(decl->identifier)),
+                                                  std::move(newSign),
+                                                  std::move(newAttrs));
 }
 
-sptr_t<sep::ParametricFunDeclaration> Translator::translate(sptr_t<ast::ParametricFunDeclaration> decl) {
-    sptr_v<ast::Symbol> params = decl->parameters;
+sep::ParametricFunDeclarationPtr Translator::translate(const ast::ParametricFunDeclarationPtr& decl) {
     vector<string> newParams;
-
-    for (auto paramIt = params.begin(); paramIt != params.end(); paramIt++) {
-        newParams.push_back((*paramIt)->toString());
+    for (const auto& param : decl->parameters) {
+        newParams.push_back(std::move(param->toString()));
     }
 
-    auto newSign = translateToSmt<ast::Sort, sep::Sort>(decl->signature);
-    auto newAttrs = translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes);
+    auto newSign = std::move(translateToSmt<ast::Sort, sep::Sort>(decl->signature));
+    auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes));
 
-    return make_shared<sep::ParametricFunDeclaration>(newParams, translate(decl->identifier),
-                                                      newSign, newAttrs);
+    return make_shared<sep::ParametricFunDeclaration>(std::move(newParams),
+                                                      std::move(translate(decl->identifier)),
+                                                      std::move(newSign),
+                                                      std::move(newAttrs));
 }
 
-sptr_t<sep::Constructor> Translator::translate(sptr_t<ast::Constructor> cons) {
-    sptr_t<ast::Symbol> cons1 = dynamic_pointer_cast<ast::Symbol>(cons);
-    if(cons1) {
+sep::ConstructorPtr Translator::translate(const ast::ConstructorPtr& cons) {
+    ast::SymbolPtr cons1 = dynamic_pointer_cast<ast::Symbol>(cons);
+    if (cons1) {
         return translate(cons1);
     }
 
-    sptr_t<ast::QualifiedConstructor> cons2 = dynamic_pointer_cast<ast::QualifiedConstructor>(cons);
-    if(cons2) {
+    ast::QualifiedConstructorPtr cons2 = dynamic_pointer_cast<ast::QualifiedConstructor>(cons);
+    if (cons2) {
         return translate(cons2);
     }
 
-    sptr_t<sep::Constructor> null;
-    return null;
+    return sep::ConstructorPtr();
 }
 
-sptr_t<sep::QualifiedConstructor> Translator::translate(sptr_t<ast::QualifiedConstructor> cons) {
+sep::QualifiedConstructorPtr Translator::translate(const ast::QualifiedConstructorPtr& cons) {
     return make_shared<sep::QualifiedConstructor>(cons->symbol->value,
-                                                  translate(cons->sort));
+                                                  std::move(translate(cons->sort)));
 }
 
-sptr_t<sep::Pattern> Translator::translate(sptr_t<ast::Pattern> pattern) {
-    sptr_t<ast::Constructor> pattern1 = dynamic_pointer_cast<ast::Constructor>(pattern);
-    if(pattern1) {
+sep::PatternPtr Translator::translate(const ast::PatternPtr& pattern) {
+    ast::ConstructorPtr pattern1 = dynamic_pointer_cast<ast::Constructor>(pattern);
+    if (pattern1) {
         return translate(pattern1);
     }
 
-    sptr_t<ast::QualifiedPattern> pattern2 = dynamic_pointer_cast<ast::QualifiedPattern>(pattern);
-    if(pattern2) {
+    ast::QualifiedPatternPtr pattern2 = dynamic_pointer_cast<ast::QualifiedPattern>(pattern);
+    if (pattern2) {
         return translate(pattern2);
     }
 
-    sptr_t<sep::Pattern> null;
-    return null;
+    return sep::PatternPtr();
 }
 
-sptr_t<sep::QualifiedPattern> Translator::translate(sptr_t<ast::QualifiedPattern> pattern) {
-    sptr_v<ast::Symbol> args = pattern->symbols;
+sep::QualifiedPatternPtr Translator::translate(const ast::QualifiedPatternPtr& pattern) {
     vector<string> newArgs;
-
-    for (auto argIt = args.begin(); argIt != args.end(); argIt++) {
-        newArgs.push_back((*argIt)->value);
+    for (const auto& arg : pattern->symbols) {
+        newArgs.push_back(arg->value);
     }
 
-    return make_shared<sep::QualifiedPattern>(translate(pattern->constructor), newArgs);
+    return make_shared<sep::QualifiedPattern>(std::move(translate(pattern->constructor)),
+                                              std::move(newArgs));
 }
 
-sptr_t<sep::MatchCase> Translator::translate(sptr_t<ast::MatchCase> mcase) {
-    return make_shared<sep::MatchCase>(translate(mcase->pattern),
-                                       translate(mcase->term));
+sep::MatchCasePtr Translator::translate(const ast::MatchCasePtr& mcase) {
+    return make_shared<sep::MatchCase>(std::move(translate(mcase->pattern)),
+                                       std::move(translate(mcase->term)));
 }
 
-sptr_t<sep::QualifiedTerm> Translator::translate(sptr_t<ast::QualifiedTerm> term) {
-    auto newTerms = translateToSmt<ast::Term, sep::Term>(term->terms);
-    return make_shared<sep::QualifiedTerm>(translate(term->identifier), newTerms);
+sep::QualifiedTermPtr Translator::translate(const ast::QualifiedTermPtr& term) {
+    auto newTerms = std::move(translateToSmt<ast::Term, sep::Term>(term->terms));
+    return make_shared<sep::QualifiedTerm>(std::move(translate(term->identifier)), std::move(newTerms));
 }
 
-sptr_t<sep::LetTerm> Translator::translate(sptr_t<ast::LetTerm> term) {
-    auto newBindings = translateToSmt<ast::VariableBinding, sep::VariableBinding>(term->bindings);
-    return make_shared<sep::LetTerm>(newBindings, translate(term->term));
+sep::LetTermPtr Translator::translate(const ast::LetTermPtr& term) {
+    auto newBindings = std::move(translateToSmt<ast::VariableBinding, sep::VariableBinding>(term->bindings));
+    return make_shared<sep::LetTerm>(std::move(newBindings), std::move(translate(term->term)));
 }
 
-sptr_t<sep::ForallTerm> Translator::translate(sptr_t<ast::ForallTerm> term) {
-    auto newBindings = translateToSmt<ast::SortedVariable, sep::SortedVariable>(term->bindings);
-    return make_shared<sep::ForallTerm>(newBindings, translate(term->term));
+sep::ForallTermPtr Translator::translate(const ast::ForallTermPtr& term) {
+    auto newBindings = std::move(translateToSmt<ast::SortedVariable, sep::SortedVariable>(term->bindings));
+    return make_shared<sep::ForallTerm>(std::move(newBindings), std::move(translate(term->term)));
 }
 
-sptr_t<sep::ExistsTerm> Translator::translate(sptr_t<ast::ExistsTerm> term) {
-    auto newBindings = translateToSmt<ast::SortedVariable, sep::SortedVariable>(term->bindings);
-    return make_shared<sep::ExistsTerm>(newBindings, translate(term->term));
+sep::ExistsTermPtr Translator::translate(const ast::ExistsTermPtr& term) {
+    auto newBindings = std::move(translateToSmt<ast::SortedVariable, sep::SortedVariable>(term->bindings));
+    return make_shared<sep::ExistsTerm>(std::move(newBindings), std::move(translate(term->term)));
 }
 
-sptr_t<sep::MatchTerm> Translator::translate(sptr_t<ast::MatchTerm> term) {
-    auto newCases = translateToSmt<ast::MatchCase, sep::MatchCase>(term->cases);
-    return make_shared<sep::MatchTerm>(translate(term->term), newCases);
+sep::MatchTermPtr Translator::translate(const ast::MatchTermPtr& term) {
+    auto newCases = std::move(translateToSmt<ast::MatchCase, sep::MatchCase>(term->cases));
+    return make_shared<sep::MatchTerm>(std::move(translate(term->term)), std::move(newCases));
 }
 
-sptr_t<sep::AnnotatedTerm> Translator::translate(sptr_t<ast::AnnotatedTerm> term) {
-    auto newAttrs = translateToSmt<ast::Attribute, sep::Attribute>(term->attributes);
-    return make_shared<sep::AnnotatedTerm>(translate(term->term), newAttrs);
+sep::AnnotatedTermPtr Translator::translate(const ast::AnnotatedTermPtr& term) {
+    auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(term->attributes));
+    return make_shared<sep::AnnotatedTerm>(std::move(translate(term->term)), std::move(newAttrs));
 }

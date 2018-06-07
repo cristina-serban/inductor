@@ -18,7 +18,7 @@ namespace smtlib {
         protected:
             RetT ret;
 
-            RetT wrappedVisit(sptr_t<Node> node) {
+            RetT wrappedVisit(const NodePtr& node) {
                 RetT oldRet = ret;
                 visit0(node);
                 RetT newRet = ret;
@@ -26,7 +26,7 @@ namespace smtlib {
                 return newRet;
             }
 
-            std::vector<RetT> wrappedVisit(sptr_v<Node> nodes) {
+            std::vector<RetT> wrappedVisit(std::vector<NodePtr>& nodes) {
                 std::vector<RetT> result(nodes.size());
                 for (size_t i = 0, n = nodes.size(); i < n; ++i) {
                     result[i] = wrappedVisit(nodes[i]);
@@ -35,7 +35,7 @@ namespace smtlib {
             }
 
         public:
-            virtual RetT run(sptr_t<Node> node) {
+            virtual RetT run(const NodePtr& node) {
                 return wrappedVisit(node);
             }
         };
@@ -46,7 +46,7 @@ namespace smtlib {
             ArgT arg;
             RetT ret;
 
-            RetT wrappedVisit(ArgT arg, sptr_t<Node> node) {
+            RetT wrappedVisit(ArgT arg, const NodePtr& node) {
                 RetT oldRet = ret;
                 ArgT oldArg = this->arg;
                 this->arg = arg;
@@ -58,17 +58,16 @@ namespace smtlib {
             }
 
             template<class T>
-            std::vector<RetT> wrappedVisit(ArgT arg, sptr_v<T> nodes) {
+            std::vector<RetT> wrappedVisit(ArgT arg, const std::vector<std::shared_ptr<T>>& nodes) {
                 std::vector<RetT> result(nodes.size());
                 for (size_t i = 0, n = nodes.size(); i < n; ++i) {
-                    result[i] = wrappedVisit(arg, std::dynamic_pointer_cast<Node>(nodes[i]));
+                    result[i] = wrappedVisit(arg, std::dynamic_pointer_cast<T>(nodes[i]));
                 }
                 return result;
             }
 
-
         public:
-            virtual RetT run(ArgT arg, sptr_t<Node> node) {
+            virtual RetT run(ArgT arg, const NodePtr& node) {
                 return wrappedVisit(arg, node);
             }
         };

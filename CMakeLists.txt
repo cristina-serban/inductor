@@ -172,8 +172,8 @@ set(SOURCE_FILES
         proof/proof_tree.cpp
         proof/proof_checker.h
         proof/proof_checker.cpp
-        proof/proof_build.h
-        proof/proof_build.cpp
+        proof/proof_tree.h
+        proof/proof_tree.cpp
         proof/proof_rule.h
         proof/proof_rule.cpp
         proof/proof_util.h

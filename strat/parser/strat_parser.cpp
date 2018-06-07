@@ -14,10 +14,10 @@ using namespace std;
 using namespace strat;
 using namespace strat::ast;
 
-shared_ptr<Node> Parser::parse(string filename) {
+NodePtr Parser::parse(const string& filename) {
     strat_yyin = fopen(filename.c_str(), "r");
     if(strat_yyin) {
-        this->filename = make_shared<string>(filename.c_str());
+        this->filename = make_shared<string>(filename);
         strat_yyparse(this);
         fclose(strat_yyin);
     } else {
@@ -28,13 +28,15 @@ shared_ptr<Node> Parser::parse(string filename) {
     return ast;
 }
 
-void Parser::setAst(shared_ptr<Node> ast) {
+void Parser::setAst(NodePtr ast) {
     if(ast) {
         this->ast = ast;
     }
 }
 
-void Parser::reportError(unsigned int lineLeft, unsigned int colLeft,
-                 unsigned int lineRight, unsigned int colRight, const char* msg) {
-    Logger::parsingError(lineLeft, colLeft, lineRight, colRight, filename->c_str(), msg);
+void Parser::reportError(int lineLeft, int colLeft,
+                         int lineRight, int colRight,
+                         const char* msg) {
+    Logger::parsingError(lineLeft, colLeft, lineRight, colRight,
+                         filename->c_str(), msg);
 }

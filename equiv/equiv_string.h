@@ -8,11 +8,12 @@
 
 #include "equiv_index.h"
 
-#include "util/global_typedef.h"
-
 #include <string>
+#include <unordered_map>
 
 namespace equiv {
+    typedef std::unordered_map<std::string, unsigned long> StringToIndexMap;
+
     /* ======================================= Node ======================================= */
     struct Node;
     struct Set;
@@ -26,8 +27,10 @@ namespace equiv {
         NodePtr next;
         SetPtr parent;
 
-        Node(const std::string& data, const NodePtr& next, const SetPtr& parent)
-                : data(data), next(next), parent(parent) {}
+        Node(std::string data, NodePtr next, SetPtr parent)
+                : data(std::move(data))
+                , next(std::move(next))
+                , parent(std::move(parent)) {}
     };
 
     /* ======================================= Set ======================================== */
@@ -90,7 +93,7 @@ namespace equiv {
         std::string toString();
 
         /** Transform the structure into one for index equivalence, based on a given order */
-        IndexEquivalencePtr toIndexEquivalence(const std::unordered_map<std::string, unsigned long>& params);
+        IndexEquivalencePtr toIndexEquivalence(const StringToIndexMap& params);
     };
 
     typedef std::shared_ptr<StringEquivalence> StringEquivalencePtr;

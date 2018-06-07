@@ -89,11 +89,6 @@ string StringAttribute::toString() {
 
 /* ================================ TheoriesAttribute ================================= */
 
-TheoriesAttribute::TheoriesAttribute(const vector<std::string>& theories) {
-    this->keyword = KW_THEORIES;
-    this->theories.insert(this->theories.begin(), theories.begin(), theories.end());
-}
-
 void TheoriesAttribute::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -115,11 +110,6 @@ string TheoriesAttribute::toString() {
 
 /* ================================== SortsAttribute ================================== */
 
-SortsAttribute::SortsAttribute(const vector<SortSymbolDeclarationPtr>& decls) {
-    this->keyword = KW_SORTS;
-    this->declarations.insert(this->declarations.begin(), decls.begin(), decls.end());
-}
-
 void SortsAttribute::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -140,11 +130,6 @@ string SortsAttribute::toString() {
 }
 
 /* ================================== FunsAttribute =================================== */
-
-FunsAttribute::FunsAttribute(const vector<FunSymbolDeclarationPtr>& decls) {
-    this->keyword = KW_FUNS;
-    this->declarations.insert(this->declarations.begin(), decls.begin(), decls.end());
-}
 
 void FunsAttribute::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());

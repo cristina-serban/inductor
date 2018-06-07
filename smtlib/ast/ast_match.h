@@ -22,8 +22,9 @@ namespace smtlib {
             SymbolPtr symbol;
             SortPtr sort;
 
-            inline QualifiedConstructor(const SymbolPtr& symbol, const SortPtr& sort)
-                    : symbol(symbol), sort(sort) {}
+            inline QualifiedConstructor(SymbolPtr symbol, SortPtr sort)
+                    : symbol(std::move(symbol))
+                    , sort(std::move(sort)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -38,8 +39,9 @@ namespace smtlib {
             ConstructorPtr constructor;
             std::vector<SymbolPtr> symbols;
 
-            QualifiedPattern(const ConstructorPtr& constructor,
-                             const std::vector<SymbolPtr>& symbols);
+            inline QualifiedPattern(ConstructorPtr constructor, std::vector<SymbolPtr> symbols)
+                    : constructor(std::move(constructor))
+                    , symbols(std::move(symbols)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -54,8 +56,9 @@ namespace smtlib {
             PatternPtr pattern;
             TermPtr term;
 
-            inline MatchCase(const PatternPtr& pattern, const TermPtr& term)
-                    : pattern(pattern), term(term) {}
+            inline MatchCase(PatternPtr pattern, TermPtr term)
+                    : pattern(std::move(pattern))
+                    , term(std::move(term)) {}
 
             void accept(Visitor0* visitor) override;
 

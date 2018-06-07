@@ -147,15 +147,16 @@ namespace pred {
         std::unordered_map<std::string, InductivePredicatePtr> predicates;
         std::vector<std::string> errors;
 
-        inline PredicateTable() : equiv(std::make_shared<EquivAnalysis>()),
-                                  alloc(std::make_shared<AllocAnalysis>()),
-                                  reach(std::make_shared<ReachAnalysis>()),
-                                  stack(std::make_shared<smtlib::sep::SymbolStack>()) {}
+        inline PredicateTable()
+                : equiv(std::make_shared<EquivAnalysis>())
+                , alloc(std::make_shared<AllocAnalysis>())
+                , reach(std::make_shared<ReachAnalysis>())
+                , stack(std::make_shared<smtlib::sep::SymbolStack>()) {}
 
-        explicit PredicateTable(std::unordered_map<std::string, InductivePredicatePtr>& predicates);
+        explicit PredicateTable(std::unordered_map<std::string, InductivePredicatePtr> predicates);
 
         /** Load predicate definitions from an SMT-LIB+SEPLOG script */
-        bool load(smtlib::sep::ScriptPtr script);
+        bool load(const smtlib::sep::ScriptPtr& script);
 
         /** Analyse allocation of predicate parameters */
         void analyseAlloc();

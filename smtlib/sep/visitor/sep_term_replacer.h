@@ -10,7 +10,6 @@
 
 #include "sep/sep_interfaces.h"
 #include "sep/sep_term.h"
-#include "util/global_typedef.h"
 
 #include <fstream>
 
@@ -20,77 +19,82 @@ namespace smtlib {
         /** Context interface for term replacement */
         class ITermReplacerContext {
         public:
-            virtual sptr_t<Term> getTerm() = 0;
-            virtual void setTerm(sptr_t<Term> term) = 0;
+            virtual TermPtr getTerm() = 0;
+            virtual void setTerm(const TermPtr& term) = 0;
 
-            virtual sptr_t<Term> getReplacement() = 0;
-            virtual void setReplacement(sptr_t<Term> expr) = 0;
+            virtual TermPtr getReplacement() = 0;
+            virtual void setReplacement(const TermPtr& expr) = 0;
         };
+
+        typedef std::shared_ptr<ITermReplacerContext> ITermReplacerContextPtr;
 
         /* =============================== TermReplacerContext ================================ */
         /** Implementation for the context interface */
         class TermReplacerContext: public ITermReplacerContext {
         private:
-            sptr_t<Term> term;
-            sptr_t<Term> repl;
+            TermPtr term;
+            TermPtr repl;
         public:
-            TermReplacerContext(sptr_t<Term> term, sptr_t<Term> repl)
-                    : term(term), repl(repl) {}
+            TermReplacerContext(TermPtr term, TermPtr repl)
+                    : term(std::move(term))
+                    , repl(std::move(repl)) {}
 
-            virtual sptr_t<Term> getTerm() { return term; }
-            virtual void setTerm(sptr_t<Term> term) { this->term = term; }
+            TermPtr getTerm() override { return term; }
+            void setTerm(const TermPtr& term) override { this->term = term; }
 
-            virtual sptr_t<Term> getReplacement() { return repl; }
-            virtual void setReplacement(sptr_t<Term> repl) { this->repl = repl; }
+            TermPtr getReplacement() override { return repl; }
+            void setReplacement(const TermPtr& repl) override { this->repl = repl; }
         };
+
+        typedef std::shared_ptr<TermReplacerContext> TermReplacerContextPtr;
 
         /* =================================== TermReplacer =================================== */
         /** Replaces a subterm of the input with another term given by its context */
-        class TermReplacer : public DummyVisitor1<sptr_t<Term>>,
+        class TermReplacer : public DummyVisitor1<TermPtr>,
                              public std::enable_shared_from_this<TermReplacer> {
         private:
-            sptr_t<ITermReplacerContext> ctx;
-            sptr_t<Term> term;
+            ITermReplacerContextPtr ctx;
+            TermPtr term;
         public:
-            inline TermReplacer(sptr_t<ITermReplacerContext> ctx) : ctx(ctx) { }
+            inline explicit TermReplacer(ITermReplacerContextPtr ctx)
+                    : ctx(std::move(ctx)) {}
 
-            virtual void visit(sptr_t<SimpleIdentifier> node);
-            virtual void visit(sptr_t<QualifiedIdentifier> node);
-            virtual void visit(sptr_t<DecimalLiteral> node);
-            virtual void visit(sptr_t<NumeralLiteral> node);
-            virtual void visit(sptr_t<StringLiteral> node);
+            void visit(const SimpleIdentifierPtr& node) override;
+            void visit(const QualifiedIdentifierPtr& node) override;
+            void visit(const DecimalLiteralPtr& node) override;
+            void visit(const NumeralLiteralPtr& node) override;
+            void visit(const StringLiteralPtr& node) override;
 
-            virtual void visit(sptr_t<QualifiedTerm> node);
-            virtual void visit(sptr_t<LetTerm> node);
-            virtual void visit(sptr_t<ForallTerm> node);
-            virtual void visit(sptr_t<ExistsTerm> node);
-            virtual void visit(sptr_t<MatchTerm> node);
-            virtual void visit(sptr_t<AnnotatedTerm> node);
+            void visit(const QualifiedTermPtr& node) override;
+            void visit(const LetTermPtr& node) override;
+            void visit(const ForallTermPtr& node) override;
+            void visit(const ExistsTermPtr& node) override;
+            void visit(const MatchTermPtr& node) override;
+            void visit(const AnnotatedTermPtr& node) override;
 
-            virtual void visit(sptr_t<TrueTerm> node);
-            virtual void visit(sptr_t<FalseTerm> node);
-            virtual void visit(sptr_t<NotTerm> node);
-            virtual void visit(sptr_t<ImpliesTerm> node);
-            virtual void visit(sptr_t<AndTerm> node);
-            virtual void visit(sptr_t<OrTerm> node);
-            virtual void visit(sptr_t<XorTerm> node);
-            virtual void visit(sptr_t<EqualsTerm> node);
-            virtual void visit(sptr_t<DistinctTerm> node);
-            virtual void visit(sptr_t<IteTerm> node);
+            void visit(const TrueTermPtr& node) override;
+            void visit(const FalseTermPtr& node) override;
+            void visit(const NotTermPtr& node) override;
+            void visit(const ImpliesTermPtr& node) override;
+            void visit(const AndTermPtr& node) override;
+            void visit(const OrTermPtr& node) override;
+            void visit(const XorTermPtr& node) override;
+            void visit(const EqualsTermPtr& node) override;
+            void visit(const DistinctTermPtr& node) override;
+            void visit(const IteTermPtr& node) override;
 
-            virtual void visit(sptr_t<EmpTerm> node);
-            virtual void visit(sptr_t<SepTerm> node);
-            virtual void visit(sptr_t<WandTerm> node);
-            virtual void visit(sptr_t<PtoTerm> node);
-            virtual void visit(sptr_t<NilTerm> node);
+            void visit(const EmpTermPtr& node) override;
+            void visit(const SepTermPtr& node) override;
+            void visit(const WandTermPtr& node) override;
+            void visit(const PtoTermPtr& node) override;
+            void visit(const NilTermPtr& node) override;
 
-            inline sptr_t<Term> run(sptr_t<Term> term) {
+            inline TermPtr run(const TermPtr& term) {
                 return wrappedVisit(term);
             }
         };
 
         typedef std::shared_ptr<TermReplacer> TermReplacerPtr;
-        typedef std::shared_ptr<TermReplacerContext> TermReplacerContextPtr;
     }
 }
 

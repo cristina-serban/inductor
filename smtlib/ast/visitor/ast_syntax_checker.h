@@ -14,22 +14,23 @@ namespace smtlib {
         private:
             struct Error {
                 std::vector<std::string> messages;
-                sptr_t<Node> node;
+                NodePtr node;
 
-                Error() { }
+                inline Error() = default;
 
-                Error(std::string message,
-                                 sptr_t<Node> node) : node(node) {
-                    messages.push_back(message);
+                inline Error(std::string message, NodePtr node)
+                        : node(std::move(node)) {
+                    messages.push_back(std::move(message));
                 }
 
-                Error(std::vector<std::string>& messages,
-                                 sptr_t<Node> node) : node(node) {
-                    this->messages.insert(this->messages.begin(), messages.begin(), messages.end());
-                }
+                inline Error(std::vector<std::string> messages, NodePtr node)
+                        : node(std::move(node))
+                        , messages(std::move(messages)) {}
             };
 
-            sptr_v<Error> errors;
+            typedef std::shared_ptr<Error> ErrorPtr;
+
+            std::vector<ErrorPtr> errors;
 
             const std::regex regexSymbol = std::regex(
                     "^([a-zA-Z+\\-/*=%?!.$_~&^<>@][a-zA-Z0-9+\\-/*=%?!.$_~&^<>@]*)"
@@ -40,159 +41,102 @@ namespace smtlib {
                             "|(\\|[\\x20-\\x5B\\x5D-\\x7B\\x7D\\x7E\\xA0-\\xFF\\x09\\r\\n \\xA0]*\\|)$"
             );
 
-            sptr_t<Error> addError(std::string message, sptr_t<Node> node,
-                                                       sptr_t<Error> err);
+            ErrorPtr addError(const std::string& message, const NodePtr& node, ErrorPtr& err);
 
-            sptr_t<Error> checkParamUsage(sptr_v<Symbol>& params,
-                                                              umap<std::string, bool>& paramUsage,
-                                                              sptr_t<Sort> sort,
-                                                              sptr_t<Node> source,
-                                                              sptr_t<Error> err);
+            ErrorPtr checkParamUsage(const std::vector<SymbolPtr>& params,
+                                     std::unordered_map<std::string, bool>& paramUsage,
+                                     const SortPtr& sort, const NodePtr& source, ErrorPtr& err);
         public:
-            virtual void visit(sptr_t<Attribute> node);
-
-            virtual void visit(sptr_t<CompAttributeValue> node);
-
-            virtual void visit(sptr_t<Symbol> node);
-
-            virtual void visit(sptr_t<Keyword> node);
-
-            virtual void visit(sptr_t<MetaSpecConstant> node);
-
-            virtual void visit(sptr_t<BooleanValue> node);
-
-            virtual void visit(sptr_t<PropLiteral> node);
-
-            virtual void visit(sptr_t<AssertCommand> node);
-
-            virtual void visit(sptr_t<CheckSatCommand> node);
-
-            virtual void visit(sptr_t<CheckSatAssumCommand> node);
-
-            virtual void visit(sptr_t<DeclareConstCommand> node);
-
-            virtual void visit(sptr_t<DeclareDatatypeCommand> node);
-
-            virtual void visit(sptr_t<DeclareDatatypesCommand> node);
-
-            virtual void visit(sptr_t<DeclareFunCommand> node);
-
-            virtual void visit(sptr_t<DeclareSortCommand> node);
-
-            virtual void visit(sptr_t<DefineFunCommand> node);
-
-            virtual void visit(sptr_t<DefineFunRecCommand> node);
-
-            virtual void visit(sptr_t<DefineFunsRecCommand> node);
-
-            virtual void visit(sptr_t<DefineSortCommand> node);
-
-            virtual void visit(sptr_t<EchoCommand> node);
-
-            virtual void visit(sptr_t<ExitCommand> node);
-
-            virtual void visit(sptr_t<GetAssertsCommand> node);
-
-            virtual void visit(sptr_t<GetAssignsCommand> node);
-
-            virtual void visit(sptr_t<GetInfoCommand> node);
-
-            virtual void visit(sptr_t<GetModelCommand> node);
-
-            virtual void visit(sptr_t<GetOptionCommand> node);
-
-            virtual void visit(sptr_t<GetProofCommand> node);
-
-            virtual void visit(sptr_t<GetUnsatAssumsCommand> node);
-
-            virtual void visit(sptr_t<GetUnsatCoreCommand> node);
-
-            virtual void visit(sptr_t<GetValueCommand> node);
-
-            virtual void visit(sptr_t<PopCommand> node);
-
-            virtual void visit(sptr_t<PushCommand> node);
-
-            virtual void visit(sptr_t<ResetCommand> node);
-
-            virtual void visit(sptr_t<ResetAssertsCommand> node);
-
-            virtual void visit(sptr_t<SetInfoCommand> node);
-
-            virtual void visit(sptr_t<SetLogicCommand> node);
-
-            virtual void visit(sptr_t<SetOptionCommand> node);
-
-            virtual void visit(sptr_t<FunctionDeclaration> node);
-
-            virtual void visit(sptr_t<FunctionDefinition> node);
-
-            virtual void visit(sptr_t<SimpleIdentifier> node);
-
-            virtual void visit(sptr_t<QualifiedIdentifier> node);
-
-            virtual void visit(sptr_t<DecimalLiteral> node);
-
-            virtual void visit(sptr_t<NumeralLiteral> node);
-
-            virtual void visit(sptr_t<StringLiteral> node);
-
-            virtual void visit(sptr_t<Logic> node);
-
-            virtual void visit(sptr_t<Theory> node);
-
-            virtual void visit(sptr_t<Script> node);
-
-            virtual void visit(sptr_t<Sort> node);
-
-            virtual void visit(sptr_t<CompSExpression> node);
-
-            virtual void visit(sptr_t<SortSymbolDeclaration> node);
-
-            virtual void visit(sptr_t<SpecConstFunDeclaration> node);
-
-            virtual void visit(sptr_t<MetaSpecConstFunDeclaration> node);
-
-            virtual void visit(sptr_t<SimpleFunDeclaration> node);
-
-            virtual void visit(sptr_t<ParametricFunDeclaration> node);
-
-            virtual void visit(sptr_t<SortDeclaration> node);
-
-            virtual void visit(sptr_t<SelectorDeclaration> node);
-
-            virtual void visit(sptr_t<ConstructorDeclaration> node);
-
-            virtual void visit(sptr_t<SimpleDatatypeDeclaration> node);
-
-            virtual void visit(sptr_t<ParametricDatatypeDeclaration> node);
-
-            virtual void visit(sptr_t<QualifiedConstructor> node);
-
-            virtual void visit(sptr_t<QualifiedPattern> node);
-
-            virtual void visit(sptr_t<MatchCase> node);
-
-            virtual void visit(sptr_t<QualifiedTerm> node);
-
-            virtual void visit(sptr_t<LetTerm> node);
-
-            virtual void visit(sptr_t<ForallTerm> node);
-
-            virtual void visit(sptr_t<ExistsTerm> node);
-
-            virtual void visit(sptr_t<MatchTerm> node);
-
-            virtual void visit(sptr_t<AnnotatedTerm> node);
-
-            virtual void visit(sptr_t<SortedVariable> node);
-
-            virtual void visit(sptr_t<VariableBinding> node);
-
-            bool check(sptr_t<Node> node);
+            void visit(const AttributePtr& node) override;
+            void visit(const CompAttributeValuePtr& node) override;
+
+            void visit(const SymbolPtr& node) override;
+            void visit(const KeywordPtr& node) override;
+            void visit(const MetaSpecConstantPtr& node) override;
+            void visit(const BooleanValuePtr& node) override;
+            void visit(const PropLiteralPtr& node) override;
+
+            void visit(const AssertCommandPtr& node) override;
+            void visit(const CheckSatCommandPtr& node) override;
+            void visit(const CheckSatAssumCommandPtr& node) override;
+            void visit(const DeclareConstCommandPtr& node) override;
+            void visit(const DeclareDatatypeCommandPtr& node) override;
+            void visit(const DeclareDatatypesCommandPtr& node) override;
+            void visit(const DeclareFunCommandPtr& node) override;
+            void visit(const DeclareSortCommandPtr& node) override;
+            void visit(const DefineFunCommandPtr& node) override;
+            void visit(const DefineFunRecCommandPtr& node) override;
+            void visit(const DefineFunsRecCommandPtr& node) override;
+            void visit(const DefineSortCommandPtr& node) override;
+            void visit(const EchoCommandPtr& node) override;
+            void visit(const ExitCommandPtr& node) override;
+            void visit(const GetAssertsCommandPtr& node) override;
+            void visit(const GetAssignsCommandPtr& node) override;
+            void visit(const GetInfoCommandPtr& node) override;
+            void visit(const GetModelCommandPtr& node) override;
+            void visit(const GetOptionCommandPtr& node) override;
+            void visit(const GetProofCommandPtr& node) override;
+            void visit(const GetUnsatAssumsCommandPtr& node) override;
+            void visit(const GetUnsatCoreCommandPtr& node) override;
+            void visit(const GetValueCommandPtr& node) override;
+            void visit(const PopCommandPtr& node) override;
+            void visit(const PushCommandPtr& node) override;
+            void visit(const ResetCommandPtr& node) override;
+            void visit(const ResetAssertsCommandPtr& node) override;
+            void visit(const SetInfoCommandPtr& node) override;
+            void visit(const SetLogicCommandPtr& node) override;
+            void visit(const SetOptionCommandPtr& node) override;
+
+            void visit(const FunctionDeclarationPtr& node) override;
+            void visit(const FunctionDefinitionPtr& node) override;
+
+            void visit(const SimpleIdentifierPtr& node) override;
+            void visit(const QualifiedIdentifierPtr& node) override;
+
+            void visit(const DecimalLiteralPtr& node) override;
+            void visit(const NumeralLiteralPtr& node) override;
+            void visit(const StringLiteralPtr& node) override;
+
+            void visit(const LogicPtr& node) override;
+            void visit(const TheoryPtr& node) override;
+            void visit(const ScriptPtr& node) override;
+
+            void visit(const SortPtr& node) override;
+
+            void visit(const CompSExpressionPtr& node) override;
+
+            void visit(const SortSymbolDeclarationPtr& node) override;
+            void visit(const SortDeclarationPtr& node) override;
+            void visit(const SelectorDeclarationPtr& node) override;
+            void visit(const ConstructorDeclarationPtr& node) override;
+            void visit(const SimpleDatatypeDeclarationPtr& node) override;
+            void visit(const ParametricDatatypeDeclarationPtr& node) override;
+
+            void visit(const QualifiedConstructorPtr& node) override;
+            void visit(const QualifiedPatternPtr& node) override;
+            void visit(const MatchCasePtr& node) override;
+
+            void visit(const SpecConstFunDeclarationPtr& node) override;
+            void visit(const MetaSpecConstFunDeclarationPtr& node) override;
+            void visit(const SimpleFunDeclarationPtr& node) override;
+            void visit(const ParametricFunDeclarationPtr& node) override;
+
+            void visit(const QualifiedTermPtr& node) override;
+            void visit(const LetTermPtr& node) override;
+            void visit(const ForallTermPtr& node) override;
+            void visit(const ExistsTermPtr& node) override;
+            void visit(const MatchTermPtr& node) override;
+            void visit(const AnnotatedTermPtr& node) override;
+
+            void visit(const SortedVariablePtr& node) override;
+            void visit(const VariableBindingPtr& node) override;
+
+            bool check(const NodePtr& node);
 
             std::string getErrors();
         };
+
+        typedef std::shared_ptr<SyntaxChecker> SyntaxCheckerPtr;
     }
 }
 

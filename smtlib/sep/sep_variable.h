@@ -27,8 +27,9 @@ namespace smtlib {
              * \param name      Variable name
              * \param sort      Variable sort
              */
-            inline SortedVariable(const std::string& name, const SortPtr& sort)
-                    : name(name), sort(sort) { }
+            inline SortedVariable(std::string name, SortPtr sort)
+                    : name(std::move(name))
+                    , sort(std::move(sort)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -47,8 +48,9 @@ namespace smtlib {
              * \param name      Variable name
              * \param term      Binding
              */
-            VariableBinding(const std::string& name, const TermPtr& term)
-                    : name(name), term(term) { }
+            inline VariableBinding(std::string name, TermPtr term)
+                    : name(std::move(name))
+                    , term(std::move(term)) {}
 
             void accept(Visitor0* visitor) override;
 

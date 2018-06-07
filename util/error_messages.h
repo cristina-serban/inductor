@@ -15,19 +15,23 @@
 
 class ErrorMessages {
 private:
-    static std::string extractFirstN(std::string str, unsigned long n);
+    static std::string extractFirstN(const std::string& str, unsigned long n);
 
     template<class T>
-    static void printArray(std::stringstream &ss, sptr_v<T> &array, std::string separator) {
+    static void printArray(std::stringstream& ss,
+                           const std::vector<std::shared_ptr<T>>& array,
+                           const std::string& separator) {
         std::vector<std::string> strArray;
-        for (auto node : array) {
+        for (const auto& node : array) {
             strArray.push_back(node->toString());
         }
 
-        printArray(ss, strArray, separator);
+        printStringArray(ss, strArray, separator);
     }
 
-    static void printArray(std::stringstream &ss, std::vector<std::string> &array, std::string separator);
+    static void printStringArray(std::stringstream& ss,
+                                 const std::vector<std::string>& array,
+                                 const std::string& separator);
 
 public:
     static const std::string ERR_INVALID_IND_CASE;
@@ -131,131 +135,172 @@ public:
     static const std::string ERR_UFLD_LVL_INVALID;
     static const std::string ERR_OUT_PATH_INVALID;
 
-    static std::string buildTheoryUnloadable(std::string theory);
+    static std::string buildTheoryUnloadable(const std::string& theory);
 
-    static std::string buildTheoryUnknown(std::string theory);
+    static std::string buildTheoryUnknown(const std::string& theory);
 
-    static std::string buildTheoryAlreadyLoaded(std::string theory);
+    static std::string buildTheoryAlreadyLoaded(const std::string& theory);
 
-    static std::string buildLogicUnloadable(std::string logic);
+    static std::string buildLogicUnloadable(const std::string& logic);
 
-    static std::string buildLogicUnknown(std::string logic);
+    static std::string buildLogicUnknown(const std::string& logic);
 
-    static std::string buildLogicAlreadySet(std::string logic);
+    static std::string buildLogicAlreadySet(const std::string& logic);
 
 
-    static std::string buildSortUnknown(std::string name, int rowLeft, int colLeft, int rowRight, int colRight);
+    static std::string buildSortUnknown(const std::string& name,
+                                        int rowLeft, int colLeft,
+                                        int rowRight, int colRight);
 
-    static std::string buildSortArity(std::string name, unsigned long arity, size_t argCount,
-                                      int rowLeft, int colLeft, int rowRight, int colRight);
+    static std::string buildSortArity(const std::string& name,
+                                      unsigned long arity, size_t argCount,
+                                      int rowLeft, int colLeft,
+                                      int rowRight, int colRight);
 
-    static std::string buildSortParamArity(std::string sort, std::string sortName);
+    static std::string buildSortParamArity(const std::string& sort,
+                                           const std::string& sortName);
 
-    static std::string buildAssertTermNotWellSorted(std::string term, int rowLeft,
-                                                    int colLeft, int rowRight, int colRight);
+    static std::string buildAssertTermNotWellSorted(const std::string& term,
+                                                    int rowLeft, int colLeft,
+                                                    int rowRight, int colRight);
 
-    static std::string buildAssertTermNotBool(std::string term, std::string termSort,
-                                              int rowLeft, int colLeft, int rowRight, int colRight);
+    static std::string buildAssertTermNotBool(const std::string& term,
+                                              const std::string& termSort,
+                                              int rowLeft, int colLeft,
+                                              int rowRight, int colRight);
 
-    static std::string buildConstAlreadyExists(std::string name);
+    static std::string buildConstAlreadyExists(const std::string& name);
 
-    static std::string buildConstUnknown(std::string name);
+    static std::string buildConstUnknown(const std::string& name);
 
-    static std::string buildConstNoSorts(std::string name);
+    static std::string buildConstNoSorts(const std::string& name);
 
-    static std::string buildConstMultipleSorts(std::string name, sptr_v<smtlib::ast::Sort> &possibleSorts);
+    static std::string buildConstMultipleSorts(const std::string& name,
+                                               const std::vector<smtlib::ast::SortPtr>& possibleSorts);
 
-    static std::string buildConstWrongSort(std::string name, std::string wrongSort,
-                                           sptr_v<smtlib::ast::Sort> &possibleSorts);
+    static std::string buildConstWrongSort(const std::string& name,
+                                           const std::string& wrongSort,
+                                           const std::vector<smtlib::ast::SortPtr>& possibleSorts);
 
-    static std::string buildFunAlreadyExists(std::string name);
+    static std::string buildFunAlreadyExists(const std::string& name);
 
-    static std::string buildFunBodyWrongSort(std::string body, std::string wrongSort, std::string rightSort,
-                                             int rowLeft, int colLeft, int rowRight, int colRight);
+    static std::string buildFunBodyWrongSort(const std::string& body,
+                                             const std::string& wrongSort,
+                                             const std::string& rightSort,
+                                             int rowLeft, int colLeft,
+                                             int rowRight, int colRight);
 
-    static std::string buildFunBodyWrongSort(std::string name, std::string body,
-                                             std::string wrongSort, std::string rightSort,
-                                             int rowLeft, int colLeft, int rowRight, int colRight);
+    static std::string buildFunBodyWrongSort(const std::string& name,
+                                             const std::string& body,
+                                             const std::string& wrongSort,
+                                             const std::string& rightSort,
+                                             int rowLeft, int colLeft,
+                                             int rowRight, int colRight);
 
-    static std::string buildFunBodyNotWellSorted(std::string body, int rowLeft,
-                                                 int colLeft, int rowRight, int colRight);
+    static std::string buildFunBodyNotWellSorted(const std::string& body,
+                                                 int rowLeft, int colLeft,
+                                                 int rowRight, int colRight);
 
-    static std::string buildFunBodyNotWellSorted(std::string name, std::string body, int rowLeft,
-                                                 int colLeft, int rowRight, int colRight);
+    static std::string buildFunBodyNotWellSorted(const std::string& name,
+                                                 const std::string& body,
+                                                 int rowLeft, int colLeft,
+                                                 int rowRight, int colRight);
 
-    static std::string buildSortAlreadyExists(std::string name);
+    static std::string buildSortAlreadyExists(const std::string& name);
 
-    static std::string buildSpecConstAlreadyExists(std::string name);
+    static std::string buildSpecConstAlreadyExists(const std::string& name);
 
-    static std::string buildMetaSpecConstAlreadyExists(std::string name);
+    static std::string buildMetaSpecConstAlreadyExists(const std::string& name);
 
-    static std::string buildRightAssocParamCount(std::string name);
+    static std::string buildRightAssocParamCount(const std::string& name);
 
-    static std::string buildRightAssocRetSort(std::string name);
+    static std::string buildRightAssocRetSort(const std::string& name);
 
-    static std::string buildLeftAssocParamCount(std::string name);
+    static std::string buildLeftAssocParamCount(const std::string& name);
 
-    static std::string buildLeftAssocRetSort(std::string name);
+    static std::string buildLeftAssocRetSort(const std::string& name);
 
-    static std::string buildChainableAndPairwise(std::string name);
+    static std::string buildChainableAndPairwise(const std::string& name);
 
-    static std::string buildChainableParamCount(std::string name);
+    static std::string buildChainableParamCount(const std::string& name);
 
-    static std::string buildChainableParamSort(std::string name);
+    static std::string buildChainableParamSort(const std::string& name);
 
-    static std::string buildChainableRetSort(std::string name);
+    static std::string buildChainableRetSort(const std::string& name);
 
-    static std::string buildPairwiseParamCount(std::string name);
+    static std::string buildPairwiseParamCount(const std::string& name);
 
-    static std::string buildPairwiseParamSort(std::string name);
+    static std::string buildPairwiseParamSort(const std::string& name);
 
-    static std::string buildPairwiseRetSort(std::string name);
+    static std::string buildPairwiseRetSort(const std::string& name);
 
-    static std::string buildTermNotWellSorted(std::string term, int rowLeft, int colLeft, int rowRight, int colRight);
+    static std::string buildTermNotWellSorted(const std::string& term,
+                                              int rowLeft, int colLeft,
+                                              int rowRight, int colRight);
 
     static std::string buildStackUnpoppable(unsigned long levels);
 
-    static std::string buildLiteralUnknownSort(std::string literalType);
+    static std::string buildLiteralUnknownSort(const std::string& literalType);
 
-    static std::string buildLiteralMultipleSorts(std::string literalType, sptr_v<smtlib::ast::Sort> &possibleSorts);
+    static std::string buildLiteralMultipleSorts(const std::string& literalType,
+                                                 const std::vector<smtlib::ast::SortPtr>& possibleSorts);
 
-    static std::string buildFunUnknownDecl(std::string name, std::string retSort);
+    static std::string buildFunUnknownDecl(const std::string& name,
+                                           const std::string& retSort);
 
-    static std::string buildFunUnknownDecl(std::string name, size_t paramCount, std::string retSort);
+    static std::string buildFunUnknownDecl(const std::string& name,
+                                           size_t paramCount,
+                                           const std::string& retSort);
 
-    static std::string buildFunUnknownDecl(std::string name, std::vector<std::string> argSorts);
+    static std::string buildFunUnknownDecl(const std::string& name,
+                                           const std::vector<std::string>& argSorts);
 
-    static std::string buildFunUnknownDecl(std::string name, std::vector<std::string> argSorts, std::string retSort);
+    static std::string buildFunUnknownDecl(const std::string& name,
+                                           const std::vector<std::string>& argSorts,
+                                           const std::string& retSort);
 
-    static std::string buildFunMultipleDecls(std::string name, size_t paramCount, std::string retSort);
+    static std::string buildFunMultipleDecls(const std::string& name,
+                                             size_t paramCount,
+                                             const std::string& retSort);
 
-    static std::string buildFunMultipleDecls(std::string name, std::vector<std::string> argSorts,
-                                             std::vector<std::string> retSorts);
+    static std::string buildFunMultipleDecls(const std::string& name,
+                                             const std::vector<std::string>& argSorts,
+                                             const std::vector<std::string>& retSorts);
 
-    static std::string buildQuantTermWrongSort(std::string term, std::string wrongSort, std::string rightSort,
-                                               int rowLeft, int colLeft, int rowRight, int colRight);
+    static std::string buildQuantTermWrongSort(const std::string& term,
+                                               const std::string& wrongSort,
+                                               const std::string& rightSort,
+                                               int rowLeft, int colLeft,
+                                               int rowRight, int colRight);
 
-    static std::string buildPatternMismatch(std::string sort, std::string pattern);
+    static std::string buildPatternMismatch(const std::string& sort,
+                                            const std::string& pattern);
 
-    static std::string buildCasesMismatch(sptr_v<smtlib::ast::Sort> caseSorts);
+    static std::string buildCasesMismatch(const std::vector<smtlib::ast::SortPtr>& caseSorts);
 
-    static std::string buildParamFunDeclUnusedSortParams(std::vector<std::string> unusedParams);
+    static std::string buildParamFunDeclUnusedSortParams(const std::vector<std::string>& unusedParams);
 
-    static std::string buildParamDatatypeDeclUnusedSortParams(std::vector<std::string> unusedParams);
+    static std::string buildParamDatatypeDeclUnusedSortParams(const std::vector<std::string>& unusedParams);
 
-    static std::string buildSortDefUnusedSortParams(std::vector<std::string> unusedParams);
+    static std::string buildSortDefUnusedSortParams(const std::vector<std::string>& unusedParams);
 
-    static std::string buildAttrValueSortDecl(std::string attrValue);
+    static std::string buildAttrValueSortDecl(const std::string& attrValue);
 
-    static std::string buildAttrValueFunDecl(std::string attrValue);
+    static std::string buildAttrValueFunDecl(const std::string& attrValue);
 
-    static std::string buildAttrValueSymbol(std::string attrValue);
+    static std::string buildAttrValueSymbol(const std::string& attrValue);
 
-    static std::string buildDeclDatatypesCount(size_t sortDeclCount, size_t datatypeDeclCount);
+    static std::string buildDeclDatatypesCount(size_t sortDeclCount,
+                                               size_t datatypeDeclCount);
 
-    static std::string buildDeclDatatypeArity(std::string name, long arity, size_t paramCount);
+    static std::string buildDeclDatatypeArity(const std::string& name,
+                                              long arity,
+                                              size_t paramCount);
 
-    static std::string buildDefFunsRecCount(size_t declCount, size_t bodyCount);
+    static std::string buildDefFunsRecCount(size_t declCount,
+                                            size_t bodyCount);
 };
+
+typedef std::shared_ptr<ErrorMessages> ErrorMessagesPtr;
 
 #endif //INDUCTOR_ERROR_MESSAGES_H

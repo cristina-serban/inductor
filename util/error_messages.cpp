@@ -1,6 +1,7 @@
 #include "error_messages.h"
 
 using namespace std;
+using namespace smtlib::ast;
 
 const string ErrorMessages::ERR_INVALID_IND_CASE = "Not a valid inductive case";
 const string ErrorMessages::ERR_NULL_NODE_VISIT = "Attempt to visit NULL node";
@@ -103,16 +104,18 @@ const string ErrorMessages::ERR_UFLD_LVL_NEGATIVE = "Negative value for unfoldin
 const string ErrorMessages::ERR_UFLD_LVL_INVALID = "Invalid value for unfolding level";
 const string ErrorMessages::ERR_OUT_PATH_INVALID = "Invalid value for unfolding output path";
 
-string ErrorMessages::extractFirstN(string str, unsigned long n) {
+string ErrorMessages::extractFirstN(const string& str, unsigned long n) {
     if (str.length() > n)
         return string(str, 0, n) + "[...]";
     else
         return str;
 }
 
-void ErrorMessages::printArray(stringstream &ss, vector<string> &array, string separator) {
+void ErrorMessages::printStringArray(stringstream& ss,
+                                     const vector<string>& array,
+                                     const string& separator) {
     bool first = true;
-    for (auto item : array) {
+    for (const auto& item : array) {
         if (first) {
             first = false;
         } else {
@@ -122,23 +125,25 @@ void ErrorMessages::printArray(stringstream &ss, vector<string> &array, string s
     }
 }
 
-string ErrorMessages::buildTheoryUnloadable(string theory) {
+string ErrorMessages::buildTheoryUnloadable(const string& theory) {
     return "Cannot load theory '" + theory + "'";
 }
 
-string ErrorMessages::buildLogicUnloadable(string logic) {
+string ErrorMessages::buildLogicUnloadable(const string& logic) {
     return "Cannot load logic '" + logic + "'";
 }
 
-string ErrorMessages::buildTheoryUnknown(string theory) {
+string ErrorMessages::buildTheoryUnknown(const string& theory) {
     return "Unknown theory '" + theory + "'";
 }
 
-string ErrorMessages::buildLogicUnknown(string logic) {
+string ErrorMessages::buildLogicUnknown(const string& logic) {
     return "Unknown logic '" + logic + "'";
 }
 
-string ErrorMessages::buildSortUnknown(string name, int rowLeft, int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildSortUnknown(const string& name,
+                                       int rowLeft, int colLeft,
+                                       int rowRight, int colRight) {
     stringstream ss;
     ss << "Unknown sort '" << name << "'";
 
@@ -148,8 +153,11 @@ string ErrorMessages::buildSortUnknown(string name, int rowLeft, int colLeft, in
     return ss.str();
 }
 
-string ErrorMessages::buildSortArity(string name, unsigned long arity, size_t argCount,
-                                     int rowLeft, int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildSortArity(const string& name,
+                                     unsigned long arity,
+                                     size_t argCount,
+                                     int rowLeft, int colLeft,
+                                     int rowRight, int colRight) {
     stringstream ss;
     ss << "Sort '" << name << "' should have " << arity << " arguments, not " << argCount;
 
@@ -159,12 +167,14 @@ string ErrorMessages::buildSortArity(string name, unsigned long arity, size_t ar
     return ss.str();
 }
 
-string ErrorMessages::buildSortParamArity(string sort, string sortName) {
+string ErrorMessages::buildSortParamArity(const string& sort,
+                                          const string& sortName) {
     return sort + ": '" + sortName + "' is a sort parameter - it should have an arity of 0";
 }
 
-string ErrorMessages::buildAssertTermNotWellSorted(string term,
-                                                   int rowLeft, int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildAssertTermNotWellSorted(const string& term,
+                                                   int rowLeft, int colLeft,
+                                                   int rowRight, int colRight) {
     stringstream ss;
     ss << "Assertion term '" << extractFirstN(term, 50) << "'";
 
@@ -175,8 +185,10 @@ string ErrorMessages::buildAssertTermNotWellSorted(string term,
     return ss.str();
 }
 
-string ErrorMessages::buildAssertTermNotBool(string term, string termSort,
-                                             int rowLeft, int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildAssertTermNotBool(const string& term,
+                                             const string& termSort,
+                                             int rowLeft, int colLeft,
+                                             int rowRight, int colRight) {
     stringstream ss;
     ss << "Assertion term '" << extractFirstN(term, 50) << "'";
 
@@ -187,83 +199,86 @@ string ErrorMessages::buildAssertTermNotBool(string term, string termSort,
     return ss.str();
 }
 
-string ErrorMessages::buildConstAlreadyExists(string name) {
+string ErrorMessages::buildConstAlreadyExists(const string& name) {
     return "Constant '" + name + "' already exists with same sort";
 }
 
-string ErrorMessages::buildConstUnknown(string name) {
+string ErrorMessages::buildConstUnknown(const string& name) {
     return "Unknown constant '" + name + "'";
 }
 
-string ErrorMessages::buildFunAlreadyExists(string name) {
+string ErrorMessages::buildFunAlreadyExists(const string& name) {
     return "Function '" + name + "' already exists with the same signature";
 }
 
-string ErrorMessages::buildSortAlreadyExists(string name) {
+string ErrorMessages::buildSortAlreadyExists(const string& name) {
     return "Sort symbol '" + name + "' already exists";
 }
 
-string ErrorMessages::buildSpecConstAlreadyExists(string name) {
+string ErrorMessages::buildSpecConstAlreadyExists(const string& name) {
     return "Specification constant '" + name + "' already exists";
 }
 
-string ErrorMessages::buildMetaSpecConstAlreadyExists(string name) {
+string ErrorMessages::buildMetaSpecConstAlreadyExists(const string& name) {
     return "Sort for meta specification constant '" + name + "' already declared";
 }
 
-string ErrorMessages::buildRightAssocParamCount(string name) {
+string ErrorMessages::buildRightAssocParamCount(const string& name) {
     return "Function '" + name +
            "' cannot be right associative - it does not have 2 parameters";
 }
 
-string ErrorMessages::buildRightAssocRetSort(string name) {
+string ErrorMessages::buildRightAssocRetSort(const string& name) {
     return "Function '" + name +
            "' cannot be right associative - sort of second parameter not the same as return sort";
 }
 
-string ErrorMessages::buildLeftAssocParamCount(string name) {
+string ErrorMessages::buildLeftAssocParamCount(const string& name) {
     return "Function '" + name +
            "' cannot be left associative - it does not have 2 parameters";
 }
 
-string ErrorMessages::buildLeftAssocRetSort(string name) {
+string ErrorMessages::buildLeftAssocRetSort(const string& name) {
     return "Function '" + name +
            "' cannot be left associative - sort of first parameter not the same as return sort";
 }
 
-string ErrorMessages::buildChainableAndPairwise(string name) {
+string ErrorMessages::buildChainableAndPairwise(const string& name) {
     return "Function '" + name +
            "' cannot be both chainable and pairwise";
 }
 
-string ErrorMessages::buildChainableParamCount(string name) {
+string ErrorMessages::buildChainableParamCount(const string& name) {
     return "Function '" + name +
            "' cannot be chainable - it does not have 2 parameters";
 }
 
-string ErrorMessages::buildChainableParamSort(string name) {
+string ErrorMessages::buildChainableParamSort(const string& name) {
     return "Function '" + name + "' cannot be chainable " + "- parameters do not have the same sort";
 }
 
-string ErrorMessages::buildChainableRetSort(string name) {
+string ErrorMessages::buildChainableRetSort(const string& name) {
     return "Function '" + name + "' cannot be chainable " + "- return sort is not Bool";
 }
 
-string ErrorMessages::buildPairwiseParamCount(string name) {
+string ErrorMessages::buildPairwiseParamCount(const string& name) {
     return "Function '" + name +
            "' cannot be chainable - it does not have 2 parameters";
 }
 
-string ErrorMessages::buildPairwiseParamSort(string name) {
+string ErrorMessages::buildPairwiseParamSort(const string& name) {
     return "Function '" + name + "' cannot be pairwise " + "- parameters do not have the same sort";
 }
 
-string ErrorMessages::buildPairwiseRetSort(string name) {
+string ErrorMessages::buildPairwiseRetSort(const string& name) {
     return "Function '" + name + "' cannot be pairwise " + "- return sort is not Bool";
 }
 
-string ErrorMessages::buildFunBodyWrongSort(string body, string wrongSort, string rightSort,
-                                            int rowLeft, int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildFunBodyWrongSort(const string& body,
+                                            const string& wrongSort,
+                                            const string& rightSort,
+                                            int rowLeft, int colLeft,
+                                            int rowRight, int colRight) {
     stringstream ss;
     ss << "Function body '" << extractFirstN(body, 50) << "'";
 
@@ -274,9 +289,12 @@ string ErrorMessages::buildFunBodyWrongSort(string body, string wrongSort, strin
     return ss.str();
 }
 
-string ErrorMessages::buildFunBodyWrongSort(string name, string body,
-                                            string wrongSort, string rightSort,
-                                            int rowLeft, int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildFunBodyWrongSort(const string& name,
+                                            const string& body,
+                                            const string& wrongSort,
+                                            const string& rightSort,
+                                            int rowLeft, int colLeft,
+                                            int rowRight, int colRight) {
     stringstream ss;
     ss << "The body of function " << name << ", '" << extractFirstN(body, 50) << "'";
 
@@ -287,8 +305,9 @@ string ErrorMessages::buildFunBodyWrongSort(string name, string body,
     return ss.str();
 }
 
-string ErrorMessages::buildFunBodyNotWellSorted(string body,
-                                                int rowLeft, int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildFunBodyNotWellSorted(const string& body,
+                                                int rowLeft, int colLeft,
+                                                int rowRight, int colRight) {
     stringstream ss;
     ss << "Function body '" << extractFirstN(body, 50) << "'";
 
@@ -299,8 +318,10 @@ string ErrorMessages::buildFunBodyNotWellSorted(string body,
     return ss.str();
 }
 
-string ErrorMessages::buildFunBodyNotWellSorted(string name, string body, int rowLeft,
-                                                int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildFunBodyNotWellSorted(const string& name,
+                                                const string& body,
+                                                int rowLeft, int colLeft,
+                                                int rowRight, int colRight) {
     stringstream ss;
     ss << "The body of function '" << name << "', '" << extractFirstN(body, 50) << "'";
 
@@ -311,7 +332,9 @@ string ErrorMessages::buildFunBodyNotWellSorted(string name, string body, int ro
     return ss.str();
 }
 
-string ErrorMessages::buildTermNotWellSorted(string term, int rowLeft, int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildTermNotWellSorted(const string& term,
+                                             int rowLeft, int colLeft,
+                                             int rowRight, int colRight) {
     stringstream ss;
     ss << "Term '" << extractFirstN(term, 50) << "'";
 
@@ -334,19 +357,20 @@ string ErrorMessages::buildStackUnpoppable(unsigned long levels) {
 }
 
 
-string ErrorMessages::buildLogicAlreadySet(string logic) {
+string ErrorMessages::buildLogicAlreadySet(const string& logic) {
     return "Logic already set to '" + logic + "'";
 }
 
-string ErrorMessages::buildTheoryAlreadyLoaded(string theory) {
+string ErrorMessages::buildTheoryAlreadyLoaded(const string& theory) {
     return "Theory '" + theory + "' already loaded";
 }
 
-string ErrorMessages::buildConstNoSorts(std::string name) {
+string ErrorMessages::buildConstNoSorts(const string& name) {
     return "No possible sorts for constant '" + name + "'";
 }
 
-string ErrorMessages::buildConstMultipleSorts(string name, sptr_v<smtlib::ast::Sort> &possibleSorts) {
+string ErrorMessages::buildConstMultipleSorts(const string& name,
+                                              const std::vector<SortPtr>& possibleSorts) {
     stringstream ss;
     ss << "Multiple possible sorts for constant '" << name << "': ";
     printArray(ss, possibleSorts, ", ");
@@ -354,7 +378,9 @@ string ErrorMessages::buildConstMultipleSorts(string name, sptr_v<smtlib::ast::S
     return ss.str();
 }
 
-string ErrorMessages::buildConstWrongSort(string name, string wrongSort, sptr_v<smtlib::ast::Sort> &possibleSorts) {
+string ErrorMessages::buildConstWrongSort(const string& name,
+                                          const string& wrongSort,
+                                          const std::vector<SortPtr>& possibleSorts) {
     stringstream ss;
     ss << "Constant '" << name << "' cannot be of sort " << wrongSort << ". Possible sorts: ";
     printArray(ss, possibleSorts, ", ");
@@ -362,83 +388,97 @@ string ErrorMessages::buildConstWrongSort(string name, string wrongSort, sptr_v<
     return ss.str();
 }
 
-string ErrorMessages::buildLiteralUnknownSort(string literalType) {
+string ErrorMessages::buildLiteralUnknownSort(const string& literalType) {
     return "No declared sort for " + literalType + " literals";
 }
 
-string ErrorMessages::buildLiteralMultipleSorts(string literalType, sptr_v<smtlib::ast::Sort> &possibleSorts) {
+string ErrorMessages::buildLiteralMultipleSorts(const string& literalType,
+                                                const std::vector<SortPtr>& possibleSorts) {
     stringstream ss;
     ss << "Multiple declared sorts for " + literalType + " literals: ";
     printArray(ss, possibleSorts, ", ");
     return ss.str();
 }
 
-string ErrorMessages::buildFunUnknownDecl(string name, string retSort) {
+string ErrorMessages::buildFunUnknownDecl(const string& name,
+                                          const string& retSort) {
     stringstream ss;
     ss << "No known declaration for function '" << name << "' with return sort " << retSort;
     return ss.str();
 }
 
-string ErrorMessages::buildFunUnknownDecl(string name, size_t paramCount, string retSort) {
+string ErrorMessages::buildFunUnknownDecl(const string& name,
+                                          size_t paramCount,
+                                          const string& retSort) {
     stringstream ss;
     ss << "No known declaration for function '" << name << "' with "
-    << paramCount << " parameters and return sort " << retSort;
+       << paramCount << " parameters and return sort " << retSort;
 
     return ss.str();
 }
 
-string ErrorMessages::buildFunUnknownDecl(string name, vector<string> argSorts) {
+string ErrorMessages::buildFunUnknownDecl(const string& name,
+                                          const vector<string>& argSorts) {
     stringstream ss;
     ss << "No known declaration for function '" << name << "' with parameter list (";
-    printArray(ss, argSorts, " ");
+    printStringArray(ss, argSorts, " ");
     ss << ")";
 
     return ss.str();
 }
 
-string ErrorMessages::buildFunUnknownDecl(string name, vector<string> argSorts, string retSort) {
+string ErrorMessages::buildFunUnknownDecl(const string& name,
+                                          const vector<string>& argSorts,
+                                          const string& retSort) {
     stringstream ss;
     ss << buildFunUnknownDecl(name, argSorts) << " and return sort " << retSort;
 
     return ss.str();
 }
 
-string ErrorMessages::buildFunMultipleDecls(string name, size_t paramCount, string retSort) {
+string ErrorMessages::buildFunMultipleDecls(const string& name,
+                                            size_t paramCount,
+                                            const string& retSort) {
     stringstream ss;
     ss << "Multiple declarations for function '" << name << "' with "
-    << paramCount << " parameters and return sort " << retSort;
+       << paramCount << " parameters and return sort " << retSort;
 
     return ss.str();
 }
 
-string ErrorMessages::buildFunMultipleDecls(string name, vector<string> argSorts, vector<string> retSorts) {
+string ErrorMessages::buildFunMultipleDecls(const string& name,
+                                            const vector<string>& argSorts,
+                                            const vector<string>& retSorts) {
     stringstream ss;
     ss << "Multiple declarations for function '" << name << "' with parameter list (";
-    printArray(ss, argSorts, " ");
+    printStringArray(ss, argSorts, " ");
     ss << "). Possible return sorts: ";
-    printArray(ss, retSorts, ", ");
+    printStringArray(ss, retSorts, ", ");
 
     return ss.str();
 }
 
-string ErrorMessages::buildQuantTermWrongSort(string term, string wrongSort, string rightSort,
-                                              int rowLeft, int colLeft, int rowRight, int colRight) {
+string ErrorMessages::buildQuantTermWrongSort(const string& term,
+                                              const string& wrongSort,
+                                              const string& rightSort,
+                                              int rowLeft, int colLeft,
+                                              int rowRight, int colRight) {
     stringstream ss;
     ss << "Quantified term '" << extractFirstN(term, 50) << "' ("
-    << rowLeft << ":" << colLeft << " - " << rowRight << ":" << colRight
-    << ") is of type " << wrongSort << ", not " << rightSort;
+       << rowLeft << ":" << colLeft << " - " << rowRight << ":" << colRight
+       << ") is of type " << wrongSort << ", not " << rightSort;
 
     return ss.str();
 }
 
-string ErrorMessages::buildPatternMismatch(string sort, string pattern) {
+string ErrorMessages::buildPatternMismatch(const string& sort, const string& pattern) {
     stringstream ss;
     ss << "Cannot match term of sort " << sort << " with pattern " << pattern;
 
     return ss.str();
 }
 
-string ErrorMessages::buildCasesMismatch(sptr_v<smtlib::ast::Sort> caseSorts) {
+string ErrorMessages::buildCasesMismatch(const std::vector<SortPtr>& caseSorts) {
     stringstream ss;
     ss << "Cases have different sorts: ";
     printArray(ss, caseSorts, " ");
@@ -446,73 +486,78 @@ string ErrorMessages::buildCasesMismatch(sptr_v<smtlib::ast::Sort> caseSorts) {
     return ss.str();
 }
 
-string ErrorMessages::buildParamFunDeclUnusedSortParams(vector<string> unusedParams) {
+string ErrorMessages::buildParamFunDeclUnusedSortParams(const vector<string>& unusedParams) {
     long diff = unusedParams.size();
 
     stringstream ss;
     ss << "Sort parameter" << ((diff == 1) ? " " : "s ");
-    printArray(ss, unusedParams, ", ");
+    printStringArray(ss, unusedParams, ", ");
     ss << ((diff == 1) ? " is " : " are ") << "not used in parametric function declaration";
 
     return ss.str();
 }
 
-string ErrorMessages::buildParamDatatypeDeclUnusedSortParams(vector<string> unusedParams) {
+string ErrorMessages::buildParamDatatypeDeclUnusedSortParams(const vector<string>& unusedParams) {
     long diff = unusedParams.size();
 
     stringstream ss;
     ss << "Sort parameter" << ((diff == 1) ? " " : "s ");
-    printArray(ss, unusedParams, ", ");
+    printStringArray(ss, unusedParams, ", ");
     ss << ((diff == 1) ? " is " : " are ") << "not used in parametric datatype declaration";
 
     return ss.str();
 }
 
-string ErrorMessages::buildSortDefUnusedSortParams(vector<string> unusedParams) {
+string ErrorMessages::buildSortDefUnusedSortParams(const vector<string>& unusedParams) {
     long diff = unusedParams.size();
 
     stringstream ss;
     ss << "Sort parameter" << ((diff == 1) ? " " : "s ");
-    printArray(ss, unusedParams, ", ");
+    printStringArray(ss, unusedParams, ", ");
     ss << ((diff == 1) ? " is " : " are ") << "not used in sort definition";
 
     return ss.str();
 }
 
-string ErrorMessages::buildAttrValueSortDecl(string attrValue) {
+string ErrorMessages::buildAttrValueSortDecl(const string& attrValue) {
     return "Attribute value '" + attrValue + "' should be a sort symbol declaration";
 }
 
-string ErrorMessages::buildAttrValueFunDecl(string attrValue) {
-    return "Attribute value '" + attrValue + "' should be a function symbol declaration";
+string ErrorMessages::buildAttrValueFunDecl(const string& attrValue) {
+    return "Attribute value '" + attrValue +"' should be a function symbol declaration";
 }
 
-string ErrorMessages::buildAttrValueSymbol(string attrValue) {
+string ErrorMessages::buildAttrValueSymbol(const string& attrValue) {
     return "Attribute value '" + attrValue + "' should be a symbol";
 }
 
-string ErrorMessages::buildDeclDatatypesCount(size_t sortDeclCount, size_t datatypeDeclCount) {
+string ErrorMessages::buildDeclDatatypesCount(size_t sortDeclCount,
+                                              size_t datatypeDeclCount) {
     stringstream ss;
     ss << "Number of sort declarations (" << sortDeclCount
-    << ") is not equal to the number of datatype declarations ("
-    << datatypeDeclCount << ") in declare-datatypes command";
+       << ") is not equal to the number of datatype declarations ("
+       << datatypeDeclCount << ") in declare-datatypes command";
 
     return ss.str();
 }
 
-string ErrorMessages::buildDeclDatatypeArity(string name, long arity, size_t paramCount) {
+string ErrorMessages::buildDeclDatatypeArity(const string& name,
+                                             long arity,
+                                             size_t paramCount) {
     stringstream ss;
     ss << "Datatype '" << name << "' has an arity of " << arity
-    << " but its declaration has " << paramCount << " parameter" << (paramCount == 1 ? "" : "s");
+       << " but its declaration has " << paramCount << " parameter"
+       << (paramCount == 1 ? "" : "s");
 
     return ss.str();
 }
 
-string ErrorMessages::buildDefFunsRecCount(size_t declCount, size_t bodyCount) {
+string ErrorMessages::buildDefFunsRecCount(size_t declCount,
+                                           size_t bodyCount) {
     stringstream ss;
     ss << "Number of function declarations (" << declCount
-    << ") is not equal to the number of function bodies ("
-    << bodyCount << ") in define-funs-rec command";
+       << ") is not equal to the number of function bodies ("
+       << bodyCount << ") in define-funs-rec command";
 
     return ss.str();
 }

@@ -18,7 +18,6 @@
 #include "ast/ast_theory.h"
 #include "ast/ast_variable.h"
 #include "parser/smtlib_parser.h"
-#include "util/global_typedef.h"
 
 #include <iostream>
 #include <memory>
@@ -434,8 +433,8 @@ public:
     template<class T>
     vector<shared_ptr<T>> unwrap() {
         vector<shared_ptr<T>> result;
-        for (unsigned long i = 0, n = v.size(); i < n; ++i) {
-            shared_ptr<T> ptr = share<T>(v[i]);
+        for (const auto& elem : v) {
+            shared_ptr<T> ptr = share<T>(elem);
             result.push_back(ptr);
         }
         v.clear();
@@ -472,14 +471,18 @@ void ast_setAst(SmtPrsr parser, AstPtr ast) {
     }
 }
 
-void ast_reportError(SmtPrsr parser, unsigned int rowLeft, unsigned int colLeft,
-                     unsigned int rowRight, unsigned int colRight, const char* msg) {
+void ast_reportError(SmtPrsr parser,
+                     int rowLeft, int colLeft,
+                     int rowRight, int colRight,
+                     const char* msg) {
     if (parser && msg) {
         parser->reportError(rowLeft, colLeft, rowRight, colRight, msg);
     }
 }
 
-void ast_setLocation(SmtPrsr parser, AstPtr ptr, int rowLeft, int colLeft, int rowRight, int colRight) {
+void ast_setLocation(SmtPrsr parser, AstPtr ptr,
+                     int rowLeft, int colLeft,
+                     int rowRight, int colRight) {
     ptr->filename = parser->getFilename();
     ptr->rowLeft = rowLeft;
     ptr->colLeft = colLeft;
@@ -498,20 +501,21 @@ int ast_bool_value(AstPtr ptr) {
 
 // ast_attribute.h
 AstPtr ast_newAttribute1(AstPtr keyword) {
-    AttributePtr ptr = make_shared<Attribute>(share<Keyword>(keyword));
+    AttributePtr ptr = make_shared<Attribute>(std::move(share<Keyword>(keyword)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newAttribute2(AstPtr keyword, AstPtr attr_value) {
-    AttributePtr ptr = make_shared<Attribute>(share<Keyword>(keyword), share<AttributeValue>(attr_value));
+    AttributePtr ptr = make_shared<Attribute>(std::move(share<Keyword>(keyword)),
+                                              std::move(share<AttributeValue>(attr_value)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newCompAttributeValue(AstList values) {
-    vector<AttributeValuePtr> v = values->unwrap<AttributeValue>();
-    CompAttributeValuePtr ptr = make_shared<CompAttributeValue>(v);
+    CompAttributeValuePtr ptr =
+            make_shared<CompAttributeValue>(std::move(values->unwrap<AttributeValue>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -530,8 +534,8 @@ AstPtr ast_newKeyword(char const* value) {
 }
 
 AstPtr ast_newMetaSpecConstant(int value) {
-    MetaSpecConstantPtr ptr = make_shared<MetaSpecConstant>(
-            static_cast<MetaSpecConstant::Type>(value));
+    MetaSpecConstantPtr ptr =
+            make_shared<MetaSpecConstant>(static_cast<MetaSpecConstant::Type>(value));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -543,7 +547,8 @@ AstPtr ast_newBooleanValue(int value) {
 }
 
 AstPtr ast_newPropLiteral(AstPtr symbol, int negated) {
-    PropLiteralPtr ptr = make_shared<PropLiteral>(share<Symbol>(symbol), (bool) negated);
+    PropLiteralPtr ptr =
+            make_shared<PropLiteral>(std::move(share<Symbol>(symbol)), (bool) negated);
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -562,74 +567,79 @@ AstPtr ast_newCheckSatCommand() {
 }
 
 AstPtr ast_newCheckSatAssumCommand(AstList assumptions) {
-    vector<PropLiteralPtr> v = assumptions->unwrap<PropLiteral>();
-    CheckSatAssumCommandPtr ptr = make_shared<CheckSatAssumCommand>(v);
+    CheckSatAssumCommandPtr ptr =
+            make_shared<CheckSatAssumCommand>(std::move(assumptions->unwrap<PropLiteral>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDeclareConstCommand(AstPtr symbol, AstPtr sort) {
     DeclareConstCommandPtr ptr =
-            make_shared<DeclareConstCommand>(share<Symbol>(symbol), share<Sort>(sort));
+            make_shared<DeclareConstCommand>(std::move(share<Symbol>(symbol)),
+                                             std::move(share<Sort>(sort)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDeclareDatatypeCommand(AstPtr symbol, AstPtr declaration) {
     DeclareDatatypeCommandPtr ptr =
-            make_shared<DeclareDatatypeCommand>(share<Symbol>(symbol),
-                                                share<DatatypeDeclaration>(declaration));
+            make_shared<DeclareDatatypeCommand>(std::move(share<Symbol>(symbol)),
+                                                std::move(share<DatatypeDeclaration>(declaration)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDeclareDatatypesCommand(AstList sorts, AstList declarations) {
-    vector<SortDeclarationPtr> v1 = sorts->unwrap<SortDeclaration>();
-    vector<DatatypeDeclarationPtr> v2 = declarations->unwrap<DatatypeDeclaration>();
-    DeclareDatatypesCommandPtr ptr = make_shared<DeclareDatatypesCommand>(v1, v2);
+    DeclareDatatypesCommandPtr ptr =
+            make_shared<DeclareDatatypesCommand>(std::move(sorts->unwrap<SortDeclaration>()),
+                                                 std::move(declarations->unwrap<DatatypeDeclaration>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDeclareFunCommand(AstPtr symbol, AstList params, AstPtr sort) {
-    vector<SortPtr> v = params->unwrap<Sort>();
-    DeclareFunCommandPtr ptr = make_shared<DeclareFunCommand>(share<Symbol>(symbol), v, share<Sort>(sort));
+    vector<SortPtr> v();
+    DeclareFunCommandPtr ptr = make_shared<DeclareFunCommand>(std::move(share<Symbol>(symbol)),
+                                                              std::move(params->unwrap<Sort>()),
+                                                              std::move(share<Sort>(sort)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDeclareSortCommand(AstPtr symbol, AstPtr arity) {
     DeclareSortCommandPtr ptr =
-            make_shared<DeclareSortCommand>(share<Symbol>(symbol), share<NumeralLiteral>(arity));
+            make_shared<DeclareSortCommand>(std::move(share<Symbol>(symbol)),
+                                            std::move(share<NumeralLiteral>(arity)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDefineFunCommand(AstPtr definition) {
     DefineFunCommandPtr ptr =
-            make_shared<DefineFunCommand>(share<FunctionDefinition>(definition));
+            make_shared<DefineFunCommand>(std::move(share<FunctionDefinition>(definition)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDefineFunRecCommand(AstPtr definition) {
-    DefineFunRecCommandPtr ptr = make_shared<DefineFunRecCommand>(share<FunctionDefinition>(definition));
+    DefineFunRecCommandPtr ptr =
+            make_shared<DefineFunRecCommand>(std::move(share<FunctionDefinition>(definition)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDefineFunsRecCommand(AstList declarations, AstList bodies) {
-    vector<FunctionDeclarationPtr> v1 = declarations->unwrap<FunctionDeclaration>();
-    vector<TermPtr> v2 = bodies->unwrap<Term>();
-    DefineFunsRecCommandPtr ptr = make_shared<DefineFunsRecCommand>(v1, v2);
+    DefineFunsRecCommandPtr ptr =
+            make_shared<DefineFunsRecCommand>(std::move(declarations->unwrap<FunctionDeclaration>()),
+                                              std::move(bodies->unwrap<Term>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newDefineSortCommand(AstPtr symbol, AstList params, AstPtr sort) {
-    vector<SymbolPtr> v1 = params->unwrap<Symbol>();
-    DefineSortCommandPtr ptr =
-            make_shared<DefineSortCommand>(share<Symbol>(symbol), v1, share<Sort>(sort));
+    DefineSortCommandPtr ptr = make_shared<DefineSortCommand>(std::move(share<Symbol>(symbol)),
+                                                              std::move(params->unwrap<Symbol>()),
+                                                              std::move(share<Sort>(sort)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -659,7 +669,7 @@ AstPtr ast_newGetAssignsCommand() {
 }
 
 AstPtr ast_newGetInfoCommand(AstPtr keyword) {
-    GetInfoCommandPtr ptr = make_shared<GetInfoCommand>(share<Keyword>(keyword));
+    GetInfoCommandPtr ptr = make_shared<GetInfoCommand>(std::move(share<Keyword>(keyword)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -671,7 +681,7 @@ AstPtr ast_newGetModelCommand() {
 }
 
 AstPtr ast_newGetOptionCommand(AstPtr keyword) {
-    GetOptionCommandPtr ptr = make_shared<GetOptionCommand>(share<Keyword>(keyword));
+    GetOptionCommandPtr ptr = make_shared<GetOptionCommand>(std::move(share<Keyword>(keyword)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -695,20 +705,19 @@ AstPtr ast_newGetUnsatCoreCommand() {
 }
 
 AstPtr ast_newGetValueCommand(AstList terms) {
-    vector<TermPtr> v = terms->unwrap<Term>();
-    GetValueCommandPtr ptr = make_shared<GetValueCommand>(v);
+    GetValueCommandPtr ptr = make_shared<GetValueCommand>(std::move(terms->unwrap<Term>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newPopCommand(AstPtr numeral) {
-    PopCommandPtr ptr = make_shared<PopCommand>(share<NumeralLiteral>(numeral));
+    PopCommandPtr ptr = make_shared<PopCommand>(std::move(share<NumeralLiteral>(numeral)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newPushCommand(AstPtr numeral) {
-    PushCommandPtr ptr = make_shared<PushCommand>(share<NumeralLiteral>(numeral));
+    PushCommandPtr ptr = make_shared<PushCommand>(std::move(share<NumeralLiteral>(numeral)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -726,19 +735,19 @@ AstPtr ast_newResetAssertsCommand() {
 }
 
 AstPtr ast_newSetInfoCommand(AstPtr info) {
-    SetInfoCommandPtr ptr = make_shared<SetInfoCommand>(share<Attribute>(info));
+    SetInfoCommandPtr ptr = make_shared<SetInfoCommand>(std::move(share<Attribute>(info)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSetLogicCommand(AstPtr logic) {
-    SetLogicCommandPtr ptr = make_shared<SetLogicCommand>(share<Symbol>(logic));
+    SetLogicCommandPtr ptr = make_shared<SetLogicCommand>(std::move(share<Symbol>(logic)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSetOptionCommand(AstPtr option) {
-    SetOptionCommandPtr ptr = make_shared<SetOptionCommand>(share<Attribute>(option));
+    SetOptionCommandPtr ptr = make_shared<SetOptionCommand>(std::move(share<Attribute>(option)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -746,74 +755,79 @@ AstPtr ast_newSetOptionCommand(AstPtr option) {
 //ast_datatype.h
 AstPtr ast_newSortDeclaration(AstPtr symbol, AstPtr numeral) {
     SortDeclarationPtr ptr =
-            make_shared<SortDeclaration>(share<Symbol>(symbol), share<NumeralLiteral>(numeral));
+            make_shared<SortDeclaration>(std::move(share<Symbol>(symbol)),
+                                         std::move(share<NumeralLiteral>(numeral)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSelectorDeclaration(AstPtr symbol, AstPtr sort) {
     SelectorDeclarationPtr ptr =
-            make_shared<SelectorDeclaration>(share<Symbol>(symbol), share<Sort>(sort));
+            make_shared<SelectorDeclaration>(std::move(share<Symbol>(symbol)),
+                                             std::move(share<Sort>(sort)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newConstructorDeclaration(AstPtr symbol, AstList selectors) {
-    vector<SelectorDeclarationPtr> v = selectors->unwrap<SelectorDeclaration>();
-    ConstructorDeclarationPtr ptr = make_shared<ConstructorDeclaration>(share<Symbol>(symbol), v);
+    ConstructorDeclarationPtr ptr =
+            make_shared<ConstructorDeclaration>(std::move(share<Symbol>(symbol)),
+                                                std::move(selectors->unwrap<SelectorDeclaration>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSimpleDatatypeDeclaration(AstList constructors) {
-    vector<ConstructorDeclarationPtr> v = constructors->unwrap<ConstructorDeclaration>();
-    SimpleDatatypeDeclarationPtr ptr = make_shared<SimpleDatatypeDeclaration>(v);
+    SimpleDatatypeDeclarationPtr ptr =
+            make_shared<SimpleDatatypeDeclaration>(std::move(constructors->unwrap<ConstructorDeclaration>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newParametricDatatypeDeclaration(AstList params, AstList constructors) {
-    vector<SymbolPtr> v1 = params->unwrap<Symbol>();
-    vector<ConstructorDeclarationPtr> v2 = constructors->unwrap<ConstructorDeclaration>();
-    ParametricDatatypeDeclarationPtr ptr = make_shared<ParametricDatatypeDeclaration>(v1, v2);
+    ParametricDatatypeDeclarationPtr ptr =
+            make_shared<ParametricDatatypeDeclaration>(std::move(params->unwrap<Symbol>()),
+                                                       std::move(constructors->unwrap<ConstructorDeclaration>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_fun.h
 AstPtr ast_newFunctionDeclaration(AstPtr symbol, AstList params, AstPtr sort) {
-    vector<SortedVariablePtr> v = params->unwrap<SortedVariable>();
     FunctionDeclarationPtr ptr =
-            make_shared<FunctionDeclaration>(share<Symbol>(symbol), v, share<Sort>(sort));
+            make_shared<FunctionDeclaration>(std::move(share<Symbol>(symbol)),
+                                             std::move(params->unwrap<SortedVariable>()),
+                                             std::move(share<Sort>(sort)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newFunctionDefinition(AstPtr signature, AstPtr body) {
-    FunctionDefinitionPtr ptr = make_shared<FunctionDefinition>(
-            share<FunctionDeclaration>(signature), share<Term>(body));
+    FunctionDefinitionPtr ptr =
+            make_shared<FunctionDefinition>(std::move(share<FunctionDeclaration>(signature)),
+                                            std::move(share<Term>(body)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_identifier.h
 AstPtr ast_newSimpleIdentifier1(AstPtr symbol) {
-    SimpleIdentifierPtr ptr = make_shared<SimpleIdentifier>(share<Symbol>(symbol));
+    SimpleIdentifierPtr ptr = make_shared<SimpleIdentifier>(std::move(share<Symbol>(symbol)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSimpleIdentifier2(AstPtr symbol, AstList indices) {
-    vector<IndexPtr> v = indices->unwrap<Index>();
-    SimpleIdentifierPtr ptr =
-            make_shared<SimpleIdentifier>(share<Symbol>(symbol), v);
+    SimpleIdentifierPtr ptr = make_shared<SimpleIdentifier>(std::move(share<Symbol>(symbol)),
+                                                            std::move(indices->unwrap<Index>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newQualifiedIdentifier(AstPtr identifier, AstPtr sort) {
     QualifiedIdentifierPtr ptr =
-            make_shared<QualifiedIdentifier>(share<SimpleIdentifier>(identifier), share<Sort>(sort));
+            make_shared<QualifiedIdentifier>(std::move(share<SimpleIdentifier>(identifier)),
+                                             std::move(share<Sort>(sort)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -839,8 +853,8 @@ AstPtr ast_newStringLiteral(char const* value) {
 
 // ast_logic.h
 AstPtr ast_newLogic(AstPtr name, AstList attributes) {
-    vector<AttributePtr> v = attributes->unwrap<Attribute>();
-    LogicPtr ptr = make_shared<Logic>(share<Symbol>(name), v);
+    LogicPtr ptr = make_shared<Logic>(std::move(share<Symbol>(name)),
+                                      std::move(attributes->unwrap<Attribute>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
@@ -848,159 +862,163 @@ AstPtr ast_newLogic(AstPtr name, AstList attributes) {
 // ast_match.h
 AstPtr ast_newQualifiedConstructor(AstPtr symbol, AstPtr sort) {
     QualifiedConstructorPtr ptr =
-            make_shared<QualifiedConstructor>(share<Symbol>(symbol), share<Sort>(sort));
+            make_shared<QualifiedConstructor>(std::move(share<Symbol>(symbol)),
+                                              std::move(share<Sort>(sort)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newQualifiedPattern(AstPtr constructor, AstList symbols) {
-    vector<SymbolPtr> v = symbols->unwrap<Symbol>();
-    QualifiedPatternPtr ptr = make_shared<QualifiedPattern>(share<Constructor>(constructor), v);
+    QualifiedPatternPtr ptr = make_shared<QualifiedPattern>(std::move(share<Constructor>(constructor)),
+                                                            std::move(symbols->unwrap<Symbol>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newMatchCase(AstPtr pattern, AstPtr term) {
-    MatchCasePtr ptr = make_shared<MatchCase>(share<Pattern>(pattern), share<Term>(term));
+    MatchCasePtr ptr = make_shared<MatchCase>(std::move(share<Pattern>(pattern)),
+                                              std::move(share<Term>(term)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_s_expr.h
 AstPtr ast_newCompSExpression(AstList exprs) {
-    vector<SExpressionPtr> v = exprs->unwrap<SExpression>();
-    CompSExpressionPtr ptr = make_shared<CompSExpression>(v);
+    CompSExpressionPtr ptr = make_shared<CompSExpression>(std::move(exprs->unwrap<SExpression>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_script.h
 AstPtr ast_newScript(AstList cmds) {
-    vector<CommandPtr> v = cmds->unwrap<Command>();
-    ScriptPtr ptr = make_shared<Script>(v);
+    ScriptPtr ptr = make_shared<Script>(std::move(cmds->unwrap<Command>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_sort.h
 AstPtr ast_newSort1(AstPtr identifier) {
-    SortPtr ptr = make_shared<Sort>(share<SimpleIdentifier>(identifier));
+    SortPtr ptr = make_shared<Sort>(std::move(share<SimpleIdentifier>(identifier)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSort2(AstPtr identifier, AstList params) {
-    vector<SortPtr> v = params->unwrap<Sort>();
-    SortPtr ptr = make_shared<Sort>(share<SimpleIdentifier>(identifier), v);
+    SortPtr ptr = make_shared<Sort>(std::move(share<SimpleIdentifier>(identifier)),
+                                    std::move(params->unwrap<Sort>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_symbol_decl.h
 AstPtr ast_newSortSymbolDeclaration(AstPtr identifier, AstPtr arity, AstList attributes) {
-    vector<AttributePtr> v = attributes->unwrap<Attribute>();
     SortSymbolDeclarationPtr ptr =
-            make_shared<SortSymbolDeclaration>(share<SimpleIdentifier>(identifier),
-                                               share<NumeralLiteral>(arity), v);
+            make_shared<SortSymbolDeclaration>(std::move(share<SimpleIdentifier>(identifier)),
+                                               std::move(share<NumeralLiteral>(arity)),
+                                               std::move(attributes->unwrap<Attribute>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSpecConstFunDeclaration(AstPtr constant, AstPtr sort, AstList attributes) {
-    vector<AttributePtr> v = attributes->unwrap<Attribute>();
     SpecConstFunDeclarationPtr ptr =
-            make_shared<SpecConstFunDeclaration>(share<SpecConstant>(constant), share<Sort>(sort), v);
+            make_shared<SpecConstFunDeclaration>(std::move(share<SpecConstant>(constant)),
+                                                 std::move(share<Sort>(sort)),
+                                                 std::move(attributes->unwrap<Attribute>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newMetaSpecConstFunDeclaration(AstPtr constant, AstPtr sort, AstList attributes) {
-    vector<AttributePtr> v = attributes->unwrap<Attribute>();
     MetaSpecConstFunDeclarationPtr ptr =
-            make_shared<MetaSpecConstFunDeclaration>(share<MetaSpecConstant>(constant), share<Sort>(sort), v);
+            make_shared<MetaSpecConstFunDeclaration>(std::move(share<MetaSpecConstant>(constant)),
+                                                     std::move(share<Sort>(sort)),
+                                                     std::move(attributes->unwrap<Attribute>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newSimpleFunDeclaration(AstPtr identifier, AstList signature, AstList attributes) {
-    vector<SortPtr> v1 = signature->unwrap<Sort>();
-    vector<AttributePtr> v2 = attributes->unwrap<Attribute>();
     SimpleFunDeclarationPtr ptr =
-            make_shared<SimpleFunDeclaration>(share<SimpleIdentifier>(identifier), v1, v2);
+            make_shared<SimpleFunDeclaration>(std::move(share<SimpleIdentifier>(identifier)),
+                                              std::move(signature->unwrap<Sort>()),
+                                              std::move(attributes->unwrap<Attribute>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newParametricFunDeclaration(AstList params, AstPtr identifier, AstList signature, AstList attributes) {
-    vector<SymbolPtr> v1 = params->unwrap<Symbol>();
-    vector<SortPtr> v2 = signature->unwrap<Sort>();
-    vector<AttributePtr> v3 = attributes->unwrap<Attribute>();
     ParametricFunDeclarationPtr ptr =
-            make_shared<ParametricFunDeclaration>(v1, share<SimpleIdentifier>(identifier), v2, v3);
+            make_shared<ParametricFunDeclaration>(std::move(params->unwrap<Symbol>()),
+                                                  std::move(share<SimpleIdentifier>(identifier)),
+                                                  std::move(signature->unwrap<Sort>()),
+                                                  std::move(attributes->unwrap<Attribute>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_term.h
 AstPtr ast_newQualifiedTerm(AstPtr identifier, AstList terms) {
-    vector<TermPtr> v = terms->unwrap<Term>();
-    QualifiedTermPtr ptr = make_shared<QualifiedTerm>(share<Identifier>(identifier), v);
+    QualifiedTermPtr ptr = make_shared<QualifiedTerm>(std::move(share<Identifier>(identifier)),
+                                                      std::move(terms->unwrap<Term>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newLetTerm(AstList bindings, AstPtr term) {
-    vector<VariableBindingPtr> v = bindings->unwrap<VariableBinding>();
-    LetTermPtr ptr = make_shared<LetTerm>(v, share<Term>(term));
+    LetTermPtr ptr = make_shared<LetTerm>(std::move(bindings->unwrap<VariableBinding>()),
+                                          std::move(share<Term>(term)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newForallTerm(AstList bindings, AstPtr term) {
-    vector<SortedVariablePtr> v = bindings->unwrap<SortedVariable>();
-    ForallTermPtr ptr = make_shared<ForallTerm>(v, share<Term>(term));
+    ForallTermPtr ptr = make_shared<ForallTerm>(std::move(bindings->unwrap<SortedVariable>()),
+                                                std::move(share<Term>(term)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newExistsTerm(AstList bindings, AstPtr term) {
-    vector<SortedVariablePtr> v = bindings->unwrap<SortedVariable>();
-    ExistsTermPtr ptr = make_shared<ExistsTerm>(v, share<Term>(term));
+    ExistsTermPtr ptr = make_shared<ExistsTerm>(std::move(bindings->unwrap<SortedVariable>()),
+                                                std::move(share<Term>(term)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newMatchTerm(AstPtr term, AstList cases) {
-    vector<MatchCasePtr> v = cases->unwrap<MatchCase>();
-    MatchTermPtr ptr = make_shared<MatchTerm>(share<Term>(term), v);
+    MatchTermPtr ptr = make_shared<MatchTerm>(std::move(share<Term>(term)),
+                                              std::move(cases->unwrap<MatchCase>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newAnnotatedTerm(AstPtr term, AstList attrs) {
-    vector<AttributePtr> v = attrs->unwrap<Attribute>();
-    AnnotatedTermPtr ptr = make_shared<AnnotatedTerm>(share<Term>(term), v);
+    AnnotatedTermPtr ptr = make_shared<AnnotatedTerm>(std::move(share<Term>(term)),
+                                                      std::move(attrs->unwrap<Attribute>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_theory.h
 AstPtr ast_newTheory(AstPtr name, AstList attributes) {
-    vector<AttributePtr> v = attributes->unwrap<Attribute>();
-    TheoryPtr ptr = make_shared<Theory>(share<Symbol>(name), v);
+    TheoryPtr ptr = make_shared<Theory>(std::move(share<Symbol>(name)),
+                                        std::move(attributes->unwrap<Attribute>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 // ast_variable.h
 AstPtr ast_newSortedVariable(AstPtr symbol, AstPtr sort) {
-    SortedVariablePtr ptr = make_shared<SortedVariable>(share<Symbol>(symbol), share<Sort>(sort));
+    SortedVariablePtr ptr = make_shared<SortedVariable>(std::move(share<Symbol>(symbol)),
+                                                        std::move(share<Sort>(sort)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 AstPtr ast_newVariableBinding(AstPtr symbol, AstPtr term) {
-    VariableBindingPtr ptr = make_shared<VariableBinding>(share<Symbol>(symbol), share<Term>(term));
+    VariableBindingPtr ptr = make_shared<VariableBinding>(std::move(share<Symbol>(symbol)),
+                                                          std::move(share<Term>(term)));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }

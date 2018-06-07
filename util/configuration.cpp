@@ -1,4 +1,3 @@
-
 #include "configuration.h"
 
 #include <cstring>
@@ -8,22 +7,22 @@
 
 using namespace std;
 
-const std::string Configuration::TRIM_CHARS  = " \t\n\r=";
+const std::string Configuration::TRIM_CHARS = " \t\n\r=";
 
 std::map<std::string, Configuration::Property> Configuration::PROP_NAMES;
 
-void Configuration::loadFile(std::string path) {
+void Configuration::loadFile(const std::string& path) {
     ifstream input(path);
     while(!input.eof()) {
         char buffer[1024];
 
         input.get(buffer, 1024, '=');
-        string prop = string(buffer);
-        prop = trim(prop);
+        string prop(buffer);
+        trim(prop);
 
         input.get(buffer, 1024, '\n');
-        string value = string(buffer);
-        value = trim(value);
+        string value(buffer);
+        trim(value);
 
         std::map<std::string, Property>::iterator it;
         it = PROP_NAMES.find(prop);
@@ -39,7 +38,7 @@ Configuration::Configuration() {
     loadDefaults();
 }
 
-Configuration::Configuration(string path) {
+Configuration::Configuration(const string& path) {
     populatePropNames();
     loadDefaults();
     loadFile(path);

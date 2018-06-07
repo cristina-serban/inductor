@@ -52,7 +52,7 @@ vector<string> StringReachability::keys() {
 }
 
 bool StringReachability::fill(const vector<string>& vec) {
-    for (const auto& elem : vec) {
+    for (const string& elem : vec) {
         if (!add(elem))
             return false;
     }
@@ -74,7 +74,7 @@ void StringReachability::close() {
         copy = copyMap();
         for (const auto& entry : map) {
             vector<string> trans;
-            for (const auto& elem : entry.second) {
+            for (const string& elem : entry.second) {
                 trans.insert(trans.begin(), map[elem].begin(), map[elem].end());
             }
 
@@ -86,14 +86,14 @@ void StringReachability::close() {
     } while (!equalsMap(copy));
 }
 
-sptr_t<StringReachability> StringReachability::clone() {
-    sptr_t<StringReachability> result = make_shared<StringReachability>();
+StringReachabilityPtr StringReachability::clone() {
+    StringReachabilityPtr result = make_shared<StringReachability>();
     result->map = copyMap();
     return result;
 }
 
-sptr_t<IndexReachability> StringReachability::toIndexReachability(const unordered_map<string, unsigned long>& params) {
-    sptr_t<IndexReachability> result = make_shared<IndexReachability>();
+IndexReachabilityPtr StringReachability::toIndexReachability(const StringToIndexMap& params) {
+    IndexReachabilityPtr result = make_shared<IndexReachability>();
 
     for (size_t i = 0, sz = params.size(); i < sz; i++) {
         result->add();
@@ -105,7 +105,7 @@ sptr_t<IndexReachability> StringReachability::toIndexReachability(const unordere
 
         unsigned long pos1 = params.at(entry.first);
 
-        for (const auto& elem : entry.second) {
+        for (const string& elem : entry.second) {
             if (params.find(elem) == params.end())
                 continue;
 
@@ -123,7 +123,7 @@ std::string StringReachability::toString() {
 
     bool first = true;
     for (const auto& entry : map) {
-        for (const auto& elem : entry.second) {
+        for (const string& elem : entry.second) {
             if (!first) {
                 ss << ", ";
             } else {
@@ -157,12 +157,12 @@ bool StringReachability::equalsMap(const unordered_map<string, vector<string>>& 
         if (entry.second.size() != otherVec.size())
             return false;
 
-        for (const auto& elem : entry.second) {
+        for (const string& elem : entry.second) {
             if (std::find(otherVec.begin(), otherVec.end(), elem) == otherVec.end())
                 return false;
         }
 
-        for (const auto& i : otherVec) {
+        for (const string& i : otherVec) {
             if (std::find(entry.second.begin(), entry.second.end(), i) == entry.second.end())
                 return false;
         }

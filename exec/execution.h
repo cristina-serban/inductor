@@ -17,8 +17,8 @@ namespace inductor {
     /** Class handling the execution of the project */
     class Execution {
     private:
-        sptr_t<ExecutionSettings> settings;
-        sptr_t<smtlib::ast::Node> ast;
+        ExecutionSettingsPtr settings;
+        smtlib::ast::NodePtr ast;
 
         bool parseAttempted, parseSuccessful;
         bool syntaxCheckAttempted, syntaxCheckSuccessful;
@@ -29,7 +29,7 @@ namespace inductor {
         Execution();
 
         /** Execution instance with specific settings */
-        Execution(sptr_t<ExecutionSettings> settings);
+        explicit Execution(const ExecutionSettingsPtr& settings);
 
         /** Parse an input file */
         bool parse();
@@ -49,6 +49,8 @@ namespace inductor {
         /** Run the input file in CVC4 */
         bool run();
     };
+
+    typedef std::shared_ptr<Execution> ExecutionPtr;
 }
 
 #endif //INDUCTOR_EXECUTION_H

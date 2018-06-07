@@ -6,7 +6,7 @@ using namespace std;
 using namespace smtlib::ast;
 
 /* ================================== SortedVariable ================================== */
-void SortedVariable::accept(Visitor0* visitor){
+void SortedVariable::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -17,7 +17,7 @@ string SortedVariable::toString() {
 }
 
 /* ==================================== VariableBinding ==================================== */
-void VariableBinding::accept(Visitor0* visitor){
+void VariableBinding::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 

@@ -12,463 +12,467 @@ using namespace std;
 using namespace smtlib::sep;
 
 
-void Duplicator::visit(sptr_t<SimpleAttribute> node) {
+void Duplicator::visit(const SimpleAttributePtr& node) {
     ret = make_shared<SimpleAttribute>(node->keyword);
 }
 
-void Duplicator::visit(sptr_t<SExpressionAttribute> node) {
-    auto newValue = dynamic_pointer_cast<SExpression>(wrappedVisit(node->value));
-    ret = make_shared<SExpressionAttribute>(node->keyword, newValue);
+void Duplicator::visit(const SExpressionAttributePtr& node) {
+    ret = make_shared<SExpressionAttribute>(
+            node->keyword,
+            std::move(dynamic_pointer_cast<SExpression>(wrappedVisit(node->value))));
 }
 
-void Duplicator::visit(sptr_t<SymbolAttribute> node) {
+void Duplicator::visit(const SymbolAttributePtr& node) {
     ret = make_shared<SymbolAttribute>(node->keyword, node->value);
 }
 
-void Duplicator::visit(sptr_t<BooleanAttribute> node) {
+void Duplicator::visit(const BooleanAttributePtr& node) {
     ret = make_shared<BooleanAttribute>(node->keyword, node->value);
 }
 
-void Duplicator::visit(sptr_t<NumeralAttribute> node) {
-    auto newValue = dynamic_pointer_cast<NumeralLiteral>(wrappedVisit(node->value));
-    ret = make_shared<NumeralAttribute>(node->keyword, newValue);
+void Duplicator::visit(const NumeralAttributePtr& node) {
+    ret = make_shared<NumeralAttribute>(
+            node->keyword,
+            std::move(dynamic_pointer_cast<NumeralLiteral>(wrappedVisit(node->value))));
 }
 
-void Duplicator::visit(sptr_t<DecimalAttribute> node) {
-    auto newValue = dynamic_pointer_cast<DecimalLiteral>(wrappedVisit(node->value));
-    ret = make_shared<DecimalAttribute>(node->keyword, newValue);
+void Duplicator::visit(const DecimalAttributePtr& node) {
+    ret = make_shared<DecimalAttribute>(
+            node->keyword,
+            std::move(dynamic_pointer_cast<DecimalLiteral>(wrappedVisit(node->value))));
 }
 
-void Duplicator::visit(sptr_t<StringAttribute> node) {
-    auto newValue = dynamic_pointer_cast<StringLiteral>(wrappedVisit(node->value));
-    ret = make_shared<StringAttribute>(node->keyword, newValue);
+void Duplicator::visit(const StringAttributePtr& node) {
+    ret = make_shared<StringAttribute>(
+            node->keyword,
+            std::move(dynamic_pointer_cast<StringLiteral>(wrappedVisit(node->value))));
 }
 
-void Duplicator::visit(sptr_t<TheoriesAttribute> node) {
+void Duplicator::visit(const TheoriesAttributePtr& node) {
     ret = make_shared<TheoriesAttribute>(node->theories);
 }
 
-void Duplicator::visit(sptr_t<SortsAttribute> node) {
-    auto newSorts = duplicate<SortSymbolDeclaration>(node->declarations);
-    ret = make_shared<SortsAttribute>(newSorts);
+void Duplicator::visit(const SortsAttributePtr& node) {
+    ret = make_shared<SortsAttribute>(
+            std::move(duplicate<SortSymbolDeclaration>(node->declarations)));
 }
 
-void Duplicator::visit(sptr_t<FunsAttribute> node) {
-    auto newFuns = duplicate<FunSymbolDeclaration>(node->declarations);
-    ret = make_shared<FunsAttribute>(newFuns);
+void Duplicator::visit(const FunsAttributePtr& node) {
+    ret = make_shared<FunsAttribute>(
+            std::move(duplicate<FunSymbolDeclaration>(node->declarations)));
 }
 
-void Duplicator::visit(sptr_t<Symbol> node) {
+void Duplicator::visit(const SymbolPtr& node) {
     ret = make_shared<Symbol>(node->value);
 }
 
-void Duplicator::visit(sptr_t<Keyword> node) {
+void Duplicator::visit(const KeywordPtr& node) {
     ret = make_shared<Keyword>(node->value);
 }
 
-void Duplicator::visit(sptr_t<MetaSpecConstant> node) {
+void Duplicator::visit(const MetaSpecConstantPtr& node) {
     ret = make_shared<MetaSpecConstant>(node->type);
 }
 
-void Duplicator::visit(sptr_t<BooleanValue> node) {
+void Duplicator::visit(const BooleanValuePtr& node) {
     ret = make_shared<BooleanValue>(node->value);
 }
 
-void Duplicator::visit(sptr_t<PropLiteral> node) {
+void Duplicator::visit(const PropLiteralPtr& node) {
     ret = make_shared<PropLiteral>(node->value, node->negated);
 }
 
-void Duplicator::visit(sptr_t<AssertCommand> node) {
-    ret = make_shared<AssertCommand>(dynamic_pointer_cast<Term>(wrappedVisit(node->term)));
+void Duplicator::visit(const AssertCommandPtr& node) {
+    ret = make_shared<AssertCommand>(
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->term))));
 }
 
-void Duplicator::visit(sptr_t<CheckSatCommand> node) {
+void Duplicator::visit(const CheckSatCommandPtr& node) {
     ret = make_shared<CheckSatCommand>();
 }
 
-void Duplicator::visit(sptr_t<CheckSatAssumCommand> node) {
-    auto newAssums = duplicate<PropLiteral>(node->assumptions);
-    ret = make_shared<CheckSatAssumCommand>(newAssums);
+void Duplicator::visit(const CheckSatAssumCommandPtr& node) {
+    ret = make_shared<CheckSatAssumCommand>(
+            std::move(duplicate<PropLiteral>(node->assumptions)));
 }
 
-void Duplicator::visit(sptr_t<DeclareConstCommand> node) {
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    ret = make_shared<DeclareConstCommand>(node->name, newSort);
+void Duplicator::visit(const DeclareConstCommandPtr& node) {
+    ret = make_shared<DeclareConstCommand>(
+            node->name,
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))));
 }
 
-void Duplicator::visit(sptr_t<DeclareDatatypeCommand> node) {
-    auto newDecl = dynamic_pointer_cast<DatatypeDeclaration>(wrappedVisit(node->declaration));
-    ret = make_shared<DeclareDatatypeCommand>(node->name, newDecl);
+void Duplicator::visit(const DeclareDatatypeCommandPtr& node) {
+    ret = make_shared<DeclareDatatypeCommand>(
+            node->name,
+            std::move(dynamic_pointer_cast<DatatypeDeclaration>(wrappedVisit(node->declaration))));
 }
 
-void Duplicator::visit(sptr_t<DeclareDatatypesCommand> node) {
-    auto newSorts = duplicate<SortDeclaration>(node->sorts);
-    auto newDecls = duplicate<DatatypeDeclaration>(node->declarations);
-    ret = make_shared<DeclareDatatypesCommand>(newSorts, newDecls);
+void Duplicator::visit(const DeclareDatatypesCommandPtr& node) {
+    ret = make_shared<DeclareDatatypesCommand>(
+            std::move(duplicate<SortDeclaration>(node->sorts)),
+            std::move(duplicate<DatatypeDeclaration>(node->declarations)));
 }
 
-void Duplicator::visit(sptr_t<DeclareFunCommand> node) {
-    auto newParams = duplicate<Sort>(node->parameters);
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    ret = make_shared<DeclareFunCommand>(node->name, newParams, newSort);
+void Duplicator::visit(const DeclareFunCommandPtr& node) {
+    ret = make_shared<DeclareFunCommand>(
+            node->name,
+            std::move(duplicate<Sort>(node->parameters)),
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))));
 }
 
-void Duplicator::visit(sptr_t<DeclareSortCommand> node) {
+void Duplicator::visit(const DeclareSortCommandPtr& node) {
     ret = make_shared<DeclareSortCommand>(node->name, node->arity);
 }
 
-void Duplicator::visit(sptr_t<DefineFunCommand> node) {
-    auto newDef = dynamic_pointer_cast<FunctionDefinition>(wrappedVisit(node->definition));
-    ret = make_shared<DefineFunCommand>(newDef);
+void Duplicator::visit(const DefineFunCommandPtr& node) {
+    ret = make_shared<DefineFunCommand>(
+            std::move(dynamic_pointer_cast<FunctionDefinition>(wrappedVisit(node->definition))));
 }
 
-void Duplicator::visit(sptr_t<DefineFunRecCommand> node) {
-    auto newDef = dynamic_pointer_cast<FunctionDefinition>(wrappedVisit(node->definition));
-    ret = make_shared<DefineFunRecCommand>(newDef);
+void Duplicator::visit(const DefineFunRecCommandPtr& node) {
+    ret = make_shared<DefineFunRecCommand>(
+            std::move(dynamic_pointer_cast<FunctionDefinition>(wrappedVisit(node->definition))));
 }
 
-void Duplicator::visit(sptr_t<DefineFunsRecCommand> node) {
-    auto newDecls = duplicate<FunctionDeclaration>(node->declarations);
-    auto newBodies = duplicate<Term>(node->bodies);
-    ret = make_shared<DefineFunsRecCommand>(newDecls, newBodies);
+void Duplicator::visit(const DefineFunsRecCommandPtr& node) {
+    ret = make_shared<DefineFunsRecCommand>(
+            std::move(duplicate<FunctionDeclaration>(node->declarations)),
+            std::move(duplicate<Term>(node->bodies)));
 }
 
-void Duplicator::visit(sptr_t<DefineSortCommand> node) {
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    ret = make_shared<DefineSortCommand>(node->name, node->parameters, newSort);
+void Duplicator::visit(const DefineSortCommandPtr& node) {
+    ret = make_shared<DefineSortCommand>(
+            node->name, node->parameters,
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))));
 }
 
-void Duplicator::visit(sptr_t<EchoCommand> node) {
+void Duplicator::visit(const EchoCommandPtr& node) {
     ret = make_shared<EchoCommand>(node->message);
 }
 
-void Duplicator::visit(sptr_t<ExitCommand> node) {
+void Duplicator::visit(const ExitCommandPtr& node) {
     ret = make_shared<ExitCommand>();
 }
 
-void Duplicator::visit(sptr_t<GetAssertsCommand> node) {
+void Duplicator::visit(const GetAssertsCommandPtr& node) {
     ret = make_shared<GetAssertsCommand>();
 }
 
-void Duplicator::visit(sptr_t<GetAssignsCommand> node) {
+void Duplicator::visit(const GetAssignsCommandPtr& node) {
     ret = make_shared<GetAssignsCommand>();
 }
 
-void Duplicator::visit(sptr_t<GetInfoCommand> node) {
+void Duplicator::visit(const GetInfoCommandPtr& node) {
     ret = make_shared<GetInfoCommand>(node->flag);
 }
 
-void Duplicator::visit(sptr_t<GetModelCommand> node) {
+void Duplicator::visit(const GetModelCommandPtr& node) {
     ret = make_shared<GetModelCommand>();
 }
 
-void Duplicator::visit(sptr_t<GetOptionCommand> node) {
+void Duplicator::visit(const GetOptionCommandPtr& node) {
     ret = make_shared<GetInfoCommand>(node->option);
 }
 
-void Duplicator::visit(sptr_t<GetProofCommand> node) {
+void Duplicator::visit(const GetProofCommandPtr& node) {
     ret = make_shared<GetProofCommand>();
 }
 
-void Duplicator::visit(sptr_t<GetUnsatAssumsCommand> node) {
+void Duplicator::visit(const GetUnsatAssumsCommandPtr& node) {
     ret = make_shared<GetUnsatAssumsCommand>();
 }
 
-void Duplicator::visit(sptr_t<GetUnsatCoreCommand> node) {
+void Duplicator::visit(const GetUnsatCoreCommandPtr& node) {
     ret = make_shared<GetUnsatCoreCommand>();
 }
 
-void Duplicator::visit(sptr_t<GetValueCommand> node) {
+void Duplicator::visit(const GetValueCommandPtr& node) {
     auto newTerms = duplicate<Term>(node->terms);
     ret = make_shared<GetValueCommand>(newTerms);
 }
 
-void Duplicator::visit(sptr_t<PopCommand> node) {
+void Duplicator::visit(const PopCommandPtr& node) {
     ret = make_shared<PopCommand>(node->levelCount);
 }
 
-void Duplicator::visit(sptr_t<PushCommand> node) {
+void Duplicator::visit(const PushCommandPtr& node) {
     ret = make_shared<PushCommand>(node->levelCount);
 }
 
-void Duplicator::visit(sptr_t<ResetCommand> node) {
+void Duplicator::visit(const ResetCommandPtr& node) {
     ret = make_shared<ResetCommand>();
 }
 
-void Duplicator::visit(sptr_t<ResetAssertsCommand> node) {
+void Duplicator::visit(const ResetAssertsCommandPtr& node) {
     ret = make_shared<ResetAssertsCommand>();
 }
 
-void Duplicator::visit(sptr_t<SetInfoCommand> node) {
+void Duplicator::visit(const SetInfoCommandPtr& node) {
     ret = make_shared<SetInfoCommand>(
-        dynamic_pointer_cast<Attribute>(wrappedVisit(node->info)));
+            std::move(dynamic_pointer_cast<Attribute>(wrappedVisit(node->info))));
 }
 
-void Duplicator::visit(sptr_t<SetLogicCommand> node) {
+void Duplicator::visit(const SetLogicCommandPtr& node) {
     ret = make_shared<SetLogicCommand>(node->logic);
 }
 
-void Duplicator::visit(sptr_t<SetOptionCommand> node) {
-    auto newAttr = dynamic_pointer_cast<Attribute>(wrappedVisit(node->option));
-    ret = make_shared<SetOptionCommand>(newAttr);
+void Duplicator::visit(const SetOptionCommandPtr& node) {
+    ret = make_shared<SetOptionCommand>(
+            std::move(dynamic_pointer_cast<Attribute>(wrappedVisit(node->option))));
 }
 
-void Duplicator::visit(sptr_t<SortDeclaration> node) {
+void Duplicator::visit(const SortDeclarationPtr& node) {
     ret = make_shared<SortDeclaration>(node->name, node->arity);
 }
 
-void Duplicator::visit(sptr_t<SelectorDeclaration> node) {
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    ret = make_shared<SelectorDeclaration>(node->name, newSort);
+void Duplicator::visit(const SelectorDeclarationPtr& node) {
+    ret = make_shared<SelectorDeclaration>(
+            node->name,
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))));
 }
 
-void Duplicator::visit(sptr_t<ConstructorDeclaration> node) {
-    auto newSels = duplicate<SelectorDeclaration>(node->selectors);
-    ret = make_shared<ConstructorDeclaration>(node->name, newSels);
+void Duplicator::visit(const ConstructorDeclarationPtr& node) {
+    ret = make_shared<ConstructorDeclaration>(
+            node->name,
+            std::move(duplicate<SelectorDeclaration>(node->selectors)));
 }
 
-void Duplicator::visit(sptr_t<SimpleDatatypeDeclaration> node) {
-    auto newCons = duplicate<ConstructorDeclaration>(node->constructors);
-    ret = make_shared<SimpleDatatypeDeclaration>(newCons);
+void Duplicator::visit(const SimpleDatatypeDeclarationPtr& node) {
+    ret = make_shared<SimpleDatatypeDeclaration>(
+            std::move(duplicate<ConstructorDeclaration>(node->constructors)));
 }
 
-void Duplicator::visit(sptr_t<ParametricDatatypeDeclaration> node) {
-    auto newCons = duplicate<ConstructorDeclaration>(node->constructors);
-    ret = make_shared<ParametricDatatypeDeclaration>(node->parameters, newCons);
+void Duplicator::visit(const ParametricDatatypeDeclarationPtr& node) {
+    ret = make_shared<ParametricDatatypeDeclaration>(
+            node->parameters,
+            std::move(duplicate<ConstructorDeclaration>(node->constructors)));
 }
 
-void Duplicator::visit(sptr_t<FunctionDeclaration> node) {
-    auto newParams = duplicate<SortedVariable>(node->parameters);
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    ret = make_shared<FunctionDeclaration>(node->name, newParams, newSort);
+void Duplicator::visit(const FunctionDeclarationPtr& node) {
+    ret = make_shared<FunctionDeclaration>(
+            node->name,
+            std::move(duplicate<SortedVariable>(node->parameters)),
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))));
 }
 
-void Duplicator::visit(sptr_t<FunctionDefinition> node) {
-    auto newSignature = dynamic_pointer_cast<FunctionDeclaration>(wrappedVisit(node->signature));
-    auto newBody = dynamic_pointer_cast<Term>(wrappedVisit(node->body));
-    ret = make_shared<FunctionDefinition>(newSignature, newBody);
+void Duplicator::visit(const FunctionDefinitionPtr& node) {
+    ret = make_shared<FunctionDefinition>(
+            std::move(dynamic_pointer_cast<FunctionDeclaration>(wrappedVisit(node->signature))),
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->body))));
 }
 
-void Duplicator::visit(sptr_t<SimpleIdentifier> node) {
-    auto newIndices = duplicate<Index>(node->indices);
-    ret = make_shared<SimpleIdentifier>(node->name, newIndices);
+void Duplicator::visit(const SimpleIdentifierPtr& node) {
+    ret = make_shared<SimpleIdentifier>(node->name, std::move(duplicate<Index>(node->indices)));
 }
 
-void Duplicator::visit(sptr_t<QualifiedIdentifier> node) {
-    auto newId = dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier));
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    ret = make_shared<QualifiedIdentifier>(newId, newSort);
+void Duplicator::visit(const QualifiedIdentifierPtr& node) {
+    ret = make_shared<QualifiedIdentifier>(
+            std::move(dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier))),
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))));
 }
 
-void Duplicator::visit(sptr_t<NumeralLiteral> node) {
+void Duplicator::visit(const NumeralLiteralPtr& node) {
     ret = make_shared<NumeralLiteral>(node->value, node->base);
 }
 
-void Duplicator::visit(sptr_t<DecimalLiteral> node) {
+void Duplicator::visit(const DecimalLiteralPtr& node) {
     ret = make_shared<DecimalLiteral>(node->value);
 }
 
-void Duplicator::visit(sptr_t<StringLiteral> node) {
+void Duplicator::visit(const StringLiteralPtr& node) {
     ret = make_shared<StringLiteral>(node->value);
 }
 
-void Duplicator::visit(sptr_t<Logic> node) {
-    auto newAttrs = duplicate<Attribute>(node->attributes);
-    ret = make_shared<Logic>(node->name, newAttrs);
+void Duplicator::visit(const LogicPtr& node) {
+    ret = make_shared<Logic>(node->name, std::move(duplicate<Attribute>(node->attributes)));
 }
 
-void Duplicator::visit(sptr_t<Theory> node) {
-    auto newAttrs = duplicate<Attribute>(node->attributes);
-    ret = make_shared<Theory>(node->name, newAttrs);
+void Duplicator::visit(const TheoryPtr& node) {
+    ret = make_shared<Theory>(node->name, std::move(duplicate<Attribute>(node->attributes)));
 }
 
-void Duplicator::visit(sptr_t<Script> node) {
+void Duplicator::visit(const ScriptPtr& node) {
     auto newCmds = duplicate<Command>(node->commands);
     ret = make_shared<Script>(newCmds);
 }
 
-void Duplicator::visit(sptr_t<QualifiedConstructor> node) {
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    ret = make_shared<QualifiedConstructor>(node->name, newSort);
+void Duplicator::visit(const QualifiedConstructorPtr& node) {
+    ret = make_shared<QualifiedConstructor>(
+            node->name,
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))));
 }
 
-void Duplicator::visit(sptr_t<QualifiedPattern> node) {
-    auto newCons = dynamic_pointer_cast<Constructor>(wrappedVisit(node->constructor));
-    ret = make_shared<QualifiedPattern>(newCons, node->arguments);
+void Duplicator::visit(const QualifiedPatternPtr& node) {
+    ret = make_shared<QualifiedPattern>(
+            std::move(dynamic_pointer_cast<Constructor>(wrappedVisit(node->constructor))),
+            node->arguments);
 }
 
-void Duplicator::visit(sptr_t<MatchCase> node) {
-    auto newPattern = dynamic_pointer_cast<Pattern>(wrappedVisit(node->pattern));
-    auto newTerm = dynamic_pointer_cast<Term>(wrappedVisit(node->term));
-    ret = make_shared<MatchCase>(newPattern, newTerm);
+void Duplicator::visit(const MatchCasePtr& node) {
+    ret = make_shared<MatchCase>(
+            std::move(dynamic_pointer_cast<Pattern>(wrappedVisit(node->pattern))),
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->term))));
 }
 
-void Duplicator::visit(sptr_t<CompSExpression> node) {
-    auto newExps = duplicate<SExpression>(node->expressions);
-    ret = make_shared<CompSExpression>(newExps);
+void Duplicator::visit(const CompSExpressionPtr& node) {
+    ret = make_shared<CompSExpression>(std::move(duplicate<SExpression>(node->expressions)));
 }
 
-void Duplicator::visit(sptr_t<Sort> node) {
-    auto newArgs = duplicate<Sort>(node->arguments);
-    ret = make_shared<Sort>(node->name, newArgs);
+void Duplicator::visit(const SortPtr& node) {
+    ret = make_shared<Sort>(node->name, std::move(duplicate<Sort>(node->arguments)));
 }
 
-void Duplicator::visit(sptr_t<SortSymbolDeclaration> node) {
-    auto newId = dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier));
-    auto newAttrs = duplicate<Attribute>(node->attributes);
-    ret = make_shared<SortSymbolDeclaration>(newId, node->arity, newAttrs);
+void Duplicator::visit(const SortSymbolDeclarationPtr& node) {
+    ret = make_shared<SortSymbolDeclaration>(
+            std::move(dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier))),
+            node->arity,
+            std::move(duplicate<Attribute>(node->attributes)));
 }
 
-void Duplicator::visit(sptr_t<SpecConstFunDeclaration> node) {
-    auto newConst = dynamic_pointer_cast<SpecConstant>(wrappedVisit(node->constant));
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    auto newAttrs = duplicate<Attribute>(node->attributes);
-    ret = make_shared<SpecConstFunDeclaration>(newConst, newSort, newAttrs);
+void Duplicator::visit(const SpecConstFunDeclarationPtr& node) {
+    ret = make_shared<SpecConstFunDeclaration>(
+            std::move(dynamic_pointer_cast<SpecConstant>(wrappedVisit(node->constant))),
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))),
+            std::move(duplicate<Attribute>(node->attributes)));
 }
 
-void Duplicator::visit(sptr_t<MetaSpecConstFunDeclaration> node) {
-    auto newConst = dynamic_pointer_cast<MetaSpecConstant>(wrappedVisit(node->constant));
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    auto newAttrs = duplicate<Attribute>(node->attributes);
-    ret = make_shared<MetaSpecConstFunDeclaration>(newConst, newSort, newAttrs);
+void Duplicator::visit(const MetaSpecConstFunDeclarationPtr& node) {
+    ret = make_shared<MetaSpecConstFunDeclaration>(
+            std::move(dynamic_pointer_cast<MetaSpecConstant>(wrappedVisit(node->constant))),
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))),
+            std::move(duplicate<Attribute>(node->attributes)));
 }
 
-void Duplicator::visit(sptr_t<SimpleFunDeclaration> node) {
-    auto newParams = duplicate<Sort>(node->signature);
-    auto newId = dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier));
-    auto newSignature = duplicate<Sort>(node->signature);
-    auto newAttrs = duplicate<Attribute>(node->attributes);
-    ret = make_shared<SimpleFunDeclaration>(newId, newSignature, newAttrs);
+void Duplicator::visit(const SimpleFunDeclarationPtr& node) {
+    ret = make_shared<SimpleFunDeclaration>(
+            std::move(dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier))),
+            std::move(duplicate<Sort>(node->signature)),
+            std::move(duplicate<Attribute>(node->attributes)));
 }
 
-void Duplicator::visit(sptr_t<ParametricFunDeclaration> node) {
-    auto newId = dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier));
-    auto newSignature = duplicate<Sort>(node->signature);
-    auto newAttrs = duplicate<Attribute>(node->attributes);
-    ret = make_shared<ParametricFunDeclaration>(node->parameters, newId, newSignature, newAttrs);
+void Duplicator::visit(const ParametricFunDeclarationPtr& node) {
+    ret = make_shared<ParametricFunDeclaration>(
+            node->parameters,
+            std::move(dynamic_pointer_cast<SimpleIdentifier>(wrappedVisit(node->identifier))),
+            std::move(duplicate<Sort>(node->signature)),
+            std::move(duplicate<Attribute>(node->attributes)));
 }
 
-void Duplicator::visit(sptr_t<QualifiedTerm> node) {
-    auto newId = dynamic_pointer_cast<Identifier>(wrappedVisit(node->identifier));
-    auto newTerms = duplicate<Term>(node->terms);
-    ret = make_shared<QualifiedTerm>(newId, newTerms);
+void Duplicator::visit(const QualifiedTermPtr& node) {
+    ret = make_shared<QualifiedTerm>(
+            std::move(dynamic_pointer_cast<Identifier>(wrappedVisit(node->identifier))),
+            std::move(duplicate<Term>(node->terms)));
 }
 
-void Duplicator::visit(sptr_t<LetTerm> node) {
-    auto newBindings = duplicate<VariableBinding>(node->bindings);
-    auto newTerm = dynamic_pointer_cast<Term>(wrappedVisit(node->term));
-    ret = make_shared<LetTerm>(newBindings, newTerm);
+void Duplicator::visit(const LetTermPtr& node) {
+    ret = make_shared<LetTerm>(
+            std::move(duplicate<VariableBinding>(node->bindings)),
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->term))));
 }
 
-void Duplicator::visit(sptr_t<ForallTerm> node) {
-    auto newBindings = duplicate<SortedVariable>(node->bindings);
-    auto newTerm = dynamic_pointer_cast<Term>(wrappedVisit(node->term));
-    ret = make_shared<ForallTerm>(newBindings, newTerm);
+void Duplicator::visit(const ForallTermPtr& node) {
+    ret = make_shared<ForallTerm>(
+            std::move(duplicate<SortedVariable>(node->bindings)),
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->term))));
 }
 
-void Duplicator::visit(sptr_t<ExistsTerm> node) {
-    auto newBindings = duplicate<SortedVariable>(node->bindings);
-    auto newTerm = dynamic_pointer_cast<Term>(wrappedVisit(node->term));
-    ret = make_shared<ExistsTerm>(newBindings, newTerm);
+void Duplicator::visit(const ExistsTermPtr& node) {
+    ret = make_shared<ExistsTerm>(
+            std::move(duplicate<SortedVariable>(node->bindings)),
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->term))));
 }
 
-void Duplicator::visit(sptr_t<MatchTerm> node) {
-    auto newTerm = dynamic_pointer_cast<Term>(wrappedVisit(node->term));
-    auto newCases = duplicate<MatchCase>(node->cases);
-    ret = make_shared<MatchTerm>(newTerm, newCases);
+void Duplicator::visit(const MatchTermPtr& node) {
+    ret = make_shared<MatchTerm>(
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->term))),
+            std::move(duplicate<MatchCase>(node->cases)));
 }
 
-void Duplicator::visit(sptr_t<AnnotatedTerm> node) {
-    auto newTerm = dynamic_pointer_cast<Term>(wrappedVisit(node->term));
-    auto newAttrs = duplicate<Attribute>(node->attributes);
-    ret = make_shared<AnnotatedTerm>(newTerm, newAttrs);
+void Duplicator::visit(const AnnotatedTermPtr& node) {
+    ret = make_shared<AnnotatedTerm>(
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->term))),
+            std::move(duplicate<Attribute>(node->attributes)));
 }
 
-void Duplicator::visit(sptr_t<TrueTerm> node) {
+void Duplicator::visit(const TrueTermPtr& node) {
     ret = make_shared<TrueTerm>();
 }
 
-void Duplicator::visit(sptr_t<FalseTerm> node) {
+void Duplicator::visit(const FalseTermPtr& node) {
     ret = make_shared<FalseTerm>();
 }
 
-void Duplicator::visit(sptr_t<NotTerm> node) {
-    auto newTerm = dynamic_pointer_cast<Term>(wrappedVisit(node->term));
-    ret = make_shared<NotTerm>(newTerm);
+void Duplicator::visit(const NotTermPtr& node) {
+    ret = make_shared<NotTerm>(std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->term))));
 }
 
-void Duplicator::visit(sptr_t<ImpliesTerm> node) {
-    auto newTerms = duplicate<Term>(node->terms);
-    ret = make_shared<ImpliesTerm>(newTerms);
+void Duplicator::visit(const ImpliesTermPtr& node) {
+    ret = make_shared<ImpliesTerm>(std::move(duplicate<Term>(node->terms)));
 }
 
-void Duplicator::visit(sptr_t<AndTerm> node) {
-    auto newTerms = duplicate<Term>(node->terms);
-    ret = make_shared<AndTerm>(newTerms);
+void Duplicator::visit(const AndTermPtr& node) {
+    ret = make_shared<AndTerm>(std::move(duplicate<Term>(node->terms)));
 }
 
-void Duplicator::visit(sptr_t<OrTerm> node) {
-    auto newTerms = duplicate<Term>(node->terms);
-    ret = make_shared<OrTerm>(newTerms);
+void Duplicator::visit(const OrTermPtr& node) {
+    ret = make_shared<OrTerm>(std::move(duplicate<Term>(node->terms)));
 }
 
-void Duplicator::visit(sptr_t<XorTerm> node) {
-    auto newTerms = duplicate<Term>(node->terms);
-    ret = make_shared<XorTerm>(newTerms);
+void Duplicator::visit(const XorTermPtr& node) {
+    ret = make_shared<XorTerm>(std::move(duplicate<Term>(node->terms)));
 }
 
-void Duplicator::visit(sptr_t<EqualsTerm> node) {
-    auto newTerms = duplicate<Term>(node->terms);
-    ret = make_shared<EqualsTerm>(newTerms);
+void Duplicator::visit(const EqualsTermPtr& node) {
+    ret = make_shared<EqualsTerm>(std::move(duplicate<Term>(node->terms)));
 }
 
-void Duplicator::visit(sptr_t<DistinctTerm> node) {
-    auto newTerms = duplicate<Term>(node->terms);
-    ret = make_shared<DistinctTerm>(newTerms);
+void Duplicator::visit(const DistinctTermPtr& node) {
+    ret = make_shared<DistinctTerm>(std::move(duplicate<Term>(node->terms)));
 }
 
-void Duplicator::visit(sptr_t<IteTerm> node) {
-    auto newTest = dynamic_pointer_cast<Term>(wrappedVisit(node->testTerm));
-    auto newThen = dynamic_pointer_cast<Term>(wrappedVisit(node->thenTerm));
-    auto newElse = dynamic_pointer_cast<Term>(wrappedVisit(node->elseTerm));
-    ret = make_shared<IteTerm>(newTest, newThen, newElse);
+void Duplicator::visit(const IteTermPtr& node) {
+    ret = make_shared<IteTerm>(
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->testTerm))),
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->thenTerm))),
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->elseTerm))));
 }
 
-void Duplicator::visit(sptr_t<EmpTerm> node) {
+void Duplicator::visit(const EmpTermPtr& node) {
     ret = make_shared<EmpTerm>();
 }
 
-void Duplicator::visit(sptr_t<SepTerm> node) {
-    auto newTerms = duplicate<Term>(node->terms);
-    ret = make_shared<SepTerm>(newTerms);
+void Duplicator::visit(const SepTermPtr& node) {
+    ret = make_shared<SepTerm>(std::move(duplicate<Term>(node->terms)));
 }
 
-void Duplicator::visit(sptr_t<WandTerm> node) {
-    auto newTerms = duplicate<Term>(node->terms);
-    ret = make_shared<WandTerm>(newTerms);
+void Duplicator::visit(const WandTermPtr& node) {
+    ret = make_shared<WandTerm>(std::move(duplicate<Term>(node->terms)));
 }
 
-void Duplicator::visit(sptr_t<PtoTerm> node) {
-    auto newLeft = dynamic_pointer_cast<Term>(wrappedVisit(node->leftTerm));
-    auto newRight = dynamic_pointer_cast<Term>(wrappedVisit(node->rightTerm));
-    ret = make_shared<PtoTerm>(newLeft, newRight);
+void Duplicator::visit(const PtoTermPtr& node) {
+    ret = make_shared<PtoTerm>(
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->leftTerm))),
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->rightTerm))));
 }
 
-void Duplicator::visit(sptr_t<NilTerm> node) {
+void Duplicator::visit(const NilTermPtr& node) {
     if (node->sort) {
-        auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-        ret = make_shared<NilTerm>(newSort);
+        ret = make_shared<NilTerm>(
+                std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))));
     } else {
         ret = make_shared<NilTerm>();
     }
 }
 
-void Duplicator::visit(sptr_t<SortedVariable> node) {
-    auto newSort = dynamic_pointer_cast<Sort>(wrappedVisit(node->sort));
-    ret = make_shared<SortedVariable>(node->name, newSort);
+void Duplicator::visit(const SortedVariablePtr& node) {
+    ret = make_shared<SortedVariable>(
+            node->name,
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->sort))));
 }
 
-void Duplicator::visit(sptr_t<VariableBinding> node) {
-    auto newTerm = dynamic_pointer_cast<Term>(wrappedVisit(node->term));
-    ret = make_shared<VariableBinding>(node->name, newTerm);
+void Duplicator::visit(const VariableBindingPtr& node) {
+    ret = make_shared<VariableBinding>(
+            node->name,
+            std::move(dynamic_pointer_cast<Term>(wrappedVisit(node->term))));
 }

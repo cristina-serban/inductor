@@ -13,26 +13,26 @@ using namespace smtlib;
 using namespace smtlib::ast;
 
 template<class T>
-std::vector<std::string> toStringArray(sptr_v<T> &array) {
-    std::vector<std::string> strArray;
-    for (auto node : array) {
+vector<string> toStringArray(vector<shared_ptr<T>>& array) {
+    vector<string> strArray;
+    for (const auto& node : array) {
         strArray.push_back(node->toString());
     }
 
     return strArray;
 }
 
-void TermSorter::visit(sptr_t<SimpleIdentifier> node) {
+void TermSorter::visit(const SimpleIdentifierPtr& node) {
     // Check if it is a variable
-    sptr_t<VarInfo> varInfo = ctx->getStack()->getVarInfo(node->toString());
-    if (varInfo) {
-        ret = varInfo->sort;
+    VarEntryPtr varEntry = ctx->getStack()->getVarEntry(node->toString());
+    if (varEntry) {
+        ret = varEntry->sort;
         return;
     }
 
     // Check if it is a function
-    sptr_v<FunInfo> infos = ctx->getStack()->getFunInfo(node->toString());
-    sptr_v<Sort> retSorts = extractReturnSorts(infos, 0, false);
+    vector<FunEntryPtr> entries = ctx->getStack()->getFunEntry(node->symbol->toString());
+    vector<SortPtr> retSorts = extractReturnSorts(entries, 0, false);
 
     if (retSorts.size() == 1) {
         ret = retSorts[0];
@@ -45,25 +45,25 @@ void TermSorter::visit(sptr_t<SimpleIdentifier> node) {
     }
 }
 
-void TermSorter::visit(sptr_t<QualifiedIdentifier> node) {
-    sptr_t<SortednessChecker::NodeError> errorAccum;
+void TermSorter::visit(const QualifiedIdentifierPtr& node) {
+    SortednessChecker::NodeErrorPtr errorAccum;
     errorAccum = ctx->getChecker()->checkSort(node->sort, node, errorAccum);
 
-    sptr_t<Sort> sortExpanded = ctx->getStack()->expand(node->sort);
+    SortPtr sortExpanded = ctx->getStack()->expand(node->sort);
     string sortStr = sortExpanded->toString();
 
     string name = node->identifier->toString();
-    sptr_v<FunInfo> infos = ctx->getStack()->getFunInfo(name);
+    vector<FunEntryPtr> entries = ctx->getStack()->getFunEntry(name);
 
     // Possible non-parametric return sorts
-    sptr_v<Sort> retSorts = extractReturnSorts(infos, 0, false);
+    vector<SortPtr> retSorts = extractReturnSorts(entries, 0, false);
 
     // Possible parametric return sorts that match
-    extractParamMatches(infos, 0, sortExpanded, ctx->getStack(), retSorts);
+    extractParamMatches(entries, 0, sortExpanded, ctx->getStack(), retSorts);
 
     // Check if indicated sort is possible
     auto pos = find_if(retSorts.begin(), retSorts.end(),
-                       [&](const sptr_t<Sort> &s) { return s->toString() == sortExpanded->toString(); });
+                       [&](const SortPtr& s) { return s->toString() == sortExpanded->toString(); });
 
     if (pos != retSorts.end()) {
         ret = *pos;
@@ -76,82 +76,82 @@ void TermSorter::visit(sptr_t<QualifiedIdentifier> node) {
     }
 }
 
-void TermSorter::visit(sptr_t<DecimalLiteral> node) {
+void TermSorter::visit(const DecimalLiteralPtr& node) {
     // Get sort for this type of constant
-    sptr_v<FunInfo> infos = ctx->getStack()->getFunInfo(MSCONST_DECIMAL);
-    if (infos.size() == 1) {
-        if (infos[0]->signature.size() == 1) {
-            ret = infos[0]->signature[0];
+    vector<FunEntryPtr> entries = ctx->getStack()->getFunEntry(MSCONST_DECIMAL);
+    if (entries.size() == 1) {
+        if (entries[0]->signature.size() == 1) {
+            ret = entries[0]->signature[0];
         }
     } else {
         // If no entries or multiple entries are found, add error
-        if (infos.empty()) {
+        if (entries.empty()) {
             auto error = ErrorMessages::buildLiteralUnknownSort(MSCONST_DECIMAL_REF);
             ctx->getChecker()->addError(error, node);
         } else {
-            sptr_v<Sort> possibleSorts = extractReturnSorts(infos, 0, false);
+            vector<SortPtr> possibleSorts = extractReturnSorts(entries, 0, false);
             auto error = ErrorMessages::buildLiteralMultipleSorts(MSCONST_DECIMAL_REF, possibleSorts);
             ctx->getChecker()->addError(error, node);
         }
     }
 }
 
-void TermSorter::visit(sptr_t<NumeralLiteral> node) {
+void TermSorter::visit(const NumeralLiteralPtr& node) {
     // Get sort for this type of constant
-    sptr_v<FunInfo> infos = ctx->getStack()->getFunInfo(MSCONST_NUMERAL);
-    if (infos.size() == 1) {
-        if (infos[0]->signature.size() == 1) {
-            ret = infos[0]->signature[0];
+    vector<FunEntryPtr> entries = ctx->getStack()->getFunEntry(MSCONST_NUMERAL);
+    if (entries.size() == 1) {
+        if (entries[0]->signature.size() == 1) {
+            ret = entries[0]->signature[0];
         }
     } else {
         // If no entries or multiple entries are found, add error
-        if (infos.empty()) {
+        if (entries.empty()) {
             auto error = ErrorMessages::buildLiteralUnknownSort(MSCONST_NUMERAL_REF);
             ctx->getChecker()->addError(error, node);
         } else {
-            sptr_v<Sort> possibleSorts = extractReturnSorts(infos, 0, false);
+            vector<SortPtr> possibleSorts = extractReturnSorts(entries, 0, false);
             auto error = ErrorMessages::buildLiteralMultipleSorts(MSCONST_NUMERAL_REF, possibleSorts);
             ctx->getChecker()->addError(error, node);
         }
     }
 }
 
-void TermSorter::visit(sptr_t<StringLiteral> node) {
+void TermSorter::visit(const StringLiteralPtr& node) {
     // Get sort for this type of constant
-    sptr_v<FunInfo> infos = ctx->getStack()->getFunInfo(MSCONST_STRING);
-    if (infos.size() == 1) {
-        if (infos[0]->signature.size() == 1) {
-            ret = infos[0]->signature[0];
+    vector<FunEntryPtr> entries = ctx->getStack()->getFunEntry(MSCONST_STRING);
+    if (entries.size() == 1) {
+        if (entries[0]->signature.size() == 1) {
+            ret = entries[0]->signature[0];
         }
     } else {
         // If no entries or multiple entries are found, add error
-        if (infos.empty()) {
+        if (entries.empty()) {
             auto error = ErrorMessages::buildLiteralUnknownSort(MSCONST_STRING_REF);
             ctx->getChecker()->addError(error, node);
         } else {
-            sptr_v<Sort> possibleSorts = extractReturnSorts(infos, 0, false);
+            vector<SortPtr> possibleSorts = extractReturnSorts(entries, 0, false);
             auto error = ErrorMessages::buildLiteralMultipleSorts(MSCONST_STRING_REF, possibleSorts);
             ctx->getChecker()->addError(error, node);
         }
     }
 }
 
-void TermSorter::visit(sptr_t<QualifiedTerm> node) {
-    sptr_t<SortednessChecker::NodeError> errAccum;
+void TermSorter::visit(const QualifiedTermPtr& node) {
+    SortednessChecker::NodeErrorPtr errAccum;
 
     // Get sorts for arguments
-    sptr_v<Sort> argSorts;
-    sptr_v<Term> terms = node->terms;
-    for (auto arg : terms) {
-        sptr_t<Sort> argSort = wrappedVisit(arg);
+    vector<SortPtr> argSorts;
+    vector<TermPtr>& terms = node->terms;
+    for (const auto& arg : terms) {
+        SortPtr argSort = wrappedVisit(arg);
         if (!argSort) { return; }
         argSorts.push_back(argSort);
     }
 
-    sptr_t<SimpleIdentifier> id = dynamic_pointer_cast<SimpleIdentifier>(node->identifier);
-    sptr_t<QualifiedIdentifier> qid = dynamic_pointer_cast<QualifiedIdentifier>(node->identifier);
+    SimpleIdentifierPtr id = dynamic_pointer_cast<SimpleIdentifier>(node->identifier);
+    QualifiedIdentifierPtr qid = dynamic_pointer_cast<QualifiedIdentifier>(node->identifier);
 
-    sptr_t<Sort> retExpanded;
+    SortPtr retExpanded;
     string name;
 
     if (id) {
@@ -162,41 +162,41 @@ void TermSorter::visit(sptr_t<QualifiedTerm> node) {
         retExpanded = ctx->getStack()->expand(qid->sort);
     }
 
-    sptr_v<FunInfo> infos = ctx->getStack()->getFunInfo(name);
-    sptr_v<Sort> retSorts;
+    vector<FunEntryPtr> entries = ctx->getStack()->getFunEntry(name);
+    vector<SortPtr> retSorts;
 
-    for (auto info : infos) {
+    for (const auto& entry : entries) {
         // Get function signature, while accounting for all possible attributes (e.g. associativity)
-        sptr_v<Sort> funSig;
+        vector<SortPtr> funSig;
         if (argSorts.size() >= 2) {
-            if (info->assocL) {
-                funSig.push_back(info->signature[0]);
+            if (entry->assocL) {
+                funSig.push_back(entry->signature[0]);
                 for (size_t i = 0; i < argSorts.size() - 1; i++) {
-                    funSig.push_back(info->signature[1]);
+                    funSig.push_back(entry->signature[1]);
                 }
-                funSig.push_back(info->signature[2]);
-            } else if (info->assocR) {
+                funSig.push_back(entry->signature[2]);
+            } else if (entry->assocR) {
                 for (size_t i = 0; i < argSorts.size() - 1; i++) {
-                    funSig.push_back(info->signature[0]);
+                    funSig.push_back(entry->signature[0]);
                 }
-                funSig.push_back(info->signature[1]);
-                funSig.push_back(info->signature[2]);
-            } else if (info->chainable || info->pairwise) {
+                funSig.push_back(entry->signature[1]);
+                funSig.push_back(entry->signature[2]);
+            } else if (entry->chainable || entry->pairwise) {
                 for (size_t i = 0; i < argSorts.size(); i++) {
-                    funSig.push_back(info->signature[0]);
+                    funSig.push_back(entry->signature[0]);
                 }
-                funSig.push_back(info->signature[2]);
+                funSig.push_back(entry->signature[2]);
             } else {
-                funSig.insert(funSig.begin(), info->signature.begin(), info->signature.end());
+                funSig.insert(funSig.begin(), entry->signature.begin(), entry->signature.end());
             }
         } else {
-            funSig.insert(funSig.begin(), info->signature.begin(), info->signature.end());
+            funSig.insert(funSig.begin(), entry->signature.begin(), entry->signature.end());
         }
 
         // Check that the arguments respect the signature
         if (argSorts.size() != funSig.size() - 1) { continue; }
         bool fits = true;
-        if (info->params.empty()) { // Function is not parametric
+        if (entry->params.empty()) { // Function is not parametric
             for (size_t i = 0; i < funSig.size() - 1; i++) {
                 if (funSig[i]->toString() != argSorts[i]->toString())
                     fits = false;
@@ -207,24 +207,24 @@ void TermSorter::visit(sptr_t<QualifiedTerm> node) {
             if (id) {
                 retSorts.push_back(funSig[funSig.size() - 1]);
             } else {
-                sptr_t<Sort> retSort = funSig[funSig.size() - 1];
+                SortPtr retSort = funSig[funSig.size() - 1];
                 if (retSort->toString() == retExpanded->toString()) {
                     ret = retSort;
                     return;
                 }
             }
         } else { // Function is parametric
-            vector<string> pnames = toStringArray(info->params);
-            unordered_map<string, sptr_t<Sort>> mapping;
+            vector<string> pnames = toStringArray(entry->params);
+            unordered_map<string, SortPtr> mapping;
 
             // Unify each argument sort with its corresponding signature sort
             for (size_t i = 0; i < funSig.size() - 1; i++) {
                 fits = fits && unify(funSig[i], argSorts[i], pnames, mapping);
             }
 
-            if (!fits || mapping.size() != info->params.size()) { continue; }
+            if (!fits || mapping.size() != entry->params.size()) { continue; }
 
-            sptr_t<Sort> retSort = funSig[funSig.size() - 1];
+            SortPtr retSort = funSig[funSig.size() - 1];
             retSort = ctx->getStack()->replace(retSort, mapping);
             if (id) {
                 retSorts.push_back(retSort);
@@ -254,23 +254,23 @@ void TermSorter::visit(sptr_t<QualifiedTerm> node) {
     }
 }
 
-void TermSorter::visit(sptr_t<LetTerm> node) {
+void TermSorter::visit(const LetTermPtr& node) {
     // New stack level for bindings
     ctx->getStack()->push();
 
     // Push bindings
-    sptr_v<VariableBinding> &bindings = node->bindings;
-    for (auto bind : bindings) {
-        sptr_t<Sort> bindSort = wrappedVisit(bind->term);
+    vector<VariableBindingPtr>& bindings = node->bindings;
+    for (const auto& bind : bindings) {
+        SortPtr bindSort = wrappedVisit(bind->term);
         if (bindSort) {
-            ctx->getStack()->tryAdd(make_shared<VarInfo>(bind->symbol->toString(), bindSort, node));
+            ctx->getStack()->tryAdd(make_shared<VarEntry>(std::move(bind->symbol->toString()), bindSort, node));
         } else {
             return;
         }
     }
 
     // Determine sort of the inner term
-    sptr_t<Sort> termSort = wrappedVisit(node->term);
+    SortPtr termSort = wrappedVisit(node->term);
     if (termSort) {
         ret = termSort;
     }
@@ -279,19 +279,20 @@ void TermSorter::visit(sptr_t<LetTerm> node) {
     ctx->getStack()->pop();
 }
 
-void TermSorter::visit(sptr_t<ForallTerm> node) {
+void TermSorter::visit(const ForallTermPtr& node) {
     // New stack level for bindings
     ctx->getStack()->push();
 
     // Push bindings
-    sptr_v<SortedVariable> &bindings = node->bindings;
-    for (auto bind : bindings) {
+    vector<SortedVariablePtr>& bindings = node->bindings;
+    for (const auto& bind : bindings) {
         auto bindSortExpanded = ctx->getStack()->expand(bind->sort);
-        ctx->getStack()->tryAdd(make_shared<VarInfo>(bind->symbol->toString(), bindSortExpanded, node));
+        ctx->getStack()->tryAdd(make_shared<VarEntry>(std::move(bind->symbol->toString()),
+                                                      bindSortExpanded, node));
     }
 
     // Determine sort of the inner term
-    sptr_t<Sort> termSort = wrappedVisit(node->term);
+    SortPtr termSort = wrappedVisit(node->term);
     if (termSort) {
         string termSortStr = termSort->toString();
         // Inner term should be boolean
@@ -310,19 +311,20 @@ void TermSorter::visit(sptr_t<ForallTerm> node) {
     ctx->getStack()->pop();
 }
 
-void TermSorter::visit(sptr_t<ExistsTerm> node) {
+void TermSorter::visit(const ExistsTermPtr& node) {
     // New stack level for bindings
     ctx->getStack()->push();
 
     // Push bindings
-    sptr_v<SortedVariable> &bindings = node->bindings;
-    for (auto bind : bindings) {
+    vector<SortedVariablePtr>& bindings = node->bindings;
+    for (const auto& bind : bindings) {
         auto bindSortExpanded = ctx->getStack()->expand(bind->sort);
-        ctx->getStack()->tryAdd(make_shared<VarInfo>(bind->symbol->toString(), bindSortExpanded, node));
+        ctx->getStack()->tryAdd(make_shared<VarEntry>(std::move(bind->symbol->toString()),
+                                                      bindSortExpanded, node));
     }
 
     // Determine sort of the inner term
-    sptr_t<Sort> termSort = wrappedVisit(node->term);
+    SortPtr termSort = wrappedVisit(node->term);
 
     if (termSort) {
         string termSortStr = termSort->toString();
@@ -342,9 +344,9 @@ void TermSorter::visit(sptr_t<ExistsTerm> node) {
     ctx->getStack()->pop();
 }
 
-void TermSorter::visit(sptr_t<MatchTerm> node) {
+void TermSorter::visit(const MatchTermPtr& node) {
     // Determine sort of the term to be matched
-    sptr_t<Sort> termSort = wrappedVisit(node->term);
+    SortPtr termSort = wrappedVisit(node->term);
 
     // Return if sort could not be determined
     if (!termSort) {
@@ -352,24 +354,24 @@ void TermSorter::visit(sptr_t<MatchTerm> node) {
     }
 
     // Determine the sort of each match case
-    sptr_v<Sort> caseSorts;
+    vector<SortPtr> caseSorts;
 
-    sptr_t<SortednessChecker::NodeError> errAccum;
+    SortednessChecker::NodeErrorPtr errAccum;
     string termSortStr = termSort->toString();
 
-    sptr_v<MatchCase> cases = node->cases;
-    for (auto caseIt = cases.begin(); caseIt != cases.end(); caseIt++) {
-        sptr_t<Pattern> pattern = (*caseIt)->pattern;
+    vector<MatchCasePtr>& cases = node->cases;
+    for (size_t i = 0, szi = cases.size(); i < szi; i++) {
+        PatternPtr pattern = cases[i]->pattern;
 
         // Symbol (constructor or variable)
-        sptr_t<Symbol> spattern = dynamic_pointer_cast<Symbol>(pattern);
+        SymbolPtr spattern = dynamic_pointer_cast<Symbol>(pattern);
         // Qualified constructor
-        sptr_t<QualifiedConstructor> cpattern = dynamic_pointer_cast<QualifiedConstructor>(pattern);
+        QualifiedConstructorPtr cpattern = dynamic_pointer_cast<QualifiedConstructor>(pattern);
         // Qualified pattern
-        sptr_t<QualifiedPattern> qpattern = dynamic_pointer_cast<QualifiedPattern>(pattern);
+        QualifiedPatternPtr qpattern = dynamic_pointer_cast<QualifiedPattern>(pattern);
 
-        sptr_t<Symbol> scons; // Simple constructor for qualified pattern
-        sptr_t<QualifiedConstructor> qcons; // Qualified constructor for qualified pattern
+        SymbolPtr scons; // Simple constructor for qualified pattern
+        QualifiedConstructorPtr qcons; // Qualified constructor for qualified pattern
         string caseId;
 
         // Initialize caseId, scons, qcons
@@ -378,7 +380,7 @@ void TermSorter::visit(sptr_t<MatchTerm> node) {
         } else if (cpattern) {
             caseId = cpattern->symbol->toString();
         } else if (qpattern) {
-            sptr_t<Constructor> cons = qpattern->constructor;
+            ConstructorPtr cons = qpattern->constructor;
             scons = dynamic_pointer_cast<Symbol>(cons);
             qcons = dynamic_pointer_cast<QualifiedConstructor>(cons);
 
@@ -389,19 +391,19 @@ void TermSorter::visit(sptr_t<MatchTerm> node) {
         }
 
         // Get known entries for functions with the name caseId
-        sptr_v<FunInfo> funInfos = ctx->getStack()->getFunInfo(caseId);
-        sptr_v<FunInfo> matchingInfos;
-        vector<unordered_map<string, sptr_t<Sort>>> matchingMappings;
+        vector<FunEntryPtr> funEntries = ctx->getStack()->getFunEntry(caseId);
+        vector<FunEntryPtr> matchingEntries;
+        vector<unordered_map<string, SortPtr>> matchingMappings;
 
         // Select the function entries that fit
-        for (auto info : funInfos) {
-            sptr_t<Sort> retSort = info->signature[info->signature.size() - 1];
+        for (const auto& entry : funEntries) {
+            SortPtr retSort = entry->signature[entry->signature.size() - 1];
             string retSortStr = retSort->toString();
 
             // If entry is about a parametric function, map sort parameters to real sorts
-            vector<string> pnames = toStringArray(info->params);
-            unordered_map<string, sptr_t<Sort>> mapping;
-            bool mapped = pnames.empty() ? true : unify(retSort, termSort, pnames, mapping);
+            vector<string> pnames = toStringArray(entry->params);
+            unordered_map<string, SortPtr> mapping;
+            bool mapped = pnames.empty() || unify(retSort, termSort, pnames, mapping);
 
             // Check if current function entry fits
             if (spattern || cpattern) {
@@ -413,8 +415,8 @@ void TermSorter::visit(sptr_t<MatchTerm> node) {
                 }
 
                 // If return sorts were mapped correctly
-                if (mapped && info->params.size() == mapping.size()) {
-                    matchingInfos.push_back(info);
+                if (mapped && entry->params.size() == mapping.size()) {
+                    matchingEntries.push_back(entry);
                     matchingMappings.push_back(mapping);
                 }
             } else if (qpattern) {
@@ -427,20 +429,20 @@ void TermSorter::visit(sptr_t<MatchTerm> node) {
 
                 // If return sorts were mapped correctly
                 // and there are as many arguments to the function as there are symbols in the pattern
-                if (mapped && info->params.size() == mapping.size()
-                    && qpattern->symbols.size() == info->signature.size() - 1) {
-                    matchingInfos.push_back(info);
+                if (mapped && entry->params.size() == mapping.size()
+                    && qpattern->symbols.size() == entry->signature.size() - 1) {
+                    matchingEntries.push_back(entry);
                     matchingMappings.push_back(mapping);
                 }
             }
         }
 
-        if (matchingInfos.empty()) {
-            if (spattern && caseIt + 1 == node->cases.end()) {
+        if (matchingEntries.empty()) {
+            if (spattern && i + 1 >= szi) {
                 // If it's not a function, try to interpret it as a variable
                 ctx->getStack()->push();
-                ctx->getStack()->tryAdd(make_shared<VarInfo>(caseId, termSort, *caseIt));
-                sptr_t<Sort> caseSort = wrappedVisit((*caseIt)->term);
+                ctx->getStack()->tryAdd(make_shared<VarEntry>(caseId, termSort, cases[i]));
+                SortPtr caseSort = wrappedVisit(cases[i]->term);
                 if (caseSort) {
                     caseSorts.push_back(caseSort);
                 }
@@ -452,22 +454,23 @@ void TermSorter::visit(sptr_t<MatchTerm> node) {
                 auto error = ErrorMessages::buildFunUnknownDecl(caseId, qpattern->symbols.size(), termSort->toString());
                 errAccum = ctx->getChecker()->addError(error, node, errAccum);
             }
-        } else if (matchingInfos.size() > 1) {
+        } else if (matchingEntries.size() > 1) {
             if (qpattern) {
                 auto error = ErrorMessages::buildFunMultipleDecls(caseId, qpattern->symbols.size(), termSort->toString());
                 errAccum = ctx->getChecker()->addError(error, node, errAccum);
             }
         } else {
-            sptr_t<FunInfo> match = matchingInfos[0];
+            FunEntryPtr match = matchingEntries[0];
             if (qpattern) {
                 ctx->getStack()->push();
-                for (size_t i = 0; i < match->signature.size() - 1; i++) {
-                    sptr_t<Sort> paramSort = ctx->getStack()->replace(match->signature[i], matchingMappings[0]);
-                    ctx->getStack()->tryAdd(make_shared<VarInfo>(qpattern->symbols[i]->toString(), paramSort, *caseIt));
+                for (size_t j = 0, szj = match->signature.size(); j < szj - 1; j++) {
+                    SortPtr paramSort = ctx->getStack()->replace(match->signature[j], matchingMappings[0]);
+                    ctx->getStack()->tryAdd(make_shared<VarEntry>(std::move(qpattern->symbols[j]->toString()),
+                                                                  paramSort, cases[i]));
                 }
             }
 
-            sptr_t<Sort> caseSort = wrappedVisit((*caseIt)->term);
+            SortPtr caseSort = wrappedVisit(cases[i]->term);
             if (caseSort) {
                 caseSorts.push_back(caseSort);
             }
@@ -482,7 +485,7 @@ void TermSorter::visit(sptr_t<MatchTerm> node) {
     if (caseSorts.size() == node->cases.size()) {
         string case1 = caseSorts[0]->toString();
         auto pos = find_if(caseSorts.begin() + 1, caseSorts.end(),
-                           [&](const sptr_t<Sort> &s) { return s->toString() != case1; });
+                           [&](const SortPtr& s) { return s->toString() != case1; });
 
         bool equalCases = pos == caseSorts.end();
         if (equalCases) {
@@ -494,48 +497,52 @@ void TermSorter::visit(sptr_t<MatchTerm> node) {
 
 }
 
-void TermSorter::visit(sptr_t<AnnotatedTerm> node) {
+void TermSorter::visit(const AnnotatedTermPtr& node) {
     visit0(node->term);
 }
 
-sptr_v<Sort> TermSorter::extractReturnSorts(sptr_v<FunInfo> infos, size_t arity, bool parametric) {
-    sptr_v<Sort> retSorts;
-    for (auto info : infos) {
-        size_t sz = info->signature.size();
-        if (sz == arity + 1 && !info->params.empty() == parametric)
-            retSorts.push_back(info->signature[sz - 1]);
+vector<SortPtr> TermSorter::extractReturnSorts(const vector<FunEntryPtr>& entries,
+                                               size_t arity, bool parametric) {
+    vector<SortPtr> retSorts;
+    for (const FunEntryPtr& entry : entries) {
+        size_t sz = entry->signature.size();
+        if (sz == arity + 1 && !entry->params.empty() == parametric)
+            retSorts.push_back(entry->signature[sz - 1]);
     }
 
     return retSorts;
 }
 
-void TermSorter::extractReturnSorts(sptr_v<FunInfo> infos, size_t arity, bool parametric, sptr_v<Sort> &accum) {
-    sptr_v<Sort> retSorts = extractReturnSorts(infos, arity, parametric);
+void TermSorter::extractReturnSorts(const vector<FunEntryPtr>& entries,
+                                    size_t arity, bool parametric,
+                                    vector<SortPtr>& accum) {
+    vector<SortPtr> retSorts = extractReturnSorts(entries, arity, parametric);
     accum.insert(accum.begin(), retSorts.begin(), retSorts.end());
 }
 
-vector<string> TermSorter::extractParamNames(sptr_t<FunInfo> info) {
+vector<string> TermSorter::extractParamNames(const FunEntryPtr& entry) {
     vector<string> paramNames;
-    for (auto param : info->params) {
+    for (const auto& param : entry->params) {
         paramNames.push_back(param->toString());
     }
 
     return paramNames;
 }
 
-sptr_v<Sort> TermSorter::extractParamMatches(sptr_v<FunInfo> infos, size_t arity,
-                                             sptr_t<Sort> sort, sptr_t<SymbolStack> stack) {
-    sptr_v<Sort> matches;
+vector<SortPtr> TermSorter::extractParamMatches(const vector<FunEntryPtr>& entries,
+                                                size_t arity, const SortPtr& sort,
+                                                const SymbolStackPtr& stack) {
+    vector<SortPtr> matches;
 
-    for (auto info : infos) {
-        size_t sz = info->signature.size();
-        if (sz == arity + 1 && !info->params.empty()) {
-            vector<string> paramNames = extractParamNames(info);
-            unordered_map<string, sptr_t<Sort>> mapping;
-            unify(info->signature[sz - 1], sort, paramNames, mapping);
+    for (const auto& entry : entries) {
+        size_t sz = entry->signature.size();
+        if (sz == arity + 1 && !entry->params.empty()) {
+            vector<string> paramNames = extractParamNames(entry);
+            unordered_map<string, SortPtr> mapping;
+            unify(entry->signature[sz - 1], sort, paramNames, mapping);
 
             if (mapping.size() == paramNames.size()) {
-                sptr_t<Sort> retSort = stack->replace(info->signature[sz - 1], mapping);
+                SortPtr retSort = stack->replace(entry->signature[sz - 1], mapping);
                 matches.push_back(retSort);
             }
         }
@@ -544,14 +551,17 @@ sptr_v<Sort> TermSorter::extractParamMatches(sptr_v<FunInfo> infos, size_t arity
     return matches;
 }
 
-void TermSorter::extractParamMatches(sptr_v<FunInfo> infos, size_t arity, sptr_t<Sort> sort,
-                                     sptr_t<SymbolStack> stack, sptr_v<Sort> &accum) {
-    sptr_v<Sort> matches = extractParamMatches(infos, arity, sort, stack);
+void TermSorter::extractParamMatches(const vector<FunEntryPtr>& entries,
+                                     size_t arity, const SortPtr& sort,
+                                     const SymbolStackPtr& stack,
+                                     vector<SortPtr>& accum) {
+    vector<SortPtr> matches = extractParamMatches(entries, arity, sort, stack);
     accum.insert(accum.begin(), matches.begin(), matches.end());
 }
 
-bool TermSorter::unify(sptr_t<Sort> sort1, sptr_t<Sort> sort2,
-                       vector<string> &params, sptr_um2<string, Sort> &mapping) {
+bool TermSorter::unify(const SortPtr& sort1, const SortPtr& sort2,
+                       const vector<string>& params,
+                       unordered_map<string, SortPtr>& mapping) {
     if (!sort1 || !sort2)
         return false;
 

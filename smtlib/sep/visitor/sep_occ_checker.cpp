@@ -7,13 +7,13 @@
 using namespace std;
 using namespace smtlib::sep;
 
-bool OccurrenceChecker::check(sptr_t<Node> node) {
+bool OccurrenceChecker::check(const NodePtr& node) {
     found = false;
     visit0(node);
     return found;
 }
 
-void OccurrenceChecker::visit(sptr_t<SimpleIdentifier> node) {
+void OccurrenceChecker::visit(const SimpleIdentifierPtr& node) {
     if(node->toString() == ctx->getSignature()->name
        && ctx->getSignature()->parameters.empty()) {
         found = true;
@@ -21,7 +21,7 @@ void OccurrenceChecker::visit(sptr_t<SimpleIdentifier> node) {
     }
 }
 
-void OccurrenceChecker::visit(sptr_t<QualifiedIdentifier> node) {
+void OccurrenceChecker::visit(const QualifiedIdentifierPtr& node) {
     if(node->identifier->toString() == ctx->getSignature()->name
        && node->sort->toString() == ctx->getSignature()->sort->toString()
        && ctx->getSignature()->parameters.empty()) {
@@ -30,8 +30,8 @@ void OccurrenceChecker::visit(sptr_t<QualifiedIdentifier> node) {
     }
 }
 
-void OccurrenceChecker::visit(sptr_t<QualifiedTerm> node) {
-    sptr_t<SimpleIdentifier> sid = dynamic_pointer_cast<SimpleIdentifier>(node->identifier);
+void OccurrenceChecker::visit(const QualifiedTermPtr& node) {
+    SimpleIdentifierPtr sid = dynamic_pointer_cast<SimpleIdentifier>(node->identifier);
     long sigSize = ctx->getSignature()->parameters.size();
     long nodeSize = node->terms.size();
 
@@ -44,7 +44,7 @@ void OccurrenceChecker::visit(sptr_t<QualifiedTerm> node) {
         return;
     }
 
-    sptr_t<QualifiedIdentifier> qid = dynamic_pointer_cast<QualifiedIdentifier>(node->identifier);
+    QualifiedIdentifierPtr qid = dynamic_pointer_cast<QualifiedIdentifier>(node->identifier);
     if(qid && qid->identifier->toString() == sigName &&
         qid->sort->toString() == sigSort &&
         nodeSize == sigSize && checkSorts(node->terms)) {
@@ -52,19 +52,19 @@ void OccurrenceChecker::visit(sptr_t<QualifiedTerm> node) {
         return;
     }
 
-    for(auto it = node->terms.begin(); it != node->terms.end(); it++) {
-        visit0(*it);
+    for (const auto& term : node->terms) {
+        visit0(term);
     }
 }
 
-bool OccurrenceChecker::checkSorts(sptr_v<Term> terms) {
+bool OccurrenceChecker::checkSorts(const std::vector<TermPtr>& terms) {
     if(ctx->getStack()) {
-        sptr_t<TermSorterContext> sctx = make_shared<TermSorterContext>(ctx->getStack());
-        sptr_t<TermSorter> sorter = make_shared<TermSorter>(sctx);
-        sptr_v<SortedVariable> params = ctx->getSignature()->parameters;
+        TermSorterContextPtr sctx = make_shared<TermSorterContext>(ctx->getStack());
+        TermSorterPtr sorter = make_shared<TermSorter>(sctx);
+        std::vector<SortedVariablePtr>& params = ctx->getSignature()->parameters;
 
         for(size_t i = 0, n = terms.size(); i < n; i++) {
-            sptr_t<Sort> sort = sorter->run(terms[i]);
+            SortPtr sort = sorter->run(terms[i]);
             if(sort->toString() != params[i]->sort->toString()) {
                 return false;
             }

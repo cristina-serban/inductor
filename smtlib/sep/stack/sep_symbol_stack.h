@@ -10,54 +10,52 @@ namespace smtlib {
     namespace sep {
         class SymbolStack {
         private:
-            sptr_v<SymbolTable> stack;
+            std::vector<SymbolTablePtr> stack;
 
-            bool equal(sptr_t<Sort> sort1,
-                       sptr_t<Sort> sort2);
+            bool equal(const SortPtr& sort1, const SortPtr& sort2);
 
-            bool equal(sptr_v<Sort> &signature1,
-                       sptr_v<Sort> &signature2);
+            bool equal(const std::vector<SortPtr>& signature1,
+                       const std::vector<SortPtr>& signature2);
 
-            bool equal(std::vector<std::string> &params1,
-                       sptr_v<Sort> &signature1,
-                       std::vector<std::string> &params2,
-                       sptr_v<Sort> &signature2);
+            bool equal(const std::vector<std::string>& params1,
+                       const std::vector<SortPtr>& signature1,
+                       const std::vector<std::string>& params2,
+                       const std::vector<SortPtr>& signature2);
 
-            bool equal(std::vector<std::string> &params1,
-                       sptr_t<Sort> sort1,
-                       std::vector<std::string> &params2,
-                       sptr_t<Sort> sort2,
-                       umap<std::string, std::string> &mapping);
+            bool equal(const std::vector<std::string>& params1, const SortPtr& sort1,
+                       const std::vector<std::string>& params2, const SortPtr& sort2,
+                       std::unordered_map<std::string, std::string>& mapping);
         public:
             SymbolStack();
 
-            sptr_t<SymbolTable> getTopLevel();
+            SymbolTablePtr getTopLevel();
 
-            sptr_v<SymbolTable> &getStack();
+            std::vector<SymbolTablePtr>& getStack();
 
             bool push();
-            bool push(unsigned long levels);
+            bool push(size_t levels);
 
             bool pop();
-            bool pop(unsigned long levels);
+            bool pop(size_t levels);
 
             void reset();
 
-            sptr_t<SortEntry> getSortEntry(std::string name);
-            sptr_v<FunEntry> getFunEntry(std::string name);
-            sptr_t<VarEntry> getVarEntry(std::string name);
+            SortEntryPtr getSortEntry(const std::string& name);
+            std::vector<FunEntryPtr> getFunEntry(const std::string& name);
+            VarEntryPtr getVarEntry(const std::string& name);
 
-            sptr_t<SortEntry> findDuplicate(sptr_t<SortEntry> entry);
-            sptr_t<FunEntry> findDuplicate(sptr_t<FunEntry> entry);
-            sptr_t<VarEntry> findDuplicate(sptr_t<VarEntry> entry);
+            SortEntryPtr findDuplicate(const SortEntryPtr& entry);
+            FunEntryPtr findDuplicate(const FunEntryPtr& entry);
+            VarEntryPtr findDuplicate(const VarEntryPtr& entry);
 
-            sptr_t<Sort> expand(sptr_t<Sort> sort);
+            SortPtr expand(const SortPtr& sort);
 
-            sptr_t<Sort> replace(sptr_t<Sort>, sptr_um2<std::string, Sort> &mapping);
+            SortPtr replace(const SortPtr&,
+                            std::unordered_map<std::string, SortPtr>& mapping);
 
-            sptr_t<SortEntry> tryAdd(sptr_t<SortEntry> entry);
-            sptr_t<FunEntry> tryAdd(sptr_t<FunEntry> entry);
-            sptr_t<VarEntry> tryAdd(sptr_t<VarEntry> entry);
+            SortEntryPtr tryAdd(const SortEntryPtr& entry);
+            FunEntryPtr tryAdd(const FunEntryPtr& entry);
+            VarEntryPtr tryAdd(const VarEntryPtr& entry);
         };
 
         typedef std::shared_ptr<SymbolStack> SymbolStackPtr;

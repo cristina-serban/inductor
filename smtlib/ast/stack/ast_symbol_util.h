@@ -9,187 +9,192 @@
 
 namespace smtlib {
     namespace ast {
-
-        /* ==================================== SymbolInfo ==================================== */
-        class SymbolInfo {
+        /* =================================== SymbolEntry ==================================== */
+        class SymbolEntry {
         public:
             std::string name;
-            sptr_t<ast::Node> source;
+            ast::NodePtr source;
 
-            virtual ~SymbolInfo();
+            inline SymbolEntry() = default;
+
+            inline SymbolEntry(std::string name, ast::NodePtr source)
+                    : name(std::move(name))
+                    , source(std::move(source)) {}
+
+            virtual ~SymbolEntry();
         };
 
-        /* =================================== SortDefInfo ==================================== */
-        class SortDefInfo {
+        typedef std::shared_ptr<SymbolEntry> SymbolEntryPtr;
+
+        /* =================================== SortDefEntry =================================== */
+        class SortDefEntry {
         public:
-            sptr_v<ast::Symbol> params;
-            sptr_t<ast::Sort> sort;
+            std::vector<ast::SymbolPtr> params;
+            ast::SortPtr sort;
 
-            SortDefInfo(sptr_v<ast::Symbol> &params,
-                        sptr_t<ast::Sort> sort) {
-                this->params.insert(this->params.begin(), params.begin(), params.end());
-                this->sort = sort;
-            }
+            inline SortDefEntry(std::vector<ast::SymbolPtr> params,
+                                ast::SortPtr sort)
+                    : params(std::move(params))
+                    , sort(std::move(sort)) {}
         };
 
-        /* ===================================== SortInfo ===================================== */
-        class SortInfo : public SymbolInfo {
+        typedef std::shared_ptr<SortDefEntry> SortDefEntryPtr;
+
+        /* ==================================== SortEntry ===================================== */
+        class SortEntry : public SymbolEntry {
         public:
-            unsigned long arity;
-            sptr_t<SortDefInfo> definition;
-            sptr_v<ast::Attribute> attributes;
+            size_t arity;
+            SortDefEntryPtr definition;
+            std::vector<ast::AttributePtr> attributes;
 
-            SortInfo(std::string name, unsigned long arity,
-                     sptr_t<ast::Node> source) : arity(arity) {
-                this->name = name;
-                this->source = source;
-            }
+            inline SortEntry(std::string name,
+                             size_t arity,
+                             ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , arity(arity) {}
 
-            SortInfo(std::string name, unsigned long arity,
-                     sptr_v<ast::Attribute> &attributes,
-                     sptr_t<ast::Node> source) : arity(arity) {
-                this->name = name;
-                this->source = source;
-                this->attributes.insert(this->attributes.begin(), attributes.begin(), attributes.end());
-            }
+            inline SortEntry(std::string name,
+                             size_t arity,
+                             std::vector<ast::AttributePtr> attributes,
+                             ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , arity(arity)
+                    , attributes(std::move(attributes)) {}
 
-            SortInfo(std::string name, unsigned long arity,
-                     sptr_v<ast::Symbol> &params,
-                     sptr_t<ast::Sort> sort,
-                     sptr_t<ast::Node> source) : arity(arity) {
-                this->name = name;
-                this->source = source;
-                this->definition = std::make_shared<SortDefInfo>(params, sort);
-            }
+            inline SortEntry(std::string name,
+                             size_t arity,
+                             std::vector<ast::SymbolPtr> params,
+                             ast::SortPtr sort,
+                             ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , arity(arity)
+                    , definition(std::make_shared<SortDefEntry>(std::move(params), std::move(sort))) {}
 
-            SortInfo(std::string name, unsigned long arity,
-                     sptr_v<ast::Symbol> &params,
-                     sptr_t<ast::Sort> sort,
-                     sptr_v<ast::Attribute> &attributes,
-                     sptr_t<ast::Node> source) : arity(arity) {
-                this->name = name;
-                this->source = source;
-                this->definition = std::make_shared<SortDefInfo>(params, sort);
-                this->attributes.insert(this->attributes.begin(), attributes.begin(), attributes.end());
-            }
+            inline SortEntry(std::string name,
+                             size_t arity,
+                             std::vector<ast::SymbolPtr> params,
+                             ast::SortPtr sort,
+                             std::vector<ast::AttributePtr> attributes,
+                             ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , arity(arity)
+                    , attributes(std::move(attributes))
+                    , definition(std::make_shared<SortDefEntry>(std::move(params), std::move(sort))) {}
         };
 
-        /* ===================================== FunInfo ====================================== */
-        class FunInfo : public SymbolInfo {
-        private:
-            inline void init(std::string name,
-                             sptr_v<ast::Sort> &signature,
-                             sptr_t<ast::Node> source) {
-                this->name = name;
-                this->signature.insert(this->signature.begin(), signature.begin(), signature.end());
-                this->source = source;
-                assocL = false;
-                assocR = false;
-                chainable = false;
-                pairwise = false;
-            }
+        typedef std::shared_ptr<SortEntry> SortEntryPtr;
 
+        /* ===================================== FunEntry ===================================== */
+        class FunEntry : public SymbolEntry {
         public:
-            sptr_v<ast::Sort> signature;
-            sptr_v<ast::Symbol> params;
-            sptr_t<ast::Term> body;
-            sptr_v<ast::Attribute> attributes;
+            std::vector<ast::SortPtr> signature;
+            std::vector<ast::SymbolPtr> params;
+            ast::TermPtr body;
+            std::vector<ast::AttributePtr> attributes;
 
-            bool assocR;
-            bool assocL;
-            bool chainable;
-            bool pairwise;
+            bool assocR { false };
+            bool assocL { false };
+            bool chainable { false };
+            bool pairwise { false };
 
-            FunInfo(std::string name,
-                    sptr_v<ast::Sort> &signature,
-                    sptr_t<ast::Node> source) {
-                init(name, signature, source);
-            }
+            inline FunEntry(std::string name,
+                            std::vector<ast::SortPtr> signature,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , signature(std::move(signature)) {}
 
-            FunInfo(std::string name,
-                    sptr_v<ast::Sort> &signature,
-                    sptr_t<ast::Term> body,
-                    sptr_t<ast::Node> source) : body(body) {
-                init(name, signature, source);
-            }
+            inline FunEntry(std::string name,
+                            std::vector<ast::SortPtr> signature,
+                            ast::TermPtr body,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , signature(std::move(signature))
+                    , body(std::move(body)) {}
 
-            FunInfo(std::string name,
-                    sptr_v<ast::Sort> &signature,
-                    sptr_v<ast::Symbol> &params,
-                    sptr_t<ast::Node> source) {
-                init(name, signature, source);
-                this->params.insert(this->params.begin(), params.begin(), params.end());
-            }
+            inline FunEntry(std::string name,
+                            std::vector<ast::SortPtr> signature,
+                            std::vector<ast::SymbolPtr> params,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , signature(std::move(signature))
+                    , params(std::move(params)) {}
 
-            FunInfo(std::string name,
-                    sptr_v<ast::Sort> &signature,
-                    sptr_v<ast::Symbol> &params,
-                    sptr_t<ast::Term> body,
-                    sptr_t<ast::Node> source) : body(body) {
-                init(name, signature, source);
-                this->params.insert(this->params.begin(), params.begin(), params.end());
-            }
+            inline FunEntry(std::string& name,
+                            std::vector<ast::SortPtr> signature,
+                            std::vector<ast::SymbolPtr> params,
+                            ast::TermPtr body,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , signature(std::move(signature))
+                    , params(std::move(params))
+                    , body(std::move(body)) {}
 
-            FunInfo(std::string name,
-                    sptr_v<ast::Sort> &signature,
-                    sptr_v<ast::Attribute> &attributes,
-                    sptr_t<ast::Node> source) {
-                init(name, signature, source);
-                this->attributes.insert(this->attributes.begin(), attributes.begin(), attributes.end());
-            }
+            inline FunEntry(std::string name,
+                            std::vector<ast::SortPtr> signature,
+                            std::vector<ast::AttributePtr> attributes,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , signature(std::move(signature))
+                    , attributes(std::move(attributes)) {}
 
-            FunInfo(std::string name,
-                    sptr_v<ast::Sort> &signature,
-                    sptr_t<ast::Term> body,
-                    sptr_v<ast::Attribute> &attributes,
-                    sptr_t<ast::Node> source) : body(body) {
-                init(name, signature, source);
-                this->attributes.insert(this->attributes.begin(), attributes.begin(), attributes.end());
-            }
+            inline FunEntry(std::string name,
+                            std::vector<ast::SortPtr> signature,
+                            ast::TermPtr body,
+                            std::vector<ast::AttributePtr> attributes,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , signature(std::move(signature))
+                    , body(std::move(body))
+                    , attributes(std::move(attributes)) {}
 
-            FunInfo(std::string name,
-                    sptr_v<ast::Sort> &signature,
-                    sptr_v<ast::Symbol> &params,
-                    sptr_v<ast::Attribute> &attributes,
-                    sptr_t<ast::Node> source) {
-                init(name, signature, source);
-                this->params.insert(this->params.begin(), params.begin(), params.end());
-                this->attributes.insert(this->attributes.begin(), attributes.begin(), attributes.end());
-            }
+            inline FunEntry(std::string name,
+                            std::vector<ast::SortPtr> signature,
+                            std::vector<ast::SymbolPtr> params,
+                            std::vector<ast::AttributePtr> attributes,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , signature(std::move(signature))
+                    , params(std::move(params))
+                    , attributes(std::move(attributes)) {}
 
-            FunInfo(std::string name,
-                    sptr_v<ast::Sort> &signature,
-                    sptr_v<ast::Symbol> &params,
-                    sptr_t<ast::Term> body,
-                    sptr_v<ast::Attribute> &attributes,
-                    sptr_t<ast::Node> source) : body(body) {
-                init(name, signature, source);
-                this->params.insert(this->params.begin(), params.begin(), params.end());
-                this->attributes.insert(this->attributes.begin(), attributes.begin(), attributes.end());
-            }
+            inline FunEntry(std::string name,
+                            std::vector<ast::SortPtr> signature,
+                            std::vector<ast::SymbolPtr> params,
+                            ast::TermPtr body,
+                            std::vector<ast::AttributePtr> attributes,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , signature(std::move(signature))
+                    , params(std::move(params))
+                    , attributes(std::move(attributes))
+                    , body(std::move(body)) {}
         };
 
-        /* ===================================== VarInfo ====================================== */
-        class VarInfo : public SymbolInfo {
+        typedef std::shared_ptr<FunEntry> FunEntryPtr;
+
+        /* ===================================== VarEntry ===================================== */
+        class VarEntry : public SymbolEntry {
         public:
-            sptr_t<ast::Sort> sort;
-            sptr_t<ast::Term> term;
+            ast::SortPtr sort;
+            ast::TermPtr term;
 
-            VarInfo(std::string name,
-                    sptr_t<ast::Sort> sort,
-                    sptr_t<ast::Node> source) : sort(sort) {
-                this->name = name;
-                this->source = source;
-            }
+            inline VarEntry(std::string name,
+                            ast::SortPtr sort,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , sort(std::move(sort)) {}
 
-            VarInfo(std::string name,
-                    sptr_t<ast::Sort> sort,
-                    sptr_t<ast::Term> term,
-                    sptr_t<ast::Node> source) : sort(sort), term(term) {
-                this->name = name;
-                this->source = source;
-            }
+            inline VarEntry(std::string name,
+                            ast::SortPtr sort,
+                            ast::TermPtr term,
+                            ast::NodePtr source)
+                    : SymbolEntry(std::move(name), std::move(source))
+                    , sort(std::move(sort))
+                    , term(std::move(term)) {}
         };
+
+        typedef std::shared_ptr<VarEntry> VarEntryPtr;
     }
 }
+
 #endif //INDUCTOR_AST_SYMBOL_UTIL_H

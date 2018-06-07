@@ -25,8 +25,8 @@ namespace smtlib {
 
             inline Attribute() = default;
 
-            inline explicit Attribute(const std::string& keyword)
-                    : keyword(keyword) {}
+            inline explicit Attribute(std::string keyword)
+                    : keyword(std::move(keyword)) {}
         };
 
         /* ================================= SimpleAttribute ================================== */
@@ -36,8 +36,8 @@ namespace smtlib {
         public:
             inline SimpleAttribute() = default;
 
-            inline explicit SimpleAttribute(const std::string& keyword)
-                    : Attribute(keyword) {}
+            inline explicit SimpleAttribute(std::string keyword)
+                    : Attribute(std::move(keyword)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -51,10 +51,11 @@ namespace smtlib {
         public:
             SExpressionPtr value;
 
-            inline SExpressionAttribute() {}
+            inline SExpressionAttribute() = default;
 
-            inline SExpressionAttribute(const std::string& keyword, const SExpressionPtr& value)
-                    : Attribute(keyword), value(value) {}
+            inline SExpressionAttribute(std::string keyword, SExpressionPtr value)
+                    : Attribute(std::move(keyword))
+                    , value(std::move(value)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -70,8 +71,9 @@ namespace smtlib {
 
             inline SymbolAttribute() = default;
 
-            inline SymbolAttribute(const std::string& keyword, const std::string& value)
-                    : Attribute(keyword), value(value) {}
+            inline SymbolAttribute(std::string keyword, std::string value)
+                    : Attribute(std::move(keyword))
+                    , value(std::move(value)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -83,12 +85,13 @@ namespace smtlib {
         class BooleanAttribute : public Attribute,
                                  public std::enable_shared_from_this<BooleanAttribute> {
         public:
-            bool value;
+            bool value{};
 
-            inline BooleanAttribute() {}
+            inline BooleanAttribute() = default;
 
-            inline BooleanAttribute(const std::string& keyword, bool value)
-                    : Attribute(keyword), value(value) {}
+            inline BooleanAttribute(std::string keyword, bool value)
+                    : Attribute(std::move(keyword))
+                    , value(value) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -102,10 +105,11 @@ namespace smtlib {
         public:
             NumeralLiteralPtr value;
 
-            inline NumeralAttribute() {}
+            inline NumeralAttribute() = default;
 
-            inline NumeralAttribute(const std::string& symbol, const NumeralLiteralPtr& value)
-                    : Attribute(keyword), value(value) {}
+            inline NumeralAttribute(std::string symbol, NumeralLiteralPtr value)
+                    : Attribute(std::move(symbol))
+                    , value(std::move(value)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -121,8 +125,9 @@ namespace smtlib {
 
             inline DecimalAttribute() = default;
 
-            inline DecimalAttribute(const std::string& keyword, const DecimalLiteralPtr& value)
-                    : Attribute(keyword), value(value) {}
+            inline DecimalAttribute(std::string keyword, DecimalLiteralPtr value)
+                    : Attribute(std::move(keyword))
+                    , value(std::move(value)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -138,8 +143,9 @@ namespace smtlib {
 
             inline StringAttribute() = default;
 
-            inline StringAttribute(const std::string& keyword, const StringLiteralPtr& value)
-                    : Attribute(keyword), value(value) {}
+            inline StringAttribute(std::string keyword, StringLiteralPtr value)
+                    : Attribute(std::move(keyword))
+                    , value(std::move(value)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -153,9 +159,11 @@ namespace smtlib {
         public:
             std::vector<std::string> theories;
 
-            inline TheoriesAttribute() : Attribute(KW_THEORIES) {}
+            inline TheoriesAttribute()
+                    : Attribute(KW_THEORIES) {}
 
-            explicit TheoriesAttribute(const std::vector<std::string>& theories);
+            inline explicit TheoriesAttribute(std::vector<std::string> theories)
+                    : theories(std::move(theories)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -169,9 +177,11 @@ namespace smtlib {
         public:
             std::vector<SortSymbolDeclarationPtr> declarations;
 
-            inline SortsAttribute() : Attribute(KW_SORTS) {}
+            inline SortsAttribute()
+                    : Attribute(KW_SORTS) {}
 
-            explicit SortsAttribute(const std::vector<SortSymbolDeclarationPtr>& decls);
+            inline explicit SortsAttribute(std::vector<SortSymbolDeclarationPtr> decls)
+                    : declarations(std::move(decls)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -185,9 +195,11 @@ namespace smtlib {
         public:
             std::vector<FunSymbolDeclarationPtr> declarations;
 
-            inline FunsAttribute() : Attribute(KW_FUNS) {}
+            inline FunsAttribute()
+                    : Attribute(KW_FUNS) {}
 
-            explicit FunsAttribute(const std::vector<FunSymbolDeclarationPtr>& decls);
+            inline explicit FunsAttribute(std::vector<FunSymbolDeclarationPtr> decls)
+                    : declarations(std::move(decls)) {}
 
             void accept(Visitor0* visitor) override;
 

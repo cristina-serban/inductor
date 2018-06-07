@@ -29,7 +29,9 @@ namespace smtlib {
              * \param identifier    Qualified identifier
              * \param terms         List of terms
              */
-            QualifiedTerm(const IdentifierPtr& identifier, const std::vector<TermPtr>& terms);
+            inline QualifiedTerm(IdentifierPtr identifier, std::vector<TermPtr> terms)
+                    : identifier(std::move(identifier))
+                    , terms(std::move(terms)) {}
 
             void accept(Visitor0 *visitor) override;
 
@@ -48,7 +50,9 @@ namespace smtlib {
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            LetTerm(const std::vector<VariableBindingPtr>& bindings, const TermPtr& term);
+            inline LetTerm(std::vector<VariableBindingPtr> bindings, TermPtr term)
+                    : bindings(std::move(bindings))
+                    , term(std::move(term)) {}
 
             void accept(Visitor0 *visitor) override;
 
@@ -67,7 +71,9 @@ namespace smtlib {
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            ForallTerm(const std::vector<SortedVariablePtr>& bindings, const TermPtr& term);
+            inline ForallTerm(std::vector<SortedVariablePtr> bindings, TermPtr term)
+                    : bindings(std::move(bindings))
+                    , term(std::move(term)) {}
 
             void accept(Visitor0 *visitor) override;
 
@@ -86,7 +92,9 @@ namespace smtlib {
              * \param bindings  List of bound variables
              * \param term      Inner term
              */
-            ExistsTerm(const std::vector<SortedVariablePtr>& bindings, const TermPtr& term);
+            inline ExistsTerm(std::vector<SortedVariablePtr> bindings, TermPtr term)
+                    : bindings(std::move(bindings))
+                    , term(std::move(term)) {}
 
             void accept(Visitor0 *visitor) override;
 
@@ -105,7 +113,9 @@ namespace smtlib {
              * @param term      Term to be matched
              * @param cases     Match cases
              */
-            MatchTerm(const TermPtr& term, const std::vector<MatchCasePtr>& cases);
+            inline MatchTerm(TermPtr term, std::vector<MatchCasePtr> cases)
+                    : term(std::move(term))
+                    , cases(std::move(cases)) {}
 
             void accept(Visitor0 *visitor) override;
 
@@ -124,7 +134,9 @@ namespace smtlib {
              * \param term  Inner term
              * \param attr  Attributes
              */
-            AnnotatedTerm(const TermPtr& term, const std::vector<AttributePtr>& attributes);
+            inline AnnotatedTerm(TermPtr term, std::vector<AttributePtr> attributes)
+                    : term(std::move(term))
+                    , attributes(std::move(attributes)) {}
 
             void accept(Visitor0 *visitor) override;
 

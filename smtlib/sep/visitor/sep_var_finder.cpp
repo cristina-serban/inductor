@@ -6,12 +6,12 @@
 using namespace std;
 using namespace smtlib::sep;
 
-void VariableFinder::addUniqueVariable(sptr_t<SortedVariable> var) {
-    auto &vars = ctx->getVariables();
+void VariableFinder::addUniqueVariable(const SortedVariablePtr& var) {
+    auto& vars = ctx->getVariables();
     string str = var->toString();
 
     bool dup = vars.end() != find_if(vars.begin(), vars.end(),
-                                     [&](const sptr_t<SortedVariable> &varsIt) {
+                                     [&](const SortedVariablePtr& varsIt) {
                                          return varsIt->toString() == str;
                                      });
 
@@ -20,12 +20,12 @@ void VariableFinder::addUniqueVariable(sptr_t<SortedVariable> var) {
     }
 }
 
-void VariableFinder::addUniqueBinding(sptr_t<SortedVariable> bind) {
-    auto &binds = ctx->getBindings();
+void VariableFinder::addUniqueBinding(const SortedVariablePtr& bind) {
+    auto& binds = ctx->getBindings();
     string str = bind->toString();
 
     bool dup = binds.end() != find_if(binds.begin(), binds.end(),
-                                      [&](const sptr_t<SortedVariable> &varsIt) {
+                                      [&](const SortedVariablePtr& varsIt) {
                                           return varsIt->toString() == str;
                                       });
 
@@ -34,14 +34,14 @@ void VariableFinder::addUniqueBinding(sptr_t<SortedVariable> bind) {
     }
 }
 
-void VariableFinder::visit(sptr_t<SimpleIdentifier> node) {
+void VariableFinder::visit(const SimpleIdentifierPtr& node) {
     string name = node->name;
-    sptr_t<Sort> sort;
+    SortPtr sort;
 
-    sptr_v<FunEntry> entries = ctx->getStack()->getFunEntry(name);
-    for (size_t i = 0, n = entries.size(); i < n; i++) {
-        if(entries[i]->params.size() == 0) {
-            sort = entries[i]->signature[0];
+    std::vector<FunEntryPtr> entries = ctx->getStack()->getFunEntry(name);
+    for (const auto& entry : entries) {
+        if(entry->params.empty()) {
+            sort = entry->signature[0];
             break;
         }
     }
@@ -51,21 +51,21 @@ void VariableFinder::visit(sptr_t<SimpleIdentifier> node) {
     }
 }
 
-void VariableFinder::visit(sptr_t<QualifiedIdentifier> node) {
+void VariableFinder::visit(const QualifiedIdentifierPtr& node) {
     string name = node->identifier->name;
-    sptr_t<Sort> sort = node->sort;
+    SortPtr sort = node->sort;
     string sortStr = node->sort->toString();
 
-    sptr_v<FunEntry> entries = ctx->getStack()->getFunEntry(name);
-    for (size_t i = 0, n = entries.size(); i < n; i++) {
-        if(entries[i]->params.size() == 1
-           && entries[i]->signature[0]->toString() == sortStr) {
+    std::vector<FunEntryPtr> entries = ctx->getStack()->getFunEntry(name);
+    for (const auto& entry : entries) {
+        if(entry->params.size() == 1
+           && entry->signature[0]->toString() == sortStr) {
             addUniqueVariable(make_shared<SortedVariable>(name, sort));
         }
     }
 }
 
-void VariableFinder::visit(sptr_t<QualifiedTerm> node) {
+void VariableFinder::visit(const QualifiedTermPtr& node) {
     if (node->terms.empty()) {
         visit0(node->identifier);
     }
@@ -73,11 +73,9 @@ void VariableFinder::visit(sptr_t<QualifiedTerm> node) {
     visit0(node->terms);
 }
 
-void VariableFinder::visit(sptr_t<ExistsTerm> node) {
-    sptr_v<SortedVariable> &binds = node->bindings;
-
-    for(size_t i = 0, n = binds.size(); i < n; i++) {
-        addUniqueBinding(make_shared<SortedVariable>(binds[i]->name, binds[i]->sort));
+void VariableFinder::visit(const ExistsTermPtr& node) {
+    for (const auto& bind : node->bindings) {
+        addUniqueBinding(make_shared<SortedVariable>(bind->name, bind->sort));
     }
 
     visit0(node->term);

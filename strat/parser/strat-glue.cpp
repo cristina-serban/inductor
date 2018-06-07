@@ -34,8 +34,8 @@ public:
     template<class T>
     vector<shared_ptr<T>> unwrap() {
         vector<shared_ptr<T>> result;
-        for (unsigned long i = 0, n = v.size(); i < n; ++i) {
-            shared_ptr<T> ptr = share<T>(v[i]);
+        for (auto& elem : v) {
+            shared_ptr<T> ptr = share<T>(elem);
             result.push_back(ptr);
         }
         v.clear();
@@ -72,14 +72,18 @@ void strat_setAst(StratPrsr parser, StratPtr ast) {
     }
 }
 
-void strat_reportError(StratPrsr parser, unsigned int rowLeft, unsigned int colLeft,
-                     unsigned int rowRight, unsigned int colRight, const char *msg) {
+void strat_reportError(StratPrsr parser,
+                       int rowLeft, int colLeft,
+                       int rowRight, int colRight,
+                       const char* msg) {
     if (parser && msg) {
         parser->reportError(rowLeft, colLeft, rowRight, colRight, msg);
     }
 }
 
-void strat_setLocation(StratPrsr parser, StratPtr ptr, int rowLeft, int colLeft, int rowRight, int colRight) {
+void strat_setLocation(StratPrsr parser, StratPtr ptr,
+                       int rowLeft, int colLeft,
+                       int rowRight, int colRight) {
     ptr->filename = parser->getFilename();
     ptr->rowLeft = rowLeft;
     ptr->colLeft = colLeft;
@@ -89,49 +93,49 @@ void strat_setLocation(StratPrsr parser, StratPtr ptr, int rowLeft, int colLeft,
 
 //ast_basic.h
 StratPtr strat_newStringLiteral(char const *value) {
-    shared_ptr<StringLiteral> ptr = make_shared<StringLiteral>(value);
+    StringLiteralPtr ptr = make_shared<StringLiteral>(value);
     strat_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 StratPtr strat_newRule(StratPtr name) {
-    shared_ptr<Rule> ptr = make_shared<Rule>(share<StringLiteral>(name));
+    RulePtr ptr = make_shared<Rule>(std::move(share<StringLiteral>(name)));
     strat_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 StratPtr strat_newState(StratPtr name) {
-    shared_ptr<State> ptr = make_shared<State>(share<StringLiteral>(name));
+    StatePtr ptr = make_shared<State>(std::move(share<StringLiteral>(name)));
     strat_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 //ast_transition.h
 StratPtr strat_newTransition(StratPtr start, StratPtr rule, StratPtr end) {
-    shared_ptr<Transition> ptr =
-            make_shared<Transition>(share<State>(start), share<Rule>(rule), share<State>(end));
+    TransitionPtr ptr = make_shared<Transition>(std::move(share<State>(start)),
+                                                std::move(share<Rule>(rule)),
+                                                std::move(share<State>(end)));
     strat_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 //ast_automaton.h
-StratPtr strat_newAutomaton(StratPtr name, StratList states, StratPtr init,
-                            StratList final, StratList transitions) {
-    vector<shared_ptr<State>> unwrappedStates = states->unwrap<State>();
-    vector<shared_ptr<State>> unwrappedFinalStates = final->unwrap<State>();
-    vector<shared_ptr<Transition>> unwrappedTransitions = transitions->unwrap<Transition>();
-
-    shared_ptr<Automaton> ptr = make_shared<Automaton>(share<StringLiteral>(name), unwrappedStates,
-                                                       share<State>(init), unwrappedFinalStates, unwrappedTransitions);
+StratPtr strat_newAutomaton(StratPtr name, StratList states,
+                            StratPtr initial, StratList final,
+                            StratList transitions) {
+    AutomatonPtr ptr = make_shared<Automaton>(std::move(share<StringLiteral>(name)),
+                                              std::move(states->unwrap<State>()),
+                                              std::move(share<State>(initial)),
+                                              std::move(final->unwrap<State>()),
+                                              std::move(transitions->unwrap<Transition>()));
     strat_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }
 
 //ast_file.h
 StratPtr strat_newFile(StratList declarations, StratPtr automaton) {
-    vector<shared_ptr<Rule>> unwrappedRules = declarations->unwrap<Rule>();
-
-    shared_ptr<File> ptr = make_shared<File>(unwrappedRules, share<Automaton>(automaton));
+    FilePtr ptr = make_shared<File>(std::move(declarations->unwrap<Rule>()),
+                                    std::move(share<Automaton>(automaton)));
     strat_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }

@@ -19,14 +19,15 @@ namespace smtlib {
                                 public std::enable_shared_from_this<SortDeclaration> {
         public:
             std::string name;
-            long arity;
+            size_t arity;
 
             /**
              * \param symbol    Datatype (sort) name
              * \param arity     Arity
              */
-            inline SortDeclaration(const std::string& name, long arity)
-                    : name(name), arity(arity) {}
+            inline SortDeclaration(std::string name, size_t arity)
+                    : name(std::move(name))
+                    , arity(arity) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -45,8 +46,9 @@ namespace smtlib {
              * \param symbol    Selector name
              * \param sort      Selector sort
              */
-            inline SelectorDeclaration(const std::string& name, const SortPtr& sort)
-                    : name(name), sort(sort) {}
+            inline SelectorDeclaration(std::string name, SortPtr sort)
+                    : name(std::move(name))
+                    , sort(std::move(sort)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -65,8 +67,10 @@ namespace smtlib {
              * \param symbol        Constructor name
              * \param selectors     Selectors for the constructor
              */
-            ConstructorDeclaration(const std::string& name,
-                                   const std::vector<SelectorDeclarationPtr>& selectors);
+            inline ConstructorDeclaration(std::string name,
+                                          std::vector<SelectorDeclarationPtr> selectors)
+                    : name(std::move(name))
+                    , selectors(std::move(selectors)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -88,7 +92,8 @@ namespace smtlib {
             /**
              * \param constructors  Constructors for this datatype
              */
-            explicit SimpleDatatypeDeclaration(const std::vector<ConstructorDeclarationPtr>& constructors);
+            inline explicit SimpleDatatypeDeclaration(std::vector<ConstructorDeclarationPtr> constructors)
+                    : constructors(std::move(constructors)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -107,8 +112,10 @@ namespace smtlib {
              * \param params        Parameters for the declaration
              * \param constructors  Constructors for this datatype
              */
-            ParametricDatatypeDeclaration(const std::vector<std::string>& parameters,
-                                          const std::vector<ConstructorDeclarationPtr>& constructors);
+            ParametricDatatypeDeclaration(std::vector<std::string> parameters,
+                                          std::vector<ConstructorDeclarationPtr> constructors)
+                    : parameters(std::move(parameters))
+                    , constructors(std::move(constructors)) {}
 
             void accept(Visitor0* visitor) override;
 

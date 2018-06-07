@@ -18,7 +18,7 @@ using namespace std;
 using namespace smtlib;
 using namespace smtlib::ast;
 
-void PredicateUnfolder::visit(sptr_t<DefineFunRecCommand> node) {
+void PredicateUnfolder::visit(const DefineFunRecCommandPtr& node) {
     findCounter = 0;
     predLevel = 0;
     prevFind = -1;
@@ -30,11 +30,11 @@ void PredicateUnfolder::visit(sptr_t<DefineFunRecCommand> node) {
 
     output.open(ctx->getOutputPath().c_str(), std::fstream::out | std::fstream::app);
 
-    sptr_t<QualifiedTerm> body = dynamic_pointer_cast<QualifiedTerm>(node->definition->body);
+    QualifiedTermPtr body = dynamic_pointer_cast<QualifiedTerm>(node->definition->body);
     currentBaseCase = dynamic_pointer_cast<Term>(body->terms[0]);
     currentRecCase = dynamic_pointer_cast<ExistsTerm>(body->terms[1]);
 
-    sptr_t<Duplicator> dupl = make_shared<Duplicator>();
+    DuplicatorPtr dupl = make_shared<Duplicator>();
     if (ctx->isExistential()) {
         currentDefinition = node->definition;
     } else {
@@ -43,15 +43,15 @@ void PredicateUnfolder::visit(sptr_t<DefineFunRecCommand> node) {
         body->terms.pop_back();
         body->terms.push_back(currentRecCase->term);
 
-        for (sptr_t<SortedVariable> binding : currentRecCase->bindings) {
+        for (const auto& binding : currentRecCase->bindings) {
             output << "(declare-const " << binding->symbol->toString()
             << " " << binding->sort->toString() << ")" << endl;
         }
     }
 
-    sptr_t<Term> unfoldedBody = dynamic_pointer_cast<Term>(wrappedVisit(arg + 1, body));
+    TermPtr unfoldedBody = dynamic_pointer_cast<Term>(wrappedVisit(arg + 1, body));
 
-    sptr_t<DefineFunRecCommand> cmd = dynamic_pointer_cast<DefineFunRecCommand>(dupl->run(node));
+    DefineFunRecCommandPtr cmd = dynamic_pointer_cast<DefineFunRecCommand>(dupl->run(node));
     cmd->definition->body = unfoldedBody;
 
     stringstream ss;
@@ -60,17 +60,17 @@ void PredicateUnfolder::visit(sptr_t<DefineFunRecCommand> node) {
         ss << "e";
     cmd->definition->signature->symbol->value = ss.str();
 
-    sptr_t<DefineFunCommand> res = make_shared<DefineFunCommand>(cmd->definition);
+    DefineFunCommandPtr res = make_shared<DefineFunCommand>(cmd->definition);
     if (ctx->isCvcEmp()) {
-        sptr_t<SimpleIdentifier> emp = make_shared<SimpleIdentifier>(make_shared<Symbol>("emp"));
-        sptr_t<NumeralLiteral> zero = make_shared<NumeralLiteral>(0, 10);
+        SimpleIdentifierPtr emp = make_shared<SimpleIdentifier>(make_shared<Symbol>("emp"));
+        NumeralLiteralPtr zero = make_shared<NumeralLiteral>(0, 10);
 
-        sptr_v<Term> terms;
+        std::vector<TermPtr> terms;
         terms.push_back(zero);
-        sptr_t<QualifiedTerm> emp0 = make_shared<QualifiedTerm>(emp, terms);
+        QualifiedTermPtr emp0 = make_shared<QualifiedTerm>(emp, terms);
 
-        sptr_t<TermReplacerContext> ctx = make_shared<TermReplacerContext>(emp, emp0);
-        sptr_t<TermReplacer> repl = make_shared<TermReplacer>(ctx);
+        TermReplacerContextPtr ctx = make_shared<TermReplacerContext>(emp, emp0);
+        TermReplacerPtr repl = make_shared<TermReplacer>(ctx);
         res->definition->body = repl->run(res->definition->body);
     }
 
@@ -82,8 +82,8 @@ void PredicateUnfolder::visit(sptr_t<DefineFunRecCommand> node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<QualifiedTerm> node) {
-    sptr_t<FunctionDeclaration> signature = currentDefinition->signature;
+void PredicateUnfolder::visit(const QualifiedTermPtr& node) {
+    FunctionDeclarationPtr signature = currentDefinition->signature;
 
     if (node->identifier->toString() == signature->symbol->toString()) {
 
@@ -96,17 +96,17 @@ void PredicateUnfolder::visit(sptr_t<QualifiedTerm> node) {
 
         prevFind = arg;
 
-        sptr_t<VariableRenamerContext> replaceContext = make_shared<VariableRenamerContext>();
-        sptr_t<VariableRenamer> renamer = make_shared<VariableRenamer>(replaceContext);
+        VariableRenamerContextPtr replaceContext = make_shared<VariableRenamerContext>();
+        VariableRenamerPtr renamer = make_shared<VariableRenamer>(replaceContext);
 
-        sptr_t<Duplicator> dupl = make_shared<Duplicator>();
-        sptr_t<Node> dup;
+        DuplicatorPtr dupl = make_shared<Duplicator>();
+        NodePtr dup;
 
         if (ctx->getUnfoldLevel() == predLevel) {
             dup = dupl->run(currentBaseCase);
         } else {
             dup = dupl->run(currentDefinition->body);
-            for (sptr_t<SortedVariable> binding : currentRecCase->bindings) {
+            for (const auto& binding : currentRecCase->bindings) {
                 string varName = binding->symbol->toString();
                 stringstream sss;
                 sss << varName;
@@ -145,8 +145,8 @@ void PredicateUnfolder::visit(sptr_t<QualifiedTerm> node) {
     } else {
         node->identifier = dynamic_pointer_cast<Identifier>(wrappedVisit(arg + 1, node->identifier));
 
-        sptr_v<Term> newTerms;
-        for (sptr_t<Term> term : node->terms) {
+        std::vector<TermPtr> newTerms;
+        for (const auto& term : node->terms) {
             newTerms.push_back(dynamic_pointer_cast<Term>(wrappedVisit(arg + 1, term)));
         }
 
@@ -157,362 +157,362 @@ void PredicateUnfolder::visit(sptr_t<QualifiedTerm> node) {
     }
 }
 
-void PredicateUnfolder::visit(sptr_t<Attribute> node) {
+void PredicateUnfolder::visit(const AttributePtr& node) {
     wrappedVisit(arg + 1, node->keyword);
     wrappedVisit(arg + 1, node->value);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<CompAttributeValue> node) {
-    for (sptr_t<AttributeValue> it : node->values) {
+void PredicateUnfolder::visit(const CompAttributeValuePtr& node) {
+    for (const auto& it : node->values) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<Symbol> node) { ret = node; }
+void PredicateUnfolder::visit(const SymbolPtr& node) { ret = node; }
 
-void PredicateUnfolder::visit(sptr_t<Keyword> node) { ret = node; }
+void PredicateUnfolder::visit(const KeywordPtr& node) { ret = node; }
 
-void PredicateUnfolder::visit(sptr_t<MetaSpecConstant> node) { ret = node; }
+void PredicateUnfolder::visit(const MetaSpecConstantPtr& node) { ret = node; }
 
-void PredicateUnfolder::visit(sptr_t<BooleanValue> node) { ret = node; }
+void PredicateUnfolder::visit(const BooleanValuePtr& node) { ret = node; }
 
-void PredicateUnfolder::visit(sptr_t<PropLiteral> node) { ret = node; }
+void PredicateUnfolder::visit(const PropLiteralPtr& node) { ret = node; }
 
-void PredicateUnfolder::visit(sptr_t<AssertCommand> node) {
+void PredicateUnfolder::visit(const AssertCommandPtr& node) {
     wrappedVisit(arg + 1, node->term);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<CheckSatCommand> node) { ret = node; }
+void PredicateUnfolder::visit(const CheckSatCommandPtr& node) { ret = node; }
 
-void PredicateUnfolder::visit(sptr_t<CheckSatAssumCommand> node) {
+void PredicateUnfolder::visit(const CheckSatAssumCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<DeclareConstCommand> node) {
+void PredicateUnfolder::visit(const DeclareConstCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<DeclareDatatypeCommand> node) {
+void PredicateUnfolder::visit(const DeclareDatatypeCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<DeclareDatatypesCommand> node) {
+void PredicateUnfolder::visit(const DeclareDatatypesCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<DeclareFunCommand> node) {
+void PredicateUnfolder::visit(const DeclareFunCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<DeclareSortCommand> node) {
+void PredicateUnfolder::visit(const DeclareSortCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<DefineFunCommand> node) {
+void PredicateUnfolder::visit(const DefineFunCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<DefineFunsRecCommand> node) {
+void PredicateUnfolder::visit(const DefineFunsRecCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<DefineSortCommand> node) {
+void PredicateUnfolder::visit(const DefineSortCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<EchoCommand> node) {
+void PredicateUnfolder::visit(const EchoCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<ExitCommand> node) {
+void PredicateUnfolder::visit(const ExitCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<GetAssertsCommand> node) {
+void PredicateUnfolder::visit(const GetAssertsCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<GetAssignsCommand> node) {
+void PredicateUnfolder::visit(const GetAssignsCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<GetInfoCommand> node) {
+void PredicateUnfolder::visit(const GetInfoCommandPtr& node) {
     wrappedVisit(arg + 1, node->flag);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<GetModelCommand> node) {
+void PredicateUnfolder::visit(const GetModelCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<GetOptionCommand> node) {
+void PredicateUnfolder::visit(const GetOptionCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<GetProofCommand> node) {
+void PredicateUnfolder::visit(const GetProofCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<GetUnsatAssumsCommand> node) {
+void PredicateUnfolder::visit(const GetUnsatAssumsCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<GetUnsatCoreCommand> node) {
+void PredicateUnfolder::visit(const GetUnsatCoreCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<GetValueCommand> node) {
+void PredicateUnfolder::visit(const GetValueCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<PopCommand> node) {
+void PredicateUnfolder::visit(const PopCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<PushCommand> node) {
+void PredicateUnfolder::visit(const PushCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<ResetCommand> node) {
+void PredicateUnfolder::visit(const ResetCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<ResetAssertsCommand> node) {
+void PredicateUnfolder::visit(const ResetAssertsCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SetInfoCommand> node) {
+void PredicateUnfolder::visit(const SetInfoCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SetLogicCommand> node) {
+void PredicateUnfolder::visit(const SetLogicCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SetOptionCommand> node) {
+void PredicateUnfolder::visit(const SetOptionCommandPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<FunctionDeclaration> node) {
+void PredicateUnfolder::visit(const FunctionDeclarationPtr& node) {
     wrappedVisit(arg + 1, node->symbol);
-    for (sptr_t<SortedVariable> it : node->parameters) {
+    for (const auto& it : node->parameters) {
         wrappedVisit(arg + 1, it);
     }
     wrappedVisit(arg + 1, node->sort);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<FunctionDefinition> node) {
+void PredicateUnfolder::visit(const FunctionDefinitionPtr& node) {
     wrappedVisit(arg + 1, node->signature);
     wrappedVisit(arg + 1, node->body);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SimpleIdentifier> node) {
+void PredicateUnfolder::visit(const SimpleIdentifierPtr& node) {
     wrappedVisit(arg + 1, node->symbol);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<QualifiedIdentifier> node) {
+void PredicateUnfolder::visit(const QualifiedIdentifierPtr& node) {
     wrappedVisit(arg + 1, node->identifier);
     wrappedVisit(arg + 1, node->sort);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<DecimalLiteral> node) {
+void PredicateUnfolder::visit(const DecimalLiteralPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<NumeralLiteral> node) {
+void PredicateUnfolder::visit(const NumeralLiteralPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<StringLiteral> node) {
+void PredicateUnfolder::visit(const StringLiteralPtr& node) {
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<Logic> node) {
+void PredicateUnfolder::visit(const LogicPtr& node) {
     wrappedVisit(arg + 1, node->name);
-    for (sptr_t<Attribute> it : node->attributes) {
+    for (const auto& it : node->attributes) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<Theory> node) {
+void PredicateUnfolder::visit(const TheoryPtr& node) {
     wrappedVisit(arg + 1, node->name);
-    for (sptr_t<Attribute> it : node->attributes) {
+    for (const auto& it : node->attributes) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<Script> node) {
-    for (sptr_t<Command> it : node->commands) {
+void PredicateUnfolder::visit(const ScriptPtr& node) {
+    for (const auto& it : node->commands) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<Sort> node) {
+void PredicateUnfolder::visit(const SortPtr& node) {
     wrappedVisit(arg + 1, node->identifier);
-    for (sptr_t<Sort> it : node->arguments) {
+    for (const auto& it : node->arguments) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<CompSExpression> node) {
-    for (sptr_t<SExpression> it : node->expressions) {
+void PredicateUnfolder::visit(const CompSExpressionPtr& node) {
+    for (const auto& it : node->expressions) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SortSymbolDeclaration> node) {
+void PredicateUnfolder::visit(const SortSymbolDeclarationPtr& node) {
     wrappedVisit(arg + 1, node->identifier);
     wrappedVisit(arg + 1, node->arity);
-    for (sptr_t<Attribute> it : node->attributes) {
+    for (const auto& it : node->attributes) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SortDeclaration> node) {
+void PredicateUnfolder::visit(const SortDeclarationPtr& node) {
     wrappedVisit(arg + 1, node->symbol);
     wrappedVisit(arg + 1, node->arity);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SelectorDeclaration> node) {
+void PredicateUnfolder::visit(const SelectorDeclarationPtr& node) {
     wrappedVisit(arg + 1, node->symbol);
     wrappedVisit(arg + 1, node->sort);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<ConstructorDeclaration> node) {
+void PredicateUnfolder::visit(const ConstructorDeclarationPtr& node) {
     wrappedVisit(arg + 1, node->symbol);
-    for (sptr_t<SelectorDeclaration> it : node->selectors) {
+    for (const auto& it : node->selectors) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SimpleDatatypeDeclaration> node) {
-    for (sptr_t<ConstructorDeclaration> it : node->constructors) {
+void PredicateUnfolder::visit(const SimpleDatatypeDeclarationPtr& node) {
+    for (const auto& it : node->constructors) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<ParametricDatatypeDeclaration> node) {
-    for (sptr_t<ConstructorDeclaration> it : node->constructors) {
+void PredicateUnfolder::visit(const ParametricDatatypeDeclarationPtr& node) {
+    for (const auto& it : node->constructors) {
         wrappedVisit(arg + 1, it);
     }
-    for (sptr_t<Symbol> it : node->parameters) {
+    for (const auto& it : node->parameters) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<QualifiedConstructor> node) {
+void PredicateUnfolder::visit(const QualifiedConstructorPtr& node) {
     wrappedVisit(arg + 1, node->symbol);
     wrappedVisit(arg + 1, node->sort);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<QualifiedPattern> node) {
+void PredicateUnfolder::visit(const QualifiedPatternPtr& node) {
     wrappedVisit(arg + 1, node->constructor);
-    for (sptr_t<Symbol> it : node->symbols) {
+    for (const auto& it : node->symbols) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<MatchCase> node) {
+void PredicateUnfolder::visit(const MatchCasePtr& node) {
     wrappedVisit(arg + 1, node->pattern);
     wrappedVisit(arg + 1, node->term);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SpecConstFunDeclaration> node) {
+void PredicateUnfolder::visit(const SpecConstFunDeclarationPtr& node) {
     wrappedVisit(arg + 1, node->constant);
     wrappedVisit(arg + 1, node->sort);
-    for (sptr_t<Attribute> it : node->attributes) {
+    for (const auto& it : node->attributes) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<MetaSpecConstFunDeclaration> node) {
+void PredicateUnfolder::visit(const MetaSpecConstFunDeclarationPtr& node) {
     wrappedVisit(arg + 1, node->constant);
     wrappedVisit(arg + 1, node->sort);
-    for (sptr_t<Attribute> it : node->attributes) {
+    for (const auto& it : node->attributes) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SimpleFunDeclaration> node) {
+void PredicateUnfolder::visit(const SimpleFunDeclarationPtr& node) {
     wrappedVisit(arg + 1, node->identifier);
-    for (sptr_t<Sort> it : node->signature) {
+    for (const auto& it : node->signature) {
         wrappedVisit(arg + 1, it);
     }
-    for (sptr_t<Attribute> it : node->attributes) {
+    for (const auto& it : node->attributes) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
-
-void PredicateUnfolder::visit(sptr_t<ParametricFunDeclaration> node) {
-    for (sptr_t<Symbol> it : node->parameters) {
+    
+void PredicateUnfolder::visit(const ParametricFunDeclarationPtr& node) {
+    for (const auto& it : node->parameters) {
         wrappedVisit(arg + 1, it);
     }
     wrappedVisit(arg + 1, node->identifier);
-    for (sptr_t<Sort> it : node->signature) {
+    for (const auto& it : node->signature) {
         wrappedVisit(arg + 1, it);
     }
-    for (sptr_t<Attribute> it : node->attributes) {
+    for (const auto& it : node->attributes) {
         wrappedVisit(arg + 1, it);
     }
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<LetTerm> node) {
+void PredicateUnfolder::visit(const LetTermPtr& node) {
     node->term = dynamic_pointer_cast<Term>(wrappedVisit(arg + 1, node->term));
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<ForallTerm> node) {
+void PredicateUnfolder::visit(const ForallTermPtr& node) {
     node->term = dynamic_pointer_cast<Term>(wrappedVisit(arg + 1, node->term));
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<ExistsTerm> node) {
+void PredicateUnfolder::visit(const ExistsTermPtr& node) {
     node->term = dynamic_pointer_cast<Term>(wrappedVisit(arg + 1, node->term));
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<MatchTerm> node) {
+void PredicateUnfolder::visit(const MatchTermPtr& node) {
     node->term = dynamic_pointer_cast<Term>(wrappedVisit(arg + 1, node->term));
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<AnnotatedTerm> node) {
+void PredicateUnfolder::visit(const AnnotatedTermPtr& node) {
     node->term = dynamic_pointer_cast<Term>(wrappedVisit(arg + 1, node->term));
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<SortedVariable> node) {
+void PredicateUnfolder::visit(const SortedVariablePtr& node) {
     wrappedVisit(arg + 1, node->symbol);
     wrappedVisit(arg + 1, node->sort);
     ret = node;
 }
 
-void PredicateUnfolder::visit(sptr_t<VariableBinding> node) {
+void PredicateUnfolder::visit(const VariableBindingPtr& node) {
     wrappedVisit(arg + 1, node->symbol);
     wrappedVisit(arg + 1, node->term);
     ret = node;

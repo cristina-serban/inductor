@@ -23,10 +23,6 @@ string Attribute::toString() {
 
 /* ============================== CompAttributeValue ============================== */
 
-CompAttributeValue::CompAttributeValue(const vector<AttributeValuePtr>& values) {
-    this->values.insert(this->values.begin(), values.begin(), values.end());
-}
-
 void CompAttributeValue::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }

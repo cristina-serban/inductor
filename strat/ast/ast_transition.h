@@ -20,21 +20,25 @@ namespace strat {
                            public std::enable_shared_from_this<Transition> {
         public:
             /** Transition rule */
-            sptr_t<Rule> rule;
+            RulePtr rule;
 
             /** Start state */
-            sptr_t<State> start;
+            StatePtr start;
 
             /** End state */
-            sptr_t<State> end;
+            StatePtr end;
 
-            inline Transition(sptr_t<State> start,
-                              sptr_t<Rule> rule,
-                              sptr_t<State> end)
-                : start(start), rule(rule), end(end) { }
+            inline Transition(StatePtr start,
+                              RulePtr rule,
+                              StatePtr end)
+                    : start(std::move(start))
+                    , rule(std::move(rule))
+                    , end(std::move(end)) {}
 
-            std::string toString();
+            std::string toString() override;
         };
+
+        typedef std::shared_ptr<Transition> TransitionPtr;
     }
 }
 

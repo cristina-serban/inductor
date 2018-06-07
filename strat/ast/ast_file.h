@@ -20,16 +20,18 @@ namespace strat {
                      public std::enable_shared_from_this<File> {
         public:
             /** List of proof rules used by strategy */
-            std::vector<sptr_t<Rule>> rules;
+            std::vector<RulePtr> rules;
 
             /** Proof strategy automaton */
-            sptr_t<Automaton> automaton;
+            AutomatonPtr automaton;
 
-            File(std::vector<sptr_t<Rule>> &rules,
-                 sptr_t<Automaton> automaton);
+            File(std::vector<RulePtr> rules,
+                 AutomatonPtr automaton);
 
-            std::string toString();
+            std::string toString() override;
         };
+
+        typedef std::shared_ptr<File> FilePtr;
     }
 }
 

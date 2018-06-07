@@ -18,27 +18,30 @@ namespace smtlib {
         /** Context interface for finding and adding variables to a symbol stack */
         class IVariableFinderContext {
         public:
-            virtual sptr_t<SymbolStack> getStack() = 0;
-            virtual sptr_v<SortedVariable> &getVariables() = 0;
-            virtual sptr_v<SortedVariable> &getBindings() = 0;
+            virtual SymbolStackPtr getStack() = 0;
+            virtual std::vector<SortedVariablePtr>& getVariables() = 0;
+            virtual std::vector<SortedVariablePtr>& getBindings() = 0;
         };
+
+        typedef std::shared_ptr<IVariableFinderContext> IVariableFinderContextPtr;
 
         /* ============================== VariableFinderContext =============================== */
         /** Implementation for the context interface */
         class VariableFinderContext : public IVariableFinderContext {
         private:
-            sptr_t<SymbolStack> stack;
-            sptr_v<SortedVariable> vars;
-            sptr_v<SortedVariable> binds;
+            SymbolStackPtr stack;
+            std::vector<SortedVariablePtr> vars;
+            std::vector<SortedVariablePtr> binds;
 
         public:
-            inline VariableFinderContext(sptr_t<SymbolStack> stack) : stack(stack) { }
+            inline explicit VariableFinderContext(SymbolStackPtr stack)
+                    : stack(std::move(stack)) {}
 
-            inline virtual sptr_t<SymbolStack> getStack() { return stack; }
+            inline SymbolStackPtr getStack() override { return stack; }
 
-            inline virtual sptr_v<SortedVariable> &getVariables() { return vars; }
+            inline std::vector<SortedVariablePtr>& getVariables() override { return vars; }
 
-            inline virtual sptr_v<SortedVariable> &getBindings() { return binds; }
+            inline std::vector<SortedVariablePtr>& getBindings() override { return binds; }
         };
 
         typedef std::shared_ptr<VariableFinderContext> VariableFinderContextPtr;
@@ -48,19 +51,20 @@ namespace smtlib {
         class VariableFinder : public DummyVisitor0,
                                public std::enable_shared_from_this<VariableFinder> {
         private:
-            sptr_t<IVariableFinderContext> ctx;
+            IVariableFinderContextPtr ctx;
 
-            void addUniqueVariable(sptr_t<SortedVariable> var);
-            void addUniqueBinding(sptr_t<SortedVariable> bind);
+            void addUniqueVariable(const SortedVariablePtr& var);
+            void addUniqueBinding(const SortedVariablePtr& bind);
 
         public:
-            inline VariableFinder(sptr_t<IVariableFinderContext> ctx) : ctx(ctx) {}
+            inline explicit VariableFinder(IVariableFinderContextPtr ctx)
+                    : ctx(std::move(ctx)) {}
 
-            virtual void visit(sptr_t<SimpleIdentifier> node);
-            virtual void visit(sptr_t<QualifiedIdentifier> node);
-            virtual void visit(sptr_t<QualifiedTerm> node);
+            void visit(const SimpleIdentifierPtr& node) override;
+            void visit(const QualifiedIdentifierPtr& node) override;
+            void visit(const QualifiedTermPtr& node) override;
 
-            virtual void visit(sptr_t<ExistsTerm> node);
+            void visit(const ExistsTermPtr& node) override;
         };
 
         typedef std::shared_ptr<VariableFinder> VariableFinderPtr;

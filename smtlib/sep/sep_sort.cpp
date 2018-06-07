@@ -5,10 +5,6 @@
 using namespace std;
 using namespace smtlib::sep;
 
-Sort::Sort(const string& name, const vector<SortPtr>& args) : name(name) {
-    this->arguments.insert(this->arguments.end(), args.begin(), args.end());
-}
-
 bool Sort::hasArgs() {
     return !arguments.empty();
 }

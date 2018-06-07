@@ -15,24 +15,27 @@ namespace strat {
     /** Proof strategy parser */
     class Parser {
     private:
-        sptr_t<ast::Node> ast;
-        sptr_t<std::string> filename;
+        ast::NodePtr ast;
+        std::shared_ptr<std::string> filename;
     public:
-        sptr_t<ast::Node> parse(std::string filename);
+        ast::NodePtr parse(const std::string& filename);
 
         /** Get input file */
-        inline sptr_t<std::string> getFilename() { return filename; }
+        inline std::shared_ptr<std::string> getFilename() { return filename; }
 
         /** Get the resulting AST */
-        inline sptr_t<ast::Node> getAst() { return ast; }
+        inline ast::NodePtr getAst() { return ast; }
 
         /** Set the resulting AST */
-        void setAst(sptr_t<ast::Node> ast);
+        void setAst(ast::NodePtr ast);
 
         /** Report a parsing error */
-        void reportError(unsigned int lineLeft, unsigned int colLeft,
-                         unsigned int lineRight, unsigned int colRight, const char* msg);
+        void reportError(int lineLeft, int colLeft,
+                         int lineRight, int colRight,
+                         const char* msg);
     };
+
+    typedef std::shared_ptr<Parser> ParserPtr;
 }
 
 #endif //PROOFSTRAT_PARSER_H

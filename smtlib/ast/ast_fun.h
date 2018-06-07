@@ -33,9 +33,12 @@ namespace smtlib {
              * \param parameters    List of parameters
              * \param sort          Sort of the return value
              */
-            FunctionDeclaration(const SymbolPtr& symbol,
-                                const std::vector<SortedVariablePtr>& parameters,
-                                const SortPtr& sort);
+            inline FunctionDeclaration(SymbolPtr symbol,
+                                       std::vector<SortedVariablePtr> parameters,
+                                       SortPtr sort)
+                    : symbol(std::move(symbol))
+                    , sort(std::move(sort))
+                    , parameters(std::move(parameters)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -54,8 +57,9 @@ namespace smtlib {
              * \param signature    Function signature
              * \param body         Function body
              */
-            FunctionDefinition(const FunctionDeclarationPtr& signature, const TermPtr& body)
-                    : signature(signature), body(body) { }
+            inline FunctionDefinition(FunctionDeclarationPtr signature, TermPtr body)
+                    : signature(std::move(signature))
+                    , body(std::move(body)) {}
 
             /**
              * \param symbol        Name of the function
@@ -63,10 +67,14 @@ namespace smtlib {
              * \param type          Sort of the return value
              * \param body          Function body
              */
-            FunctionDefinition(const SymbolPtr& symbol,
-                               const std::vector<SortedVariablePtr>& parameters,
-                               const SortPtr& sort,
-                               const TermPtr& body);
+            inline FunctionDefinition(SymbolPtr symbol,
+                                      std::vector<SortedVariablePtr> parameters,
+                                      SortPtr sort,
+                                      TermPtr body)
+                    : body(std::move(body))
+                    , signature(std::make_shared<FunctionDeclaration>(std::move(symbol),
+                                                                      std::move(parameters),
+                                                                      std::move(sort))) {}
 
             void accept(Visitor0* visitor) override;
 

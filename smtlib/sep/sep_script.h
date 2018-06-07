@@ -31,7 +31,8 @@ namespace smtlib {
             /**
              * \param cmds    Command list
              */
-            explicit Script(const std::vector<CommandPtr>& commands);
+            inline explicit Script(std::vector<CommandPtr> commands)
+                    : commands(std::move(commands)) {}
 
             void accept(Visitor0* visitor) override;
 

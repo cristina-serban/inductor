@@ -48,7 +48,8 @@ namespace pred {
         StringEquivInductiveTable inductive;
         IndexEquivAnalysisPtr index;
 
-        EquivAnalysis() : index(std::make_shared<IndexEquivAnalysis>()) {};
+        EquivAnalysis()
+                : index(std::make_shared<IndexEquivAnalysis>()) {};
 
         inline void clear() {
             base.clear();
@@ -85,6 +86,8 @@ namespace pred {
         bool equals(const IndexAllocAnalysisPtr& other);
     };
 
+    typedef std::shared_ptr<IndexAllocAnalysis> IndexAllocAnalysisPtr;
+
     /* ================================== AllocAnalysis =================================== */
     typedef std::unordered_map<BaseCasePtr, std::unordered_map<std::string, Allocated>> AllocBaseMap;
     typedef std::unordered_map<std::string, AllocBaseMap> AllocBaseTable;
@@ -97,7 +100,8 @@ namespace pred {
         AllocInductiveTable inductive;
         IndexAllocAnalysisPtr index;
 
-        AllocAnalysis() : index(std::make_shared<IndexAllocAnalysis>()) {};
+        AllocAnalysis()
+                : index(std::make_shared<IndexAllocAnalysis>()) {};
 
         inline void clear() {
             base.clear();
@@ -135,6 +139,8 @@ namespace pred {
         bool equals(const IndexReachAnalysisPtr& other);
     };
 
+    typedef std::shared_ptr<IndexReachAnalysis> IndexReachAnalysisPtr;
+
     /* ================================== ReachAnalysis =================================== */
     typedef std::unordered_map<BaseCasePtr, reach::StringReachabilityPtr> ReachBaseMap;
     typedef std::unordered_map<std::string, ReachBaseMap> ReachBaseTable;
@@ -147,7 +153,8 @@ namespace pred {
         ReachInductiveTable inductive;
         IndexReachAnalysisPtr index;
 
-        ReachAnalysis() : index(std::make_shared<IndexReachAnalysis>()) {}
+        ReachAnalysis()
+                : index(std::make_shared<IndexReachAnalysis>()) {}
 
         inline void clear() {
             base.clear();

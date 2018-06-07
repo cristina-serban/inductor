@@ -108,7 +108,7 @@ string StringEquivalence::toString() {
     return ss.str();
 }
 
-IndexEquivalencePtr StringEquivalence::toIndexEquivalence(const unordered_map<string, unsigned long>& params) {
+IndexEquivalencePtr StringEquivalence::toIndexEquivalence(const StringToIndexMap& params) {
     IndexEquivalencePtr match = make_shared<IndexEquivalence>();
 
     for(int i = 0; i < params.size(); i++) {
@@ -116,7 +116,7 @@ IndexEquivalencePtr StringEquivalence::toIndexEquivalence(const unordered_map<st
     }
 
     for(const auto& paramEntry : params) {
-        string name = paramEntry.first;
+        const string& name = paramEntry.first;
         unsigned long pos = paramEntry.second;
 
         NodePtr p = map[name]->parent->head;

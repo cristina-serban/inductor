@@ -15,6 +15,9 @@
 #include <memory>
 
 namespace inductor {
+    class ExecutionSettings;
+    typedef std::shared_ptr<ExecutionSettings> ExecutionSettingsPtr;
+
     /** Settings for execution handling. */
     class ExecutionSettings {
     public:
@@ -29,8 +32,8 @@ namespace inductor {
         std::string filename;
         std::string unfoldOutputPath = "unfolding";
 
-        sptr_t<smtlib::ast::Node> ast;
-        sptr_t<smtlib::ast::ISortCheckContext> sortCheckContext;
+        smtlib::ast::NodePtr ast;
+        smtlib::ast::ISortCheckContextPtr sortCheckContext;
 
         InputMethod inputMethod;
         int unfoldLevel = 0;
@@ -39,7 +42,7 @@ namespace inductor {
         ExecutionSettings();
 
         /** Copy constructor */
-        ExecutionSettings(const sptr_t<ExecutionSettings> settings);
+        explicit ExecutionSettings(const ExecutionSettingsPtr& settings);
 
 
         /** Whether the 'Core' theory is automatically loaded or not */
@@ -61,20 +64,20 @@ namespace inductor {
 
 
         /** Get the input AST */
-        inline sptr_t<smtlib::ast::Node> getInputAst() { return ast; }
+        inline smtlib::ast::NodePtr getInputAst() { return ast; }
 
         /** Set an AST node as input */
-        void setInputFromAst(sptr_t<smtlib::ast::Node> ast);
+        void setInputFromAst(smtlib::ast::NodePtr ast);
 
 
         /** Get the existing context for the sortedness check */
-        inline sptr_t<smtlib::ast::ISortCheckContext> getSortCheckContext() {
+        inline smtlib::ast::ISortCheckContextPtr getSortCheckContext() {
             return sortCheckContext;
         }
 
         /** Set an existing context for the sortedness check */
-        inline void setSortCheckContext(sptr_t<smtlib::ast::ISortCheckContext> ctx) {
-            this->sortCheckContext = ctx;
+        inline void setSortCheckContext(smtlib::ast::ISortCheckContextPtr ctx) {
+            this->sortCheckContext = std::move(ctx);
         }
 
 
@@ -99,7 +102,7 @@ namespace inductor {
 
         /** Set the output path for the unfolding results */
         inline void setUnfoldOutputPath(std::string unfoldOutputPath) {
-            this->unfoldOutputPath = unfoldOutputPath;
+            this->unfoldOutputPath = std::move(unfoldOutputPath);
         }
 
 

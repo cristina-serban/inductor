@@ -4,11 +4,7 @@
 using namespace std;
 using namespace smtlib::ast;
 
-CompSExpression::CompSExpression(const vector<SExpressionPtr>& expressions) {
-    this->expressions.insert(this->expressions.end(), expressions.begin(), expressions.end());
-}
-
-void CompSExpression::accept(Visitor0* visitor){
+void CompSExpression::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 

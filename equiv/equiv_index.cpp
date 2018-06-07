@@ -6,7 +6,7 @@ using namespace std;
 using namespace equiv;
 
 long IndexEquivalence::add() {
-    unsigned long newClass = classes.size() + 1;
+    long newClass = classes.size() + 1;
     classes.push_back(newClass);
     return newClass;
 }

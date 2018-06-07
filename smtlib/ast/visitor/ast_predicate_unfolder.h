@@ -21,11 +21,13 @@ namespace smtlib {
             virtual void setExistential(bool existential) = 0;
 
             virtual std::string getOutputPath() = 0;
-            virtual std::string setOutputPath(std::string output) = 0;
+            virtual std::string setOutputPath(const std::string& output) = 0;
 
             virtual bool isCvcEmp() = 0;
             virtual void setCvcEmp(bool cvcEmp) = 0;
         };
+
+        typedef std::shared_ptr<IPredicateUnfolderContext> IPredicateUnfolderContextPtr;
 
         /* ============================= PredicateUnfolderContext ============================= */
         class PredicateUnfolderContext : public IPredicateUnfolderContext {
@@ -37,129 +39,137 @@ namespace smtlib {
 
         public:
             inline PredicateUnfolderContext(int level, bool existential, std::string output, bool cvcEmp)
-                    : unfoldLevel(level), existential(existential), output(output), cvcEmp(cvcEmp) {}
+                    : unfoldLevel(level)
+                    , existential(existential)
+                    , output(std::move(output))
+                    , cvcEmp(cvcEmp) {}
 
-            virtual int getUnfoldLevel() { return unfoldLevel; }
-            virtual void setUnfoldLevel(int level) { unfoldLevel = level; }
+            int getUnfoldLevel() override { return unfoldLevel; }
+            void setUnfoldLevel(int level) override { unfoldLevel = level; }
 
-            virtual bool isExistential() { return existential; }
-            virtual void setExistential(bool existential) { this->existential = existential; }
+            bool isExistential() override { return existential; }
+            void setExistential(bool existential) override { this->existential = existential; }
 
-            virtual std::string getOutputPath() { return output; }
-            virtual std::string setOutputPath(std::string output) { this->output = output; }
+            std::string getOutputPath() override { return output; }
+            std::string setOutputPath(const std::string& output) override { this->output = output; }
 
-            virtual bool isCvcEmp() { return cvcEmp; }
-            virtual void setCvcEmp(bool cvcEmp) { this->cvcEmp = cvcEmp; }
+            bool isCvcEmp() override { return cvcEmp; }
+            void setCvcEmp(bool cvcEmp) override { this->cvcEmp = cvcEmp; }
         };
 
+        typedef std::shared_ptr<PredicateUnfolderContext> PredicateUnfolderContextPtr;
+
         /* ================================ PredicateUnfolder ================================= */
-        class PredicateUnfolder : public DummyVisitor2<sptr_t<Node>, int>,
+        class PredicateUnfolder : public DummyVisitor2<NodePtr, int>,
                                   public std::enable_shared_from_this<PredicateUnfolder> {
         private:
-            sptr_t<FunctionDefinition> currentDefinition;
-            sptr_t<Term> currentBaseCase;
-            sptr_t<ExistsTerm> currentRecCase;
+            FunctionDefinitionPtr currentDefinition;
+            TermPtr currentBaseCase;
+            ExistsTermPtr currentRecCase;
 
-            sptr_t<IPredicateUnfolderContext> ctx;
+            IPredicateUnfolderContextPtr ctx;
 
-            int findCounter;
-            int prevFind;
-            int *predLevelCounter;
-            int predLevel;
+            int findCounter{};
+            int prevFind{};
+            int *predLevelCounter{};
+            int predLevel{};
             std::fstream output;
 
         public:
-            inline PredicateUnfolder(sptr_t<IPredicateUnfolderContext> ctx) : ctx(ctx) { }
+            inline explicit PredicateUnfolder(IPredicateUnfolderContextPtr ctx)
+                    : ctx(std::move(ctx)) {}
 
-            virtual void visit(sptr_t<Attribute> node);
-            virtual void visit(sptr_t<CompAttributeValue> node);
+            void visit(const AttributePtr& node) override;
+            void visit(const CompAttributeValuePtr& node) override;
 
-            virtual void visit(sptr_t<Symbol> node);
-            virtual void visit(sptr_t<Keyword> node);
-            virtual void visit(sptr_t<MetaSpecConstant> node);
-            virtual void visit(sptr_t<BooleanValue> node);
-            virtual void visit(sptr_t<PropLiteral> node);
+            void visit(const SymbolPtr& node) override;
+            void visit(const KeywordPtr& node) override;
+            void visit(const MetaSpecConstantPtr& node) override;
+            void visit(const BooleanValuePtr& node) override;
+            void visit(const PropLiteralPtr& node) override;
 
-            virtual void visit(sptr_t<AssertCommand> node);
-            virtual void visit(sptr_t<CheckSatCommand> node);
-            virtual void visit(sptr_t<CheckSatAssumCommand> node);
-            virtual void visit(sptr_t<DeclareConstCommand> node);
-            virtual void visit(sptr_t<DeclareDatatypeCommand> node);
-            virtual void visit(sptr_t<DeclareDatatypesCommand> node);
-            virtual void visit(sptr_t<DeclareFunCommand> node);
-            virtual void visit(sptr_t<DeclareSortCommand> node);
-            virtual void visit(sptr_t<DefineFunCommand> node);
-            virtual void visit(sptr_t<DefineFunRecCommand> node);
-            virtual void visit(sptr_t<DefineFunsRecCommand> node);
-            virtual void visit(sptr_t<DefineSortCommand> node);
-            virtual void visit(sptr_t<EchoCommand> node);
-            virtual void visit(sptr_t<ExitCommand> node);
-            virtual void visit(sptr_t<GetAssertsCommand> node);
-            virtual void visit(sptr_t<GetAssignsCommand> node);
-            virtual void visit(sptr_t<GetInfoCommand> node);
-            virtual void visit(sptr_t<GetModelCommand> node);
-            virtual void visit(sptr_t<GetOptionCommand> node);
-            virtual void visit(sptr_t<GetProofCommand> node);
-            virtual void visit(sptr_t<GetUnsatAssumsCommand> node);
-            virtual void visit(sptr_t<GetUnsatCoreCommand> node);
-            virtual void visit(sptr_t<GetValueCommand> node);
-            virtual void visit(sptr_t<PopCommand> node);
-            virtual void visit(sptr_t<PushCommand> node);
-            virtual void visit(sptr_t<ResetCommand> node);
-            virtual void visit(sptr_t<ResetAssertsCommand> node);
-            virtual void visit(sptr_t<SetInfoCommand> node);
-            virtual void visit(sptr_t<SetLogicCommand> node);
-            virtual void visit(sptr_t<SetOptionCommand> node);
+            void visit(const AssertCommandPtr& node) override;
+            void visit(const CheckSatCommandPtr& node) override;
+            void visit(const CheckSatAssumCommandPtr& node) override;
+            void visit(const DeclareConstCommandPtr& node) override;
+            void visit(const DeclareDatatypeCommandPtr& node) override;
+            void visit(const DeclareDatatypesCommandPtr& node) override;
+            void visit(const DeclareFunCommandPtr& node) override;
+            void visit(const DeclareSortCommandPtr& node) override;
+            void visit(const DefineFunCommandPtr& node) override;
+            void visit(const DefineFunRecCommandPtr& node) override;
+            void visit(const DefineFunsRecCommandPtr& node) override;
+            void visit(const DefineSortCommandPtr& node) override;
+            void visit(const EchoCommandPtr& node) override;
+            void visit(const ExitCommandPtr& node) override;
+            void visit(const GetAssertsCommandPtr& node) override;
+            void visit(const GetAssignsCommandPtr& node) override;
+            void visit(const GetInfoCommandPtr& node) override;
+            void visit(const GetModelCommandPtr& node) override;
+            void visit(const GetOptionCommandPtr& node) override;
+            void visit(const GetProofCommandPtr& node) override;
+            void visit(const GetUnsatAssumsCommandPtr& node) override;
+            void visit(const GetUnsatCoreCommandPtr& node) override;
+            void visit(const GetValueCommandPtr& node) override;
+            void visit(const PopCommandPtr& node) override;
+            void visit(const PushCommandPtr& node) override;
+            void visit(const ResetCommandPtr& node) override;
+            void visit(const ResetAssertsCommandPtr& node) override;
+            void visit(const SetInfoCommandPtr& node) override;
+            void visit(const SetLogicCommandPtr& node) override;
+            void visit(const SetOptionCommandPtr& node) override;
 
-            virtual void visit(sptr_t<FunctionDeclaration> node);
-            virtual void visit(sptr_t<FunctionDefinition> node);
+            void visit(const FunctionDeclarationPtr& node) override;
+            void visit(const FunctionDefinitionPtr& node) override;
 
-            virtual void visit(sptr_t<SimpleIdentifier> node);
-            virtual void visit(sptr_t<QualifiedIdentifier> node);
+            void visit(const SimpleIdentifierPtr& node) override;
+            void visit(const QualifiedIdentifierPtr& node) override;
 
-            virtual void visit(sptr_t<DecimalLiteral> node);
-            virtual void visit(sptr_t<NumeralLiteral> node);
-            virtual void visit(sptr_t<StringLiteral> node);
+            void visit(const DecimalLiteralPtr& node) override;
+            void visit(const NumeralLiteralPtr& node) override;
+            void visit(const StringLiteralPtr& node) override;
 
-            virtual void visit(sptr_t<Logic> node);
-            virtual void visit(sptr_t<Theory> node);
-            virtual void visit(sptr_t<Script> node);
+            void visit(const LogicPtr& node) override;
+            void visit(const TheoryPtr& node) override;
+            void visit(const ScriptPtr& node) override;
 
-            virtual void visit(sptr_t<Sort> node);
+            void visit(const SortPtr& node) override;
 
-            virtual void visit(sptr_t<CompSExpression> node);
+            void visit(const CompSExpressionPtr& node) override;
 
-            virtual void visit(sptr_t<SortSymbolDeclaration> node);
+            void visit(const SortSymbolDeclarationPtr& node) override;
 
-            virtual void visit(sptr_t<SpecConstFunDeclaration> node);
-            virtual void visit(sptr_t<MetaSpecConstFunDeclaration> node);
-            virtual void visit(sptr_t<SimpleFunDeclaration> node);
-            virtual void visit(sptr_t<ParametricFunDeclaration> node);
+            void visit(const SpecConstFunDeclarationPtr& node) override;
+            void visit(const MetaSpecConstFunDeclarationPtr& node) override;
+            void visit(const SimpleFunDeclarationPtr& node) override;
+            void visit(const ParametricFunDeclarationPtr& node) override;
 
-            virtual void visit(sptr_t<SortDeclaration> node);
-            virtual void visit(sptr_t<SelectorDeclaration> node);
-            virtual void visit(sptr_t<ConstructorDeclaration> node);
-            virtual void visit(sptr_t<SimpleDatatypeDeclaration> node);
-            virtual void visit(sptr_t<ParametricDatatypeDeclaration> node);
+            void visit(const SortDeclarationPtr& node) override;
+            void visit(const SelectorDeclarationPtr& node) override;
+            void visit(const ConstructorDeclarationPtr& node) override;
+            void visit(const SimpleDatatypeDeclarationPtr& node) override;
+            void visit(const ParametricDatatypeDeclarationPtr& node) override;
 
-            virtual void visit(sptr_t<QualifiedConstructor> node);
-            virtual void visit(sptr_t<QualifiedPattern> node);
-            virtual void visit(sptr_t<MatchCase> node);
+            void visit(const QualifiedConstructorPtr& node) override;
+            void visit(const QualifiedPatternPtr& node) override;
+            void visit(const MatchCasePtr& node) override;
 
-            virtual void visit(sptr_t<QualifiedTerm> node);
-            virtual void visit(sptr_t<LetTerm> node);
-            virtual void visit(sptr_t<ForallTerm> node);
-            virtual void visit(sptr_t<ExistsTerm> node);
-            virtual void visit(sptr_t<MatchTerm> node);
-            virtual void visit(sptr_t<AnnotatedTerm> node);
+            void visit(const QualifiedTermPtr& node) override;
+            void visit(const LetTermPtr& node) override;
+            void visit(const ForallTermPtr& node) override;
+            void visit(const ExistsTermPtr& node) override;
+            void visit(const MatchTermPtr& node) override;
+            void visit(const AnnotatedTermPtr& node) override;
 
-            virtual void visit(sptr_t<SortedVariable> node);
-            virtual void visit(sptr_t<VariableBinding> node);
+            void visit(const SortedVariablePtr& node) override;
+            void visit(const VariableBindingPtr& node) override;
 
-            sptr_t<Node> run(sptr_t<Node> node) {
+            NodePtr run(const NodePtr& node) {
                 return wrappedVisit(0, node);
             }
         };
+
+        typedef std::shared_ptr<PredicateUnfolder> PredicateUnfolderPtr;
     }
 }
 

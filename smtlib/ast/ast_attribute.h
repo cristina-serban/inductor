@@ -10,7 +10,6 @@
 #include "ast_basic.h"
 #include "ast_interfaces.h"
 
-#include "util/global_typedef.h"
 #include "visitor/ast_visitor.h"
 
 #include <vector>
@@ -27,12 +26,12 @@ namespace smtlib {
 
             inline Attribute() = default;
 
-            inline explicit Attribute(const KeywordPtr& keyword)
-                    : keyword(keyword) {}
+            inline explicit Attribute(KeywordPtr keyword)
+                    : keyword(std::move(keyword)) {}
 
-            inline Attribute(const KeywordPtr& keyword,
-                             const AttributeValuePtr& value)
-                    : keyword(keyword), value(value) {}
+            inline Attribute(KeywordPtr keyword, AttributeValuePtr value)
+                    : keyword(std::move(keyword))
+                    , value(std::move(value)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -46,7 +45,8 @@ namespace smtlib {
         public:
             std::vector<AttributeValuePtr> values;
 
-            explicit CompAttributeValue(const std::vector<AttributeValuePtr>& values);
+            explicit inline CompAttributeValue(std::vector<AttributeValuePtr> values)
+                : values(std::move(values)) {}
 
             void accept(Visitor0* visitor) override;
 

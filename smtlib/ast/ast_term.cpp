@@ -7,11 +7,6 @@ using namespace smtlib::ast;
 
 /* ================================== QualifiedTerm =================================== */
 
-QualifiedTerm::QualifiedTerm(const IdentifierPtr& identifier, const vector<TermPtr>& terms)
-        : identifier(identifier) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
-
 void QualifiedTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -33,11 +28,6 @@ string QualifiedTerm::toString() {
 
 /* ===================================== LetTerm ====================================== */
 
-LetTerm::LetTerm(const vector<VariableBindingPtr>& bindings, const TermPtr& term)
-        : term(term) {
-    this->bindings.insert(this->bindings.end(), bindings.begin(), bindings.end());
-}
-
 void LetTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -58,10 +48,6 @@ string LetTerm::toString() {
 }
 
 /* ==================================== ForallTerm ==================================== */
-ForallTerm::ForallTerm(const vector<SortedVariablePtr>& bindings, const TermPtr& term)
-        : term(term) {
-    this->bindings.insert(this->bindings.end(), bindings.begin(), bindings.end());
-}
 
 void ForallTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
@@ -83,10 +69,6 @@ string ForallTerm::toString() {
 }
 
 /* ==================================== ExistsTerm ==================================== */
-ExistsTerm::ExistsTerm(const vector<SortedVariablePtr>& bindings, const TermPtr& term)
-        : term(term) {
-    this->bindings.insert(this->bindings.end(), bindings.begin(), bindings.end());
-}
 
 void ExistsTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
@@ -108,10 +90,6 @@ string ExistsTerm::toString() {
 }
 
 /* ==================================== MatchTerm ===================================== */
-MatchTerm::MatchTerm(const TermPtr& term, const vector<MatchCasePtr>& cases)
-        : term(term) {
-    this->cases.insert(this->cases.begin(), cases.begin(), cases.end());
-}
 
 void MatchTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
@@ -130,10 +108,6 @@ string MatchTerm::toString() {
 }
 
 /* ================================== AnnotatedTerm =================================== */
-AnnotatedTerm::AnnotatedTerm(const TermPtr& term, const vector<AttributePtr>& attributes)
-        : term(term) {
-    this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
-}
 
 void AnnotatedTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());

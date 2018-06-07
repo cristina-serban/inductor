@@ -10,65 +10,77 @@ namespace smtlib {
     namespace sep {
         class ITermSorterContext {
         public:
-            virtual sptr_t<SymbolStack> getStack() = 0;
+            virtual SymbolStackPtr getStack() = 0;
         };
 
+        typedef std::shared_ptr<ITermSorterContext> ITermSorterContextPtr;
+
+        /* ================================ ITermSorterContext ================================ */
+        /** Context interface for term sorting */
         class TermSorterContext : public ITermSorterContext {
         private:
-            sptr_t<SymbolStack> stack;
+            SymbolStackPtr stack;
         public:
-            inline TermSorterContext(sptr_t<SymbolStack> stack) : stack(stack) { }
+            inline explicit TermSorterContext(SymbolStackPtr stack)
+                    : stack(std::move(stack)) {}
 
-            inline virtual sptr_t<SymbolStack> getStack() { return stack; }
+            inline SymbolStackPtr getStack() override { return stack; }
 
-            inline void setStack(sptr_t<SymbolStack> stack) { this->stack = stack; }
+            inline void setStack(const SymbolStackPtr& stack) { this->stack = stack; }
         };
 
-        class TermSorter : public DummyVisitor1<sptr_t<Sort>> {
-        private:
-            sptr_t<ITermSorterContext> ctx;
+        typedef std::shared_ptr<TermSorterContext> TermSorterContextPtr;
 
-            bool getParamMapping(std::vector<std::string> &params,
-                                 sptr_um2<std::string, Sort> &mapping,
-                                 sptr_t<Sort> sort1, sptr_t<Sort> sort2);
+        /* ==================================== TermSorter ==================================== */
+        /** Determines the sort of a term */
+        class TermSorter : public DummyVisitor1<SortPtr> {
+        private:
+            ITermSorterContextPtr ctx;
+
+            static bool unify(const SortPtr& sort1, const SortPtr& sort2,
+                              const std::vector<std::string>& params,
+                              std::unordered_map<std::string, SortPtr>& mapping);
 
         public:
-            inline TermSorter(sptr_t<ITermSorterContext> ctx) : ctx(ctx) { }
+            inline explicit TermSorter(ITermSorterContextPtr ctx)
+                    : ctx(std::move(ctx)) {}
 
-            virtual void visit(sptr_t<SimpleIdentifier> node);
-            virtual void visit(sptr_t<QualifiedIdentifier> node);
-            virtual void visit(sptr_t<DecimalLiteral> node);
-            virtual void visit(sptr_t<NumeralLiteral> node);
-            virtual void visit(sptr_t<StringLiteral> node);
+            void visit(const SimpleIdentifierPtr& node) override;
+            void visit(const QualifiedIdentifierPtr& node) override;
+            void visit(const DecimalLiteralPtr& node) override;
+            void visit(const NumeralLiteralPtr& node) override;
+            void visit(const StringLiteralPtr& node) override;
 
-            virtual void visit(sptr_t<QualifiedTerm> node);
-            virtual void visit(sptr_t<LetTerm> node);
-            virtual void visit(sptr_t<ForallTerm> node);
-            virtual void visit(sptr_t<ExistsTerm> node);
-            virtual void visit(sptr_t<MatchTerm> node);
-            virtual void visit(sptr_t<AnnotatedTerm> node);
+            void visit(const QualifiedTermPtr& node) override;
+            void visit(const LetTermPtr& node) override;
+            void visit(const ForallTermPtr& node) override;
+            void visit(const ExistsTermPtr& node) override;
+            void visit(const MatchTermPtr& node) override;
+            void visit(const AnnotatedTermPtr& node) override;
 
-            virtual void visit(sptr_t<TrueTerm> node);
-            virtual void visit(sptr_t<FalseTerm> node);
-            virtual void visit(sptr_t<NotTerm> node);
-            virtual void visit(sptr_t<ImpliesTerm> node);
-            virtual void visit(sptr_t<AndTerm> node);
-            virtual void visit(sptr_t<OrTerm> node);
-            virtual void visit(sptr_t<XorTerm> node);
-            virtual void visit(sptr_t<EqualsTerm> node);
-            virtual void visit(sptr_t<DistinctTerm> node);
-            virtual void visit(sptr_t<IteTerm> node);
+            void visit(const TrueTermPtr& node) override;
+            void visit(const FalseTermPtr& node) override;
+            void visit(const NotTermPtr& node) override;
+            void visit(const ImpliesTermPtr& node) override;
+            void visit(const AndTermPtr& node) override;
+            void visit(const OrTermPtr& node) override;
+            void visit(const XorTermPtr& node) override;
+            void visit(const EqualsTermPtr& node) override;
+            void visit(const DistinctTermPtr& node) override;
+            void visit(const IteTermPtr& node) override;
 
-            virtual void visit(sptr_t<EmpTerm> node);
-            virtual void visit(sptr_t<SepTerm> node);
-            virtual void visit(sptr_t<WandTerm> node);
-            virtual void visit(sptr_t<PtoTerm> node);
-            virtual void visit(sptr_t<NilTerm> node);
+            void visit(const EmpTermPtr& node) override;
+            void visit(const SepTermPtr& node) override;
+            void visit(const WandTermPtr& node) override;
+            void visit(const PtoTermPtr& node) override;
+            void visit(const NilTermPtr& node) override;
 
-            sptr_t<Sort> run(sptr_t<Node> node) {
+            SortPtr run(const NodePtr& node) override {
                 return wrappedVisit(node);
             }
         };
+
+        typedef std::shared_ptr<TermSorter> TermSorterPtr;
     }
 }
 

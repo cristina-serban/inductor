@@ -29,14 +29,17 @@ namespace smtlib {
              * Constructs theory without attributes.
              * \param name  Theory name
              */
-            inline explicit Theory(const SymbolPtr& name) : name(name) {}
+            inline explicit Theory(SymbolPtr name)
+                    : name(std::move(name)) {}
 
             /**
              * Constructs theory with attributes.
              * \param name          Theory name
              * \param attributes    Theory attributes
              */
-            Theory(const SymbolPtr& name, const std::vector<AttributePtr>& attributes);
+            inline Theory(SymbolPtr name, std::vector<AttributePtr> attributes)
+                    : name(std::move(name))
+                    , attributes(std::move(attributes)) {}
 
             void accept(Visitor0* visitor) override;
 

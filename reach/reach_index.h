@@ -6,22 +6,24 @@
 #ifndef INDUCTOR_REACH_INDEX_H
 #define INDUCTOR_REACH_INDEX_H
 
-#include "util/global_typedef.h"
-
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace reach {
     class IndexReachability;
     typedef std::shared_ptr<IndexReachability> IndexReachabilityPtr;
 
+    typedef std::vector<std::vector<unsigned long>> IndexReachabilityMap;
+
     /** Reachability relation for indices (i.e. sequence of 0, 1, 2, etc.) */
     class IndexReachability {
     private:
-        std::vector<std::vector<unsigned long>> map;
+        IndexReachabilityMap map;
 
-        std::vector<std::vector<unsigned long>> copyMap();
+        IndexReachabilityMap copyMap();
 
-        bool equalsMap(const std::vector<std::vector<unsigned long>>& other);
+        bool equalsMap(const IndexReachabilityMap& other);
 
     public:
         /**

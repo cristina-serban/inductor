@@ -43,30 +43,32 @@ void CVC4Interface::reset() {
     termTranslator = make_shared<TermTranslator>(shared_from_this());
 }
 
-void CVC4Interface::load(sptr_v<sep::SortedVariable> params, vector<Expr> formals) {
+void CVC4Interface::load(const std::vector<sep::SortedVariablePtr>& params,
+                         const vector<Expr>& formals) {
     for(size_t i = 0, n = params.size(); i < n; i++) {
         symbols[params[i]->name][params[i]->sort->toString()] = formals[i];
     }
 }
 
-void CVC4Interface::unload(sptr_v<sep::SortedVariable> params) {
-    for(size_t i = 0, n = params.size(); i < n; i++) {
-        symbols[params[i]->name].erase(params[i]->sort->toString());
+void CVC4Interface::unload(const std::vector<sep::SortedVariablePtr>& params) {
+    for (const auto& param : params) {
+        symbols[param->name].erase(param->sort->toString());
     }
 }
 
 /* =================================== Translations =================================== */
-Expr CVC4Interface::translate(sptr_t<sep::Term> term) {
+Expr CVC4Interface::translate(const sep::TermPtr& term) {
     return termTranslator->run(manager.get(), term);
 }
 
-DatatypeType CVC4Interface::translateType(string name, sptr_t<sep::DatatypeDeclaration> decl) {
+DatatypeType CVC4Interface::translateType(const string& name,
+                                          const sep::DatatypeDeclarationPtr& decl) {
     Datatype datatype = translate(name, decl);
     return manager->mkDatatypeType(datatype);
 }
 
-vector<DatatypeType> CVC4Interface::translateType(sptr_v<sep::SortDeclaration> sorts,
-                                                  sptr_v<sep::DatatypeDeclaration> decls) {
+vector<DatatypeType> CVC4Interface::translateType(const std::vector<sep::SortDeclarationPtr>& sorts,
+                                                  const std::vector<sep::DatatypeDeclarationPtr>& decls) {
     vector<Datatype> datatypes;
     for(size_t i = 0, n = decls.size(); i < n; i++) {
         datatypes.push_back(translate(sorts[i]->name, decls[i]));
@@ -75,33 +77,33 @@ vector<DatatypeType> CVC4Interface::translateType(sptr_v<sep::SortDeclaration> s
     return manager->mkMutualDatatypeTypes(datatypes);
 }
 
-Datatype CVC4Interface::translate(string name, sptr_t<sep::DatatypeDeclaration> decl) {
-    sptr_t<sep::SimpleDatatypeDeclaration> sdecl =
+Datatype CVC4Interface::translate(const string& name,
+                                  const sep::DatatypeDeclarationPtr& decl) {
+    sep::SimpleDatatypeDeclarationPtr sdecl =
         dynamic_pointer_cast<sep::SimpleDatatypeDeclaration>(decl);
     if(sdecl) {
         return translate(name, sdecl);
     } else {
-        sptr_t<sep::ParametricDatatypeDeclaration> pdecl =
+        sep::ParametricDatatypeDeclarationPtr pdecl =
             dynamic_pointer_cast<sep::ParametricDatatypeDeclaration>(decl);
         return translate(name, pdecl);
     }
 }
 
-Datatype CVC4Interface::translate(string name, sptr_t<sep::SimpleDatatypeDeclaration> decl) {
+Datatype CVC4Interface::translate(const string& name,
+                                  const sep::SimpleDatatypeDeclarationPtr& decl) {
     Datatype datatype = Datatype(name);
 
-    auto &cons = decl->constructors;
-    for(size_t i = 0, n = cons.size(); i < n; i++) {
-        auto datatypeCons = DatatypeConstructor(cons[i]->name);
-        auto &sel = cons[i]->selectors;
+    for (const auto& con : decl->constructors) {
+        auto datatypeCons = DatatypeConstructor(con->name);
 
-        for(size_t j = 0, m = sel.size(); j < m; j++) {
-            if(sel[j]->sort->toString() == name) {
-                datatypeCons.addArg(sel[j]->name, DatatypeSelfType());
-            } else if(!canTranslateSort(sel[j]->sort->name)) {
-                datatypeCons.addArg(sel[j]->name, DatatypeUnresolvedType(sel[j]->sort->name));
+        for (const auto& sel : con->selectors) {
+            if(sel->sort->toString() == name) {
+                datatypeCons.addArg(sel->name, DatatypeSelfType());
+            } else if(!canTranslateSort(sel->sort->name)) {
+                datatypeCons.addArg(sel->name, DatatypeUnresolvedType(sel->sort->name));
             } else {
-                datatypeCons.addArg(sel[j]->name, translateSort(sel[j]->sort));
+                datatypeCons.addArg(sel->name, translateSort(sel->sort));
             }
         }
 
@@ -111,45 +113,46 @@ Datatype CVC4Interface::translate(string name, sptr_t<sep::SimpleDatatypeDeclara
     return datatype;
 }
 
-Datatype CVC4Interface::translate(string name, sptr_t<sep::ParametricDatatypeDeclaration> decl) {
+Datatype CVC4Interface::translate(const string& name,
+                                  const sep::ParametricDatatypeDeclarationPtr& decl) {
     Datatype datatype = Datatype(name);
 
-    sptr_v<sep::ConstructorDeclaration> &cons = decl->constructors;
-    for(size_t i = 0, n = cons.size(); i < n; i++) {
-        DatatypeConstructor datatypeCons = DatatypeConstructor(cons[i]->name);
-        sptr_v<sep::SelectorDeclaration> &sel = cons[i]->selectors;
+    for (const auto& con : decl->constructors) {
+        DatatypeConstructor datatypeCons = DatatypeConstructor(con->name);
 
-        for(size_t j = 0, m = sel.size(); j < m; j++) {
-            if(sel[j]->sort->toString() == name) {
-                datatypeCons.addArg(sel[j]->name, DatatypeSelfType());
-            } else if(sorts.find(sel[j]->sort->toString()) == sorts.end()){
-                datatypeCons.addArg(sel[j]->name, DatatypeUnresolvedType(sel[j]->sort->name));
+        for (const auto& sel : con->selectors) {
+            if(sel->sort->toString() == name) {
+                datatypeCons.addArg(sel->name, DatatypeSelfType());
+            } else if(sorts.find(sel->sort->toString()) == sorts.end()) {
+                datatypeCons.addArg(sel->name, DatatypeUnresolvedType(sel->sort->name));
             } else {
-                datatypeCons.addArg(sel[j]->name, translateSort(sel[j]->sort));
+                datatypeCons.addArg(sel->name, translateSort(sel->sort));
             }
         }
 
         datatype.addConstructor(datatypeCons);
     }
 
-    for(size_t i = 0, n = decl->parameters.size(); i < n; i++) {
-        sorts.erase(decl->parameters[i]);
+    for (const auto& parameter : decl->parameters) {
+        sorts.erase(parameter);
     }
 
     return datatype;
 }
 
-FunctionType CVC4Interface::translate(sptr_v<sep::Sort> params, sptr_t<sep::Sort> ret) {
+FunctionType CVC4Interface::translate(const std::vector<sep::SortPtr>& params,
+                                      const sep::SortPtr& ret) {
     vector<Type> types = translateSorts(params);
     types.push_back(translateSort(ret));
 
     return manager->mkFunctionType(types);
 }
 
-FunctionType CVC4Interface::translate(sptr_v<sep::SortedVariable> params, sptr_t<sep::Sort> ret) {
-    sptr_v<sep::Sort> sorts;
-    for(size_t i = 0, n = params.size(); i < n; i++) {
-        sorts.push_back(params[i]->sort);
+FunctionType CVC4Interface::translate(const std::vector<sep::SortedVariablePtr>& params,
+                                      const sep::SortPtr& ret) {
+    std::vector<sep::SortPtr> sorts;
+    for (const auto& param : params) {
+        sorts.push_back(param->sort);
     }
     sorts.push_back(ret);
 
@@ -157,24 +160,28 @@ FunctionType CVC4Interface::translate(sptr_v<sep::SortedVariable> params, sptr_t
     return manager->mkFunctionType(types);
 }
 
-Expr CVC4Interface::translate(string name, sptr_v<sep::Sort> params, sptr_t<sep::Sort> ret) {
+Expr CVC4Interface::translate(const string& name,
+                              const std::vector<sep::SortPtr>& params,
+                              const sep::SortPtr& ret) {
     return manager->mkVar(name, translate(params, ret));
 }
 
-Expr CVC4Interface::translate(string name, sptr_v<sep::SortedVariable> params, sptr_t<sep::Sort> ret) {
+Expr CVC4Interface::translate(const string& name,
+                              const std::vector<sep::SortedVariablePtr>& params,
+                              const sep::SortPtr& ret) {
     return manager->mkVar(name, translate(params, ret));
 }
 
-vector<Expr> CVC4Interface::translate(sptr_v<sep::SortedVariable> params) {
+vector<Expr> CVC4Interface::translate(const std::vector<sep::SortedVariablePtr>& params) {
     vector<Expr> formals;
-    for(size_t i = 0, n = params.size(); i < n; i++) {
-        Expr p = manager->mkBoundVar(params[i]->name, translateSort(params[i]->sort));
+    for (const auto& param : params) {
+        Expr p = manager->mkBoundVar(param->name, translateSort(param->sort));
         formals.push_back(p);
     }
     return formals;
 }
 
-bool CVC4Interface::canTranslateSort(std::string sort) {
+bool CVC4Interface::canTranslateSort(const std::string& sort) {
     if(sort == "Int" || sort == "Bool" || sort == "Real") {
         return true;
     }
@@ -183,7 +190,7 @@ bool CVC4Interface::canTranslateSort(std::string sort) {
 }
 
 /* ==================================== Operations ==================================== */
-void CVC4Interface::assertTerm(sptr_t<sep::Term> term) {
+void CVC4Interface::assertTerm(const sep::TermPtr& term) {
     engine->assertFormula(translate(term));
 }
 
@@ -192,16 +199,16 @@ bool CVC4Interface::checkSat() {
     return (res == Result::SAT);
 }
 
-bool CVC4Interface::checkEntailment(sptr_v<sep::SortedVariable> vars,
-                                    sptr_t<sep::Term> left, sptr_t<sep::Term> right) {
+bool CVC4Interface::checkEntailment(const std::vector<sep::SortedVariablePtr>& vars,
+                                    const sep::TermPtr& left, const sep::TermPtr& right) {
     reset();
 
-    for(size_t i = 0, n = vars.size(); i < n; i++) {
-        Expr expr = manager->mkVar(vars[i]->name, translateSort(vars[i]->sort));
-        symbols[vars[i]->name][vars[i]->sort->toString()] = expr;
+    for (const auto& var : vars) {
+        Expr expr = manager->mkVar(var->name, translateSort(var->sort));
+        symbols[var->name][var->sort->toString()] = expr;
     }
 
-    sptr_t<sep::NotTerm> notExistsRight = make_shared<sep::NotTerm>(right);
+    sep::NotTermPtr notExistsRight = make_shared<sep::NotTerm>(right);
 
     assertTerm(left);
     assertTerm(notExistsRight);
@@ -211,21 +218,21 @@ bool CVC4Interface::checkEntailment(sptr_v<sep::SortedVariable> vars,
     return res == Result::UNSAT;
 }
 
-bool CVC4Interface::checkEntailment(sptr_v<sep::SortedVariable> vars,
-                                    sptr_v<sep::SortedVariable> binds,
-                                    sptr_t<sep::Term> left, sptr_t<sep::Term> right) {
+bool CVC4Interface::checkEntailment(const std::vector<sep::SortedVariablePtr>& vars,
+                                    const std::vector<sep::SortedVariablePtr>& binds,
+                                    const sep::TermPtr& left, const sep::TermPtr& right) {
     reset();
 
-    for(size_t i = 0, n = vars.size(); i < n; i++) {
-        Expr expr = manager->mkVar(vars[i]->name, translateSort(vars[i]->sort));
-        symbols[vars[i]->name][vars[i]->sort->toString()] = expr;
+    for (const auto& var : vars) {
+        Expr expr = manager->mkVar(var->name, translateSort(var->sort));
+        symbols[var->name][var->sort->toString()] = expr;
     }
 
-    sptr_t<sep::NotTerm> notRight;
+    sep::NotTermPtr notRight;
     if(binds.empty()) {
         notRight = make_shared<sep::NotTerm>(right);
     } else {
-        sptr_t<sep::ExistsTerm> existsRight = make_shared<sep::ExistsTerm>(binds, right);
+        sep::ExistsTermPtr existsRight = make_shared<sep::ExistsTerm>(binds, right);
         notRight = make_shared<sep::NotTerm>(existsRight);
     }
 
@@ -238,22 +245,22 @@ bool CVC4Interface::checkEntailment(sptr_v<sep::SortedVariable> vars,
 }
 
 
-bool CVC4Interface::checkEntailment(sptr_v<sep::SortedVariable> vars,
-                                    sptr_v<sep::SortedVariable> binds,
-                                    sptr_t<sep::Term> left, sptr_t<sep::Term> right,
-                                    sptr_um2<string, sep::Term> &subst) {
+bool CVC4Interface::checkEntailment(const std::vector<sep::SortedVariablePtr>& vars,
+                                    const std::vector<sep::SortedVariablePtr>& binds,
+                                    const sep::TermPtr& left, const sep::TermPtr& right,
+                                    proof::StateSubstitutionVector& stateSubst) {
     reset();
 
-    for(size_t i = 0, n = vars.size(); i < n; i++) {
-        Expr expr = manager->mkVar(vars[i]->name, translateSort(vars[i]->sort));
-        symbols[vars[i]->name][vars[i]->sort->toString()] = expr;
+    for (const auto& var : vars) {
+        Expr expr = manager->mkVar(var->name, translateSort(var->sort));
+        symbols[var->name][var->sort->toString()] = expr;
     }
 
-    sptr_t<sep::NotTerm> notRight;
+    sep::NotTermPtr notRight;
     if(binds.empty()) {
         notRight = make_shared<sep::NotTerm>(right);
     } else {
-        sptr_t<sep::ExistsTerm> existsRight = make_shared<sep::ExistsTerm>(binds, right);
+        sep::ExistsTermPtr existsRight = make_shared<sep::ExistsTerm>(binds, right);
         notRight = make_shared<sep::NotTerm>(existsRight);
     }
 
@@ -273,68 +280,84 @@ bool CVC4Interface::checkEntailment(sptr_v<sep::SortedVariable> vars,
 
     vector<vector<Expr>> tvecs;
     engine->getInstantiationTermVectors(qs[0], tvecs);
-    // cout << "Quantified formula " << qs[0] << " was instantiated " << tvecs.size() << " times." << endl;
 
-    if (tvecs.empty() || tvecs[0].size() != binds.size())
+    if (tvecs.empty())
         return false;
 
-    // cout << "\t(";
-    for (size_t i = 0, n = tvecs[0].size(); i < n; i++) {
-        /* if (i > 0)
-            cout << ", ";
-        cout << tvecs[0][i]; */
+    stateSubst.clear();
 
-        stringstream ss;
-        ss << tvecs[0][i];
-        subst[binds[i]->name] = make_shared<sep::SimpleIdentifier>(ss.str());
+    for (size_t i = 0, szi = tvecs.size(); i < szi; i++) {
+        stateSubst.push_back(proof::StateSubstitution());
+
+        for (size_t j = 0, szj = tvecs[i].size(); j < szj; j++) {
+            if (tvecs[i][j].getKind() == kind::SEP_NIL) {
+                //todo retranslate nil
+                stateSubst[i][binds[j]->name] = make_shared<sep::NilTerm>(make_shared<sep::Sort>("Int"));
+            } else {
+                stringstream ss;
+                ss << tvecs[i][j];
+                stateSubst[i][binds[j]->name] = make_shared<sep::SimpleIdentifier>(ss.str());
+            }
+        }
     }
-    // cout << ")" << endl;
 
     return true;
 }
 
 /* ====================================== Script ====================================== */
-void CVC4Interface::loadScript(sptr_t<sep::Script> script) {
+void CVC4Interface::loadScript(const sep::ScriptPtr& script) {
     reset();
 
     ptoTypes.clear();
 
-    sptr_t<sep::StackLoader> loader = make_shared<sep::StackLoader>(shared_from_this());
+    sep::StackLoaderPtr loader = make_shared<sep::StackLoader>(shared_from_this());
     loader->load(script);
 
-    for(size_t i = 0, n = script->commands.size(); i < n; i++) {
-        sptr_t<sep::DeclareDatatypeCommand> declDt =
-                dynamic_pointer_cast<sep::DeclareDatatypeCommand>(script->commands[i]);
+    for (const auto& command : script->commands) {
+        sep::DeclareSortCommandPtr declSort =
+                dynamic_pointer_cast<sep::DeclareSortCommand>(command);
+        if(declSort) {
+            loadSort(declSort);
+        }
+
+        sep::DefineSortCommandPtr defSort =
+                dynamic_pointer_cast<sep::DefineSortCommand>(command);
+        if(defSort) {
+            loadSort(defSort);
+        }
+
+        sep::DeclareDatatypeCommandPtr declDt =
+                dynamic_pointer_cast<sep::DeclareDatatypeCommand>(command);
         if(declDt) {
             loadDatatype(declDt);
         }
 
-        sptr_t<sep::DeclareDatatypesCommand> declDts =
-                dynamic_pointer_cast<sep::DeclareDatatypesCommand>(script->commands[i]);
+        sep::DeclareDatatypesCommandPtr declDts =
+                dynamic_pointer_cast<sep::DeclareDatatypesCommand>(command);
         if(declDts) {
             loadDatatypes(declDts);
         }
 
-        sptr_t<sep::DeclareFunCommand> declFun =
-                dynamic_pointer_cast<sep::DeclareFunCommand>(script->commands[i]);
+        sep::DeclareFunCommandPtr declFun =
+                dynamic_pointer_cast<sep::DeclareFunCommand>(command);
         if(declFun) {
             loadFun(declFun);
         }
 
-        sptr_t<sep::DefineFunCommand> defFun =
-                dynamic_pointer_cast<sep::DefineFunCommand>(script->commands[i]);
+        sep::DefineFunCommandPtr defFun =
+                dynamic_pointer_cast<sep::DefineFunCommand>(command);
         if(defFun) {
             loadFun(defFun);
         }
 
-        sptr_t<sep::DefineFunRecCommand> defFunRec =
-                dynamic_pointer_cast<sep::DefineFunRecCommand>(script->commands[i]);
+        sep::DefineFunRecCommandPtr defFunRec =
+                dynamic_pointer_cast<sep::DefineFunRecCommand>(command);
         if(defFunRec) {
             loadFun(defFunRec);
         }
 
-        sptr_t<sep::DefineFunsRecCommand> defFunsRec =
-                dynamic_pointer_cast<sep::DefineFunsRecCommand>(script->commands[i]);
+        sep::DefineFunsRecCommandPtr defFunsRec =
+                dynamic_pointer_cast<sep::DefineFunsRecCommand>(command);
         if(defFunsRec) {
             loadFuns(defFunsRec);
         }
@@ -347,8 +370,8 @@ void CVC4Interface::loadScript(sptr_t<sep::Script> script) {
     auto datatype = ptoTypes[0].second;
 
     bool consistent = true;
-    for(auto i : ptoTypes) {
-        if(i.first != loctype || i.second != datatype) {
+    for (const auto& pto : ptoTypes) {
+        if(pto.first != loctype || pto.second != datatype) {
             consistent = false;
             break;
         }
@@ -360,17 +383,17 @@ void CVC4Interface::loadScript(sptr_t<sep::Script> script) {
     }
 }
 
-bool CVC4Interface::runScript(sptr_t<sep::Script> script) {
+bool CVC4Interface::runScript(const sep::ScriptPtr& script) {
     loadScript(script);
 
-    for(size_t i = 0, n = script->commands.size(); i < n; i++) {
-        sptr_t<sep::AssertCommand> assrt = dynamic_pointer_cast<sep::AssertCommand>(script->commands[i]);
+    for (const auto& command : script->commands) {
+        sep::AssertCommandPtr assrt = dynamic_pointer_cast<sep::AssertCommand>(command);
         if(assrt) {
             assertTerm(assrt->term);
             continue;
         }
 
-        sptr_t<sep::CheckSatCommand> check = dynamic_pointer_cast<sep::CheckSatCommand>(script->commands[i]);
+        sep::CheckSatCommandPtr check = dynamic_pointer_cast<sep::CheckSatCommand>(command);
         if(check) {
             return checkSat();
         }
@@ -379,16 +402,28 @@ bool CVC4Interface::runScript(sptr_t<sep::Script> script) {
     return false;
 }
 
+/* ====================================== Sorts ======================================= */
+void CVC4Interface::loadSort(const sep::DeclareSortCommandPtr& cmd) {
+    SortConstructorType type = manager->mkSortConstructor(cmd->name, cmd->arity);
+    sorts[cmd->name] = type;
+}
+
+void CVC4Interface::loadSort(const sep::DefineSortCommandPtr& cmd) {
+    SortConstructorType type = manager->mkSortConstructor(cmd->name, cmd->parameters.size());
+    sorts[cmd->name] = type;
+    //TODO translate and add sort definition
+}
+
 /* ==================================== Datatypes ===================================== */
-void CVC4Interface::loadDatatype(sptr_t<sep::DeclareDatatypeCommand> cmd) {
+void CVC4Interface::loadDatatype(const sep::DeclareDatatypeCommandPtr& cmd) {
     loadDatatype(cmd->name, cmd->declaration);
 }
 
-void CVC4Interface::loadDatatypes(sptr_t<sep::DeclareDatatypesCommand> cmd) {
+void CVC4Interface::loadDatatypes(const sep::DeclareDatatypesCommandPtr& cmd) {
     loadDatatypes(cmd->sorts, cmd->declarations);
 }
 
-void CVC4Interface::loadDatatype(string name, sptr_t<sep::DatatypeDeclaration> decl) {
+void CVC4Interface::loadDatatype(const string& name, const sep::DatatypeDeclarationPtr& decl) {
     auto type = translateType(name, decl);
     sorts[name] = type;
     datatypes[name] = type;
@@ -402,8 +437,8 @@ void CVC4Interface::loadDatatype(string name, sptr_t<sep::DatatypeDeclaration> d
     }
 }
 
-void CVC4Interface::loadDatatypes(sptr_v<sep::SortDeclaration> sorts,
-                                  sptr_v<sep::DatatypeDeclaration> decls) {
+void CVC4Interface::loadDatatypes(const std::vector<sep::SortDeclarationPtr>& sorts,
+                                  const std::vector<sep::DatatypeDeclarationPtr>& decls) {
     vector<DatatypeType> types = translateType(sorts, decls);
     for(size_t i = 0, n = types.size(); i < n; i++) {
         this->sorts[sorts[i]->name] = types[i];
@@ -420,41 +455,44 @@ void CVC4Interface::loadDatatypes(sptr_v<sep::SortDeclaration> sorts,
 }
 
 /* ==================================== Functions ===================================== */
-void CVC4Interface::loadFun(sptr_t<sep::DeclareFunCommand> cmd) {
+void CVC4Interface::loadFun(const sep::DeclareFunCommandPtr& cmd) {
     loadFun(cmd->name, cmd->parameters, cmd->sort);
 }
 
-void CVC4Interface::loadFun(sptr_t<sep::DefineFunCommand> cmd) {
+void CVC4Interface::loadFun(const sep::DefineFunCommandPtr& cmd) {
     // Get all parts of the definition
     string name = cmd->definition->signature->name;
-    sptr_v<sep::SortedVariable> params = cmd->definition->signature->parameters;
-    sptr_t<sep::Sort> sort = cmd->definition->signature->sort;
-    sptr_t<sep::Term> body = cmd->definition->body;
+    std::vector<sep::SortedVariablePtr>& params = cmd->definition->signature->parameters;
+    sep::SortPtr sort = cmd->definition->signature->sort;
+    sep::TermPtr body = cmd->definition->body;
 
     loadFun(name, params, sort, body);
 }
 
-void CVC4Interface::loadFun(sptr_t<sep::DefineFunRecCommand> cmd) {
+void CVC4Interface::loadFun(const sep::DefineFunRecCommandPtr& cmd) {
     // Get all parts of the definition
     string name = cmd->definition->signature->name;
-    sptr_v<sep::SortedVariable> params = cmd->definition->signature->parameters;
-    sptr_t<sep::Sort> sort = cmd->definition->signature->sort;
-    sptr_t<sep::Term> body = cmd->definition->body;
+    std::vector<sep::SortedVariablePtr>& params = cmd->definition->signature->parameters;
+    sep::SortPtr sort = cmd->definition->signature->sort;
+    sep::TermPtr body = cmd->definition->body;
 
     loadFun(name, params, sort, body);
 }
 
-void CVC4Interface::loadFuns(sptr_t<sep::DefineFunsRecCommand> cmd) {
+void CVC4Interface::loadFuns(const sep::DefineFunsRecCommandPtr& cmd) {
     loadFuns(cmd->declarations, cmd->bodies);
 }
 
-void CVC4Interface::loadFun(string name, sptr_v<sep::Sort> params, sptr_t<sep::Sort> sort) {
+void CVC4Interface::loadFun(const string& name,
+                            const std::vector<sep::SortPtr>& params,
+                            const sep::SortPtr& sort) {
     Expr expr = translate(name, params, sort);
     symbols[name][sort->toString()] = expr;
 }
 
-void CVC4Interface::loadFun(string name, sptr_v<sep::SortedVariable> params,
-                            sptr_t<sep::Sort> sort, sptr_t<sep::Term> body) {
+void CVC4Interface::loadFun(const string& name,
+                            const std::vector<sep::SortedVariablePtr>& params,
+                            const sep::SortPtr& sort, const sep::TermPtr& body) {
     // Translate function symbol and add to symbol table
     Expr fun = translate(name, params, sort);
     symbols[name][sort->toString()] = fun;
@@ -474,14 +512,15 @@ void CVC4Interface::loadFun(string name, sptr_v<sep::SortedVariable> params,
     unload(params);
 }
 
-void CVC4Interface::loadFuns(sptr_v<sep::FunctionDeclaration> decls, sptr_v<sep::Term> bodies) {
+void CVC4Interface::loadFuns(const std::vector<sep::FunctionDeclarationPtr>& decls,
+                             const std::vector<sep::TermPtr>& bodies) {
     vector<Expr> funs;
 
-    for(size_t i = 0, n = decls.size(); i < n; i++) {
+    for (const auto& decl : decls) {
         // Get needed parts of the declaration
-        string name = decls[i]->name;
-        sptr_v<sep::SortedVariable> params = decls[i]->parameters;
-        sptr_t<sep::Sort> retSort = decls[i]->sort;
+        string name = decl->name;
+        std::vector<sep::SortedVariablePtr>& params = decl->parameters;
+        sep::SortPtr retSort = decl->sort;
 
         // Translate function symbol and add to symbol table
         Expr fun = translate(name, params, retSort);
@@ -491,8 +530,8 @@ void CVC4Interface::loadFuns(sptr_v<sep::FunctionDeclaration> decls, sptr_v<sep:
 
     for(size_t i = 0, n = decls.size(); i < n; i++) {
         // Get needed parts of the definition
-        sptr_v<sep::SortedVariable> params = decls[i]->parameters;
-        sptr_t<sep::Term> body = bodies[i];
+        std::vector<sep::SortedVariablePtr>& params = decls[i]->parameters;
+        sep::TermPtr body = bodies[i];
 
         // Translate parameters
         vector<Expr> formals = translate(params);
@@ -511,12 +550,12 @@ void CVC4Interface::loadFuns(sptr_v<sep::FunctionDeclaration> decls, sptr_v<sep:
 }
 
 /* ============================== ITermTranslatorContext ============================== */
-void CVC4Interface::setEmpArgs(sptr_t<sep::Term> loc, sptr_t<sep::Term> data) {
+void CVC4Interface::setEmpArgs(sep::TermPtr loc, sep::TermPtr data) {
     empLocArg = translate(loc);
     empDataArg = translate(data);
 }
 
-Type CVC4Interface::translateSort(sptr_t<sep::Sort> sort) {
+Type CVC4Interface::translateSort(const sep::SortPtr& sort) {
     string name = sort->toString();
 
     if(name == "Int") {
@@ -531,15 +570,15 @@ Type CVC4Interface::translateSort(sptr_t<sep::Sort> sort) {
         return sorts[name];
     }
 
-    if(sort->arguments.size() == 0) {
-        sorts[name] = manager->mkSort(sort->name.c_str());
+    if(sort->arguments.empty()) {
+        sorts[name] = manager->mkSort(sort->name);
         return sorts[name];
     } else {
         SortConstructorType cons = manager->mkSortConstructor(sort->name, sort->arguments.size());
 
         vector<Type> args;
-        for(size_t i = 0, n = sort->arguments.size(); i < n; i++) {
-            args.push_back(translateSort(sort->arguments[i]));
+        for (const auto& argument : sort->arguments) {
+            args.push_back(translateSort(argument));
         }
 
         sorts[name] = cons.instantiate(args);
@@ -547,46 +586,45 @@ Type CVC4Interface::translateSort(sptr_t<sep::Sort> sort) {
     }
 }
 
-vector<Type> CVC4Interface::translateSorts(sptr_v<sep::Sort> sorts) {
+vector<Type> CVC4Interface::translateSorts(const std::vector<sep::SortPtr>& sorts) {
     vector<Type> types;
-    for(size_t i = 0, n = sorts.size(); i < n; i++) {
-        types.push_back(translateSort(sorts[i]));
+    for (const auto& sort : sorts) {
+        types.push_back(translateSort(sort));
     }
     return types;
 }
 
-Expr CVC4Interface::translateBind(sptr_t<sep::SortedVariable> bind) {
+Expr CVC4Interface::translateBind(const sep::SortedVariablePtr& bind) {
     Expr expr = manager->mkBoundVar(bind->name, translateSort(bind->sort));
     symbols[bind->name][bind->sort->toString()] = expr;
     return expr;
 }
 
-Expr CVC4Interface::translateBinds(sptr_v<sep::SortedVariable> binds) {
+Expr CVC4Interface::translateBinds(const std::vector<sep::SortedVariablePtr>& binds) {
     vector<Expr> res;
-    for(size_t i = 0, n = binds.size(); i < n; i++) {
-        res.push_back(translateBind(binds[i]));
+    for (const auto& bind : binds) {
+        res.push_back(translateBind(bind));
     }
 
     return manager->mkExpr(kind::BOUND_VAR_LIST, res);
 }
 
-bool CVC4Interface::isDatatypeConstructor(string name) {
+bool CVC4Interface::isDatatypeConstructor(const string& name) {
     return constructors.find(name) != constructors.end();
 }
 
-bool CVC4Interface::isDatatypeSelector(string name) {
+bool CVC4Interface::isDatatypeSelector(const string& name) {
     return selectors.find(name) != selectors.end();
 }
 
-CVC4::DatatypeType CVC4Interface::getDatatypeForConstructor(string name) {
+CVC4::DatatypeType CVC4Interface::getDatatypeForConstructor(const string& name) {
     return constructors[name];
 }
 
-CVC4::DatatypeType CVC4Interface::getDatatypeForSelector(string name) {
+CVC4::DatatypeType CVC4Interface::getDatatypeForSelector(const string& name) {
     return selectors[name];
 }
 
-void CVC4Interface::addPtoType(std::pair<CVC4::Type, CVC4::Type> ptoType) {
+void CVC4Interface::addPtoType(const std::pair<CVC4::Type, CVC4::Type>& ptoType) {
     ptoTypes.push_back(ptoType);
 }
-

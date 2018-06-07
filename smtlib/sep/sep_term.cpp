@@ -7,13 +7,7 @@ using namespace smtlib::sep;
 
 /* ================================== QualifiedTerm =================================== */
 
-QualifiedTerm::QualifiedTerm(const IdentifierPtr& identifier,
-                             const vector<TermPtr>& terms)
-        : identifier(identifier) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
-
-void QualifiedTerm::accept(Visitor0* visitor){
+void QualifiedTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -31,13 +25,7 @@ string QualifiedTerm::toString() {
 
 /* ===================================== LetTerm ====================================== */
 
-LetTerm::LetTerm(const vector<VariableBindingPtr>& bindings,
-                 const TermPtr& term)
-        : term(term) {
-    this->bindings.insert(this->bindings.end(), bindings.begin(), bindings.end());
-}
-
-void LetTerm::accept(Visitor0* visitor){
+void LetTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -58,13 +46,7 @@ string LetTerm::toString() {
 
 /* ==================================== ForallTerm ==================================== */
 
-ForallTerm::ForallTerm(const vector<SortedVariablePtr>& bindings,
-                       const TermPtr& term)
-        : term(term)  {
-    this->bindings.insert(this->bindings.end(), bindings.begin(), bindings.end());
-}
-
-void ForallTerm::accept(Visitor0* visitor){
+void ForallTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -85,13 +67,7 @@ string ForallTerm::toString() {
 
 /* ==================================== ExistsTerm ==================================== */
 
-ExistsTerm::ExistsTerm(const vector<SortedVariablePtr>& bindings,
-                       const TermPtr& term)
-        : term(term) {
-    this->bindings.insert(this->bindings.end(), bindings.begin(), bindings.end());
-}
-
-void ExistsTerm::accept(Visitor0* visitor){
+void ExistsTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -112,12 +88,6 @@ string ExistsTerm::toString() {
 
 /* ==================================== MatchTerm ===================================== */
 
-MatchTerm::MatchTerm(const TermPtr& term,
-                     const vector<MatchCasePtr>& cases)
-    : term(term) {
-    this->cases.insert(this->cases.begin(), cases.begin(), cases.end());
-}
-
 void MatchTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
@@ -126,7 +96,7 @@ string MatchTerm::toString() {
     stringstream ss;
     ss << "(match " << term->toString();
 
-    for (auto caseIt : cases) {
+    for (const auto& caseIt : cases) {
         ss << " " << caseIt->toString();
     }
 
@@ -136,13 +106,7 @@ string MatchTerm::toString() {
 
 /* ================================== AnnotatedTerm =================================== */
 
-AnnotatedTerm::AnnotatedTerm(const TermPtr& term,
-                             const vector<AttributePtr>& attributes)
-        : term(term) {
-    this->attributes.insert(this->attributes.end(), attributes.begin(), attributes.end());
-}
-
-void AnnotatedTerm::accept(Visitor0* visitor){
+void AnnotatedTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -163,7 +127,7 @@ string AnnotatedTerm::toString() {
 
 /* ===================================== TrueTerm ===================================== */
 
-void TrueTerm::accept(Visitor0* visitor){
+void TrueTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -173,7 +137,7 @@ string TrueTerm::toString() {
 
 /* ==================================== FalseTerm ===================================== */
 
-void FalseTerm::accept(Visitor0* visitor){
+void FalseTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -183,7 +147,7 @@ string FalseTerm::toString() {
 
 /* ===================================== NotTerm ====================================== */
 
-void NotTerm::accept(Visitor0* visitor){
+void NotTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -195,11 +159,7 @@ string NotTerm::toString() {
 
 /* =================================== ImpliesTerm ==================================== */
 
-ImpliesTerm::ImpliesTerm(const vector<TermPtr> &terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
-
-void ImpliesTerm::accept(Visitor0* visitor){
+void ImpliesTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -220,11 +180,7 @@ string ImpliesTerm::toString() {
 
 /* ===================================== AndTerm ====================================== */
 
-AndTerm::AndTerm(const vector<TermPtr> &terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
-
-void AndTerm::accept(Visitor0* visitor){
+void AndTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -245,11 +201,7 @@ string AndTerm::toString() {
 
 /* ====================================== OrTerm ====================================== */
 
-OrTerm::OrTerm(const vector<TermPtr> &terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
-
-void OrTerm::accept(Visitor0* visitor){
+void OrTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -270,11 +222,7 @@ string OrTerm::toString() {
 
 /* ===================================== XorTerm ====================================== */
 
-XorTerm::XorTerm(const vector<TermPtr> &terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
-
-void XorTerm::accept(Visitor0* visitor){
+void XorTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -295,11 +243,7 @@ string XorTerm::toString() {
 
 /* ==================================== EqualsTerm ==================================== */
 
-EqualsTerm::EqualsTerm(const vector<TermPtr> &terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
-
-void EqualsTerm::accept(Visitor0* visitor){
+void EqualsTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -320,11 +264,7 @@ string EqualsTerm::toString() {
 
 /* =================================== DistinctTerm =================================== */
 
-DistinctTerm::DistinctTerm(const vector<TermPtr> &terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
-}
-
-void DistinctTerm::accept(Visitor0* visitor){
+void DistinctTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -345,7 +285,7 @@ string DistinctTerm::toString() {
 
 /* ===================================== IteTerm ====================================== */
 
-void IteTerm::accept(Visitor0* visitor){
+void IteTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -359,7 +299,7 @@ string IteTerm::toString() {
 
 /* ===================================== EmpTerm ====================================== */
 
-void EmpTerm::accept(Visitor0* visitor){
+void EmpTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -369,12 +309,8 @@ string EmpTerm::toString() {
 
 /* ===================================== SepTerm ====================================== */
 
-void SepTerm::accept(Visitor0* visitor){
+void SepTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-}
-
-SepTerm::SepTerm(const vector<TermPtr> &terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
 string SepTerm::toString() {
@@ -394,12 +330,8 @@ string SepTerm::toString() {
 
 /* ===================================== WandTerm ===================================== */
 
-void WandTerm::accept(Visitor0* visitor){
+void WandTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-}
-
-WandTerm::WandTerm(const vector<TermPtr> &terms) {
-    this->terms.insert(this->terms.end(), terms.begin(), terms.end());
 }
 
 string WandTerm::toString() {
@@ -419,7 +351,7 @@ string WandTerm::toString() {
 
 /* ===================================== PtoTerm ====================================== */
 
-void PtoTerm::accept(Visitor0* visitor){
+void PtoTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 
@@ -431,7 +363,7 @@ string PtoTerm::toString() {
 
 /* ===================================== NilTerm ====================================== */
 
-void NilTerm::accept(Visitor0* visitor){
+void NilTerm::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
 }
 

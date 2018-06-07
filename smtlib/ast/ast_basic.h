@@ -31,8 +31,8 @@ namespace smtlib {
             /**
              * \param value     Textual value of the symbol
              */
-            inline explicit Symbol(const std::string& value)
-                    : value(value) {}
+            inline explicit Symbol(std::string value)
+                    : value(std::move(value)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -53,8 +53,8 @@ namespace smtlib {
             /**
              * \param value     Textual value of the keyword
              */
-            inline explicit Keyword(const std::string& value)
-                    : value(value) {}
+            inline explicit Keyword(std::string value)
+                    : value(std::move(value)) {}
 
             void accept(Visitor0* visitor) override;
 
@@ -118,15 +118,16 @@ namespace smtlib {
         class PropLiteral : public Node,
                             public std::enable_shared_from_this<PropLiteral> {
         public:
-            sptr_t<Symbol> symbol;
+            SymbolPtr symbol;
             bool negated;
 
             /**
              * \param symbol    Symbol of the literal
              * \param negated   Whether the symbol is negated
              */
-            inline PropLiteral(const SymbolPtr& symbol, bool negated)
-                    : symbol(symbol), negated(negated) {}
+            inline PropLiteral(SymbolPtr symbol, bool negated)
+                    : symbol(std::move(symbol))
+                    , negated(negated) {}
 
             void accept(Visitor0* visitor) override;
 

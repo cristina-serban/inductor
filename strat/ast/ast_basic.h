@@ -21,10 +21,13 @@ namespace strat {
         public:
             std::string value;
 
-            inline StringLiteral(std::string value) : value(value) { }
+            inline explicit StringLiteral(std::string value)
+                    : value(std::move(value)) {}
 
             std::string toString() override;
         };
+
+        typedef std::shared_ptr<StringLiteral> StringLiteralPtr;
 
         /**
          * A proof rule.
@@ -33,12 +36,15 @@ namespace strat {
         class Rule : public virtual Node,
                      public std::enable_shared_from_this<Rule> {
         public:
-            sptr_t<StringLiteral> name;
+            StringLiteralPtr name;
 
-            inline Rule(sptr_t<StringLiteral> name) : name(name) { }
+            inline explicit Rule(StringLiteralPtr name)
+                    : name(std::move(name)) {}
 
-            virtual std::string toString();
+            std::string toString() override;
         };
+
+        typedef std::shared_ptr<Rule> RulePtr;
 
         /**
          * A state in the strategy automaton.
@@ -47,12 +53,15 @@ namespace strat {
         class State : public virtual Node,
                       public std::enable_shared_from_this<State> {
         public:
-            sptr_t<StringLiteral> name;
+            StringLiteralPtr name;
 
-            inline State(sptr_t<StringLiteral> name) : name(name) { }
+            inline explicit State(StringLiteralPtr name)
+                    : name(std::move(name)) {}
 
-            virtual std::string toString();
+            std::string toString() override;
         };
+
+        typedef std::shared_ptr<State> StatePtr;
     }
 }
 

@@ -13,7 +13,7 @@ using namespace CVC4;
 using namespace smtlib;
 using namespace smtlib::cvc;
 
-void TermTranslator::visit(sptr_t<sep::SimpleIdentifier> node) {
+void TermTranslator::visit(const sep::SimpleIdentifierPtr& node) {
     if (ctx->getSymbols().find(node->name) != ctx->getSymbols().end()) {
         if (ctx->getSymbols()[node->name].size() == 1) {
             // If the expression has been built before, return it
@@ -36,7 +36,7 @@ void TermTranslator::visit(sptr_t<sep::SimpleIdentifier> node) {
     }
 
     // If the symbol is a function
-    sptr_v<sep::FunEntry> fentry = ctx->getStack()->getFunEntry(node->name);
+    std::vector<sep::FunEntryPtr> fentry = ctx->getStack()->getFunEntry(node->name);
     if (!fentry.empty()) {
         if (fentry.size() == 1) {
             // If there is only one entry for the symbol, then we can build it
@@ -54,7 +54,7 @@ void TermTranslator::visit(sptr_t<sep::SimpleIdentifier> node) {
     }
 
     // If the symbol is a variable
-    sptr_t<sep::VarEntry> ventry = ctx->getStack()->getVarEntry(node->name);
+    sep::VarEntryPtr ventry = ctx->getStack()->getVarEntry(node->name);
     if (ventry) {
         // Build the expression based on its previously determined sort
         ret = arg->mkVar(ventry->name, ctx->translateSort(ventry->sort));
@@ -67,7 +67,7 @@ void TermTranslator::visit(sptr_t<sep::SimpleIdentifier> node) {
     }
 }
 
-void TermTranslator::visit(sptr_t<sep::QualifiedIdentifier> node) {
+void TermTranslator::visit(const sep::QualifiedIdentifierPtr& node) {
     string name = node->identifier->name;
     string sort = node->sort->toString();
 
@@ -87,13 +87,13 @@ void TermTranslator::visit(sptr_t<sep::QualifiedIdentifier> node) {
         return;
     }
 
-    sptr_v<sep::FunEntry> fentry = ctx->getStack()->getFunEntry(node->identifier->name);
+    std::vector<sep::FunEntryPtr> fentry = ctx->getStack()->getFunEntry(node->identifier->name);
     if (!fentry.empty()) {
         // Get all function entries with the specified return type
-        sptr_v<sep::FunEntry> possib;
+        std::vector<sep::FunEntryPtr> possib;
         for (size_t i = 0, n = fentry.size(); i < n; i++) {
             size_t sz = fentry[i]->signature.size();
-            sptr_t<sep::Sort> retSort = fentry[0]->signature[sz - 1];
+            sep::SortPtr retSort = fentry[0]->signature[sz - 1];
             if (retSort->toString() == node->sort->toString()) {
                 possib.push_back(fentry[i]);
             }
@@ -125,19 +125,19 @@ void TermTranslator::visit(sptr_t<sep::QualifiedIdentifier> node) {
     }
 }
 
-void TermTranslator::visit(sptr_t<sep::DecimalLiteral> node) {
+void TermTranslator::visit(const sep::DecimalLiteralPtr& node) {
     ret = arg->mkConst(Rational((long) (node->value * 100000l), 100000l));
 }
 
-void TermTranslator::visit(sptr_t<sep::NumeralLiteral> node) {
+void TermTranslator::visit(const sep::NumeralLiteralPtr& node) {
     ret = arg->mkConst(Rational(node->value));
 }
 
-void TermTranslator::visit(sptr_t<sep::StringLiteral> node) {
+void TermTranslator::visit(const sep::StringLiteralPtr& node) {
     ret = arg->mkConst(String(node->value));
 }
 
-void TermTranslator::visit(sptr_t<sep::QualifiedTerm> node) {
+void TermTranslator::visit(const sep::QualifiedTermPtr& node) {
     // TODO: Add support for other operators
     string op = node->identifier->toString();
 
@@ -188,20 +188,19 @@ void TermTranslator::visit(sptr_t<sep::QualifiedTerm> node) {
     }
 }
 
-void TermTranslator::visit(sptr_t<sep::LetTerm> node) {
+void TermTranslator::visit(const sep::LetTermPtr& node) {
     Logger::warning("TermTranslator::visit", "No CVC4 support for 'let' terms. "
             "Variables will be replaced with their bindings");
 
     // Duplicate inside term
-    sptr_t<sep::Duplicator> dupl = make_shared<sep::Duplicator>();
-    sptr_t<sep::Term> duplNode = dynamic_pointer_cast<sep::Term>(dupl->run(node->term));
+    sep::DuplicatorPtr dupl = make_shared<sep::Duplicator>();
+    sep::TermPtr duplNode = dynamic_pointer_cast<sep::Term>(dupl->run(node->term));
 
     // Replace each variable with its binding in the duplicated term
-    for (size_t i = 0, n = node->bindings.size(); i < n; i++) {
-        sptr_t<sep::VariableBinding> bind = node->bindings[i];
-        sptr_t<sep::TermReplacerContext> replCtx = make_shared<sep::TermReplacerContext>(
+    for (const auto& bind : node->bindings) {
+        sep::TermReplacerContextPtr replCtx = make_shared<sep::TermReplacerContext>(
                 make_shared<sep::SimpleIdentifier>(bind->name), bind->term);
-        sptr_t<sep::TermReplacer> repl = make_shared<sep::TermReplacer>(replCtx);
+        sep::TermReplacerPtr repl = make_shared<sep::TermReplacer>(replCtx);
 
         repl->run(duplNode);
     }
@@ -210,39 +209,39 @@ void TermTranslator::visit(sptr_t<sep::LetTerm> node) {
     ret = wrappedVisit(arg, duplNode);
 }
 
-void TermTranslator::visit(sptr_t<sep::ForallTerm> node) {
+void TermTranslator::visit(const sep::ForallTermPtr& node) {
     Expr bindings = ctx->translateBinds(node->bindings);
     ret = arg->mkExpr(kind::FORALL, bindings, wrappedVisit(arg, node->term));
     removeBindings(node->bindings);
 }
 
-void TermTranslator::visit(sptr_t<sep::ExistsTerm> node) {
+void TermTranslator::visit(const sep::ExistsTermPtr& node) {
     Expr bindings = ctx->translateBinds(node->bindings);
     ret = arg->mkExpr(kind::EXISTS, bindings, wrappedVisit(arg, node->term));
     removeBindings(node->bindings);
 }
 
-void TermTranslator::visit(sptr_t<sep::MatchTerm> node) {
+void TermTranslator::visit(const sep::MatchTermPtr& node) {
     Logger::error("TermTranslator::visit", "No CVC4 support for 'match' terms");
 }
 
-void TermTranslator::visit(sptr_t<sep::AnnotatedTerm> node) {
+void TermTranslator::visit(const sep::AnnotatedTermPtr& node) {
     ret = wrappedVisit(arg, node->term);
 }
 
-void TermTranslator::visit(sptr_t<sep::TrueTerm> node) {
+void TermTranslator::visit(const sep::TrueTermPtr& node) {
     ret = arg->mkConst(true);
 }
 
-void TermTranslator::visit(sptr_t<sep::FalseTerm> node) {
+void TermTranslator::visit(const sep::FalseTermPtr& node) {
     ret = arg->mkConst(false);
 }
 
-void TermTranslator::visit(sptr_t<sep::NotTerm> node) {
+void TermTranslator::visit(const sep::NotTermPtr& node) {
     ret = arg->mkExpr(kind::NOT, wrappedVisit(arg, node->term));
 }
 
-void TermTranslator::visit(sptr_t<sep::ImpliesTerm> node) {
+void TermTranslator::visit(const sep::ImpliesTermPtr& node) {
     if (node->terms.size() == 2) {
         ret = arg->mkExpr(kind::IMPLIES, wrappedVisit(arg, node->terms));
     } else {
@@ -258,15 +257,15 @@ void TermTranslator::visit(sptr_t<sep::ImpliesTerm> node) {
     }
 }
 
-void TermTranslator::visit(sptr_t<sep::AndTerm> node) {
+void TermTranslator::visit(const sep::AndTermPtr& node) {
     ret = arg->mkExpr(kind::AND, wrappedVisit(arg, node->terms));
 }
 
-void TermTranslator::visit(sptr_t<sep::OrTerm> node) {
+void TermTranslator::visit(const sep::OrTermPtr& node) {
     ret = arg->mkExpr(kind::OR, wrappedVisit(arg, node->terms));
 }
 
-void TermTranslator::visit(sptr_t<sep::XorTerm> node) {
+void TermTranslator::visit(const sep::XorTermPtr& node) {
     if (node->terms.size() == 2) {
         ret = arg->mkExpr(kind::XOR, wrappedVisit(arg, node->terms));
     } else {
@@ -281,7 +280,7 @@ void TermTranslator::visit(sptr_t<sep::XorTerm> node) {
     }
 }
 
-void TermTranslator::visit(sptr_t<sep::EqualsTerm> node) {
+void TermTranslator::visit(const sep::EqualsTermPtr& node) {
     if (node->terms.size() == 2) {
         ret = arg->mkExpr(kind::EQUAL, wrappedVisit(arg, node->terms));
     } else {
@@ -300,11 +299,11 @@ void TermTranslator::visit(sptr_t<sep::EqualsTerm> node) {
     }
 }
 
-void TermTranslator::visit(sptr_t<sep::DistinctTerm> node) {
+void TermTranslator::visit(const sep::DistinctTermPtr& node) {
     ret = arg->mkExpr(kind::DISTINCT, wrappedVisit(arg, node->terms));
 }
 
-void TermTranslator::visit(sptr_t<sep::IteTerm> node) {
+void TermTranslator::visit(const sep::IteTermPtr& node) {
     ret = arg->mkExpr(kind::ITE,
                       wrappedVisit(arg, node->testTerm),
                       wrappedVisit(arg, node->thenTerm),
@@ -312,22 +311,22 @@ void TermTranslator::visit(sptr_t<sep::IteTerm> node) {
 }
 
 // TODO test
-void TermTranslator::visit(sptr_t<sep::EmpTerm> node) {
+void TermTranslator::visit(const sep::EmpTermPtr& node) {
     ret = arg->mkExpr(kind::SEP_EMP, ctx->getEmpLocArg(), ctx->getEmpDataArg());
 }
 
 // TODO test
-void TermTranslator::visit(sptr_t<sep::SepTerm> node) {
+void TermTranslator::visit(const sep::SepTermPtr& node) {
     ret = arg->mkExpr(kind::SEP_STAR, wrappedVisit(arg, node->terms));
 }
 
 // TODO test
-void TermTranslator::visit(sptr_t<sep::WandTerm> node) {
+void TermTranslator::visit(const sep::WandTermPtr& node) {
     ret = arg->mkAssociative(kind::SEP_WAND, wrappedVisit(arg, node->terms));
 }
 
 // TODO test
-void TermTranslator::visit(sptr_t<sep::PtoTerm> node) {
+void TermTranslator::visit(const sep::PtoTermPtr& node) {
     auto leftExpr = wrappedVisit(arg, node->leftTerm);
     auto rightExpr = wrappedVisit(arg, node->rightTerm);
 
@@ -336,16 +335,16 @@ void TermTranslator::visit(sptr_t<sep::PtoTerm> node) {
 }
 
 // TODO test
-void TermTranslator::visit(sptr_t<sep::NilTerm> node) {
-    ret = arg->mkConst(kind::SEP_NIL);
+void TermTranslator::visit(const sep::NilTermPtr& node) {
+    ret = arg->mkNullaryOperator(ctx->translateSort(node->sort), kind::SEP_NIL);
 }
 
-void TermTranslator::removeBindings(sptr_t<sep::SortedVariable> var) {
+void TermTranslator::removeBindings(const sep::SortedVariablePtr& var) {
     ctx->getSymbols()[var->name].erase(var->sort->toString());
 }
 
-void TermTranslator::removeBindings(sptr_v<sep::SortedVariable> vars) {
-    for (size_t i = 0, n = vars.size(); i < n; i++) {
-        removeBindings(vars[i]);
+void TermTranslator::removeBindings(const std::vector<sep::SortedVariablePtr>& vars) {
+    for (const auto& var : vars) {
+        removeBindings(var);
     }
 }

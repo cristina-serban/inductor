@@ -16,11 +16,11 @@ namespace smtlib {
         class Translator {
         private:
             template<class astT1, class astT2, class smtT>
-            sptr_v<smtT> translateToSmtCast(sptr_v<astT1> vec) {
-                sptr_v<smtT> newVec;
+            std::vector<std::shared_ptr<smtT>> translateToSmtCast(const std::vector<std::shared_ptr<astT1>>& vec) {
+                std::vector<std::shared_ptr<smtT>> newVec;
 
-                for (auto it = vec.begin(); it != vec.end(); it++) {
-                    auto temp = std::dynamic_pointer_cast<astT2>(*it);
+                for (const auto elem : vec) {
+                    auto temp = std::dynamic_pointer_cast<astT2>(elem);
                     if (temp) {
                         newVec.push_back(translate(temp));
                     }
@@ -30,131 +30,133 @@ namespace smtlib {
             }
 
             template<class astT, class smtT>
-            sptr_v<smtT> translateToSmt(sptr_v<astT> vec) {
-                sptr_v<smtT> newVec;
+            std::vector<std::shared_ptr<smtT>> translateToSmt(const std::vector<std::shared_ptr<astT>>& vec) {
+                std::vector<std::shared_ptr<smtT>> newVec;
 
-                for (auto it = vec.begin(); it != vec.end(); it++) {
-                    newVec.push_back(translate(*it));
+                for (const auto elem : vec) {
+                    newVec.push_back(translate(elem));
                 }
 
                 return newVec;
             }
 
             template<class T>
-            std::vector<std::string> translateToString(sptr_v<T> vec) {
+            std::vector<std::string> translateToString(const std::vector<std::shared_ptr<T>>& vec) {
                 std::vector<std::string> newVec;
 
-                for (auto it = vec.begin(); it != vec.end(); it++) {
-                    newVec.push_back((*it)->toString());
+                for (const auto elem : vec) {
+                    newVec.push_back(elem->toString());
                 }
 
                 return newVec;
             }
 
         public:
-            sptr_t<sep::Attribute> translate(sptr_t<ast::Attribute> attr);
+            sep::AttributePtr translate(const ast::AttributePtr&);
 
-            sptr_t<sep::Symbol> translate(sptr_t<ast::Symbol> symbol);
-            sptr_t<sep::Keyword> translate(sptr_t<ast::Keyword> keyword);
-            sptr_t<sep::MetaSpecConstant> translate(sptr_t<ast::MetaSpecConstant> constant);
-            sptr_t<sep::BooleanValue> translate(sptr_t<ast::BooleanValue> value);
-            sptr_t<sep::PropLiteral> translate(sptr_t<ast::PropLiteral> literal);
+            sep::SymbolPtr translate(const ast::SymbolPtr&);
+            sep::KeywordPtr translate(const ast::KeywordPtr&);
+            sep::MetaSpecConstantPtr translate(const ast::MetaSpecConstantPtr&);
+            sep::BooleanValuePtr translate(const ast::BooleanValuePtr&);
+            sep::PropLiteralPtr translate(const ast::PropLiteralPtr&);
 
-            sptr_t<sep::Logic> translate(sptr_t<ast::Logic> logic);
-            sptr_t<sep::Script> translate(sptr_t<ast::Script> script);
-            sptr_t<sep::Theory> translate(sptr_t<ast::Theory> theory);
+            sep::LogicPtr translate(const ast::LogicPtr&);
+            sep::ScriptPtr translate(const ast::ScriptPtr&);
+            sep::TheoryPtr translate(const ast::TheoryPtr&);
 
-            sptr_t<sep::Command> translate(sptr_t<ast::Command> cmd);
-            sptr_t<sep::AssertCommand> translate(sptr_t<ast::AssertCommand> cmd);
-            sptr_t<sep::CheckSatCommand> translate(sptr_t<ast::CheckSatCommand> cmd);
-            sptr_t<sep::CheckSatAssumCommand> translate(sptr_t<ast::CheckSatAssumCommand> cmd);
-            sptr_t<sep::DeclareConstCommand> translate(sptr_t<ast::DeclareConstCommand> cmd);
-            sptr_t<sep::DeclareDatatypeCommand> translate(sptr_t<ast::DeclareDatatypeCommand> cmd);
-            sptr_t<sep::DeclareDatatypesCommand> translate(sptr_t<ast::DeclareDatatypesCommand> cmd);
-            sptr_t<sep::DeclareFunCommand> translate(sptr_t<ast::DeclareFunCommand> cmd);
-            sptr_t<sep::DeclareSortCommand> translate(sptr_t<ast::DeclareSortCommand> cmd);
-            sptr_t<sep::DefineFunCommand> translate(sptr_t<ast::DefineFunCommand> cmd);
-            sptr_t<sep::DefineFunRecCommand> translate(sptr_t<ast::DefineFunRecCommand> cmd);
-            sptr_t<sep::DefineFunsRecCommand> translate(sptr_t<ast::DefineFunsRecCommand> cmd);
-            sptr_t<sep::DefineSortCommand> translate(sptr_t<ast::DefineSortCommand> cmd);
-            sptr_t<sep::EchoCommand> translate(sptr_t<ast::EchoCommand> cmd);
-            sptr_t<sep::ExitCommand> translate(sptr_t<ast::ExitCommand> cmd);
-            sptr_t<sep::GetAssertsCommand> translate(sptr_t<ast::GetAssertsCommand> cmd);
-            sptr_t<sep::GetAssignsCommand> translate(sptr_t<ast::GetAssignsCommand> cmd);
-            sptr_t<sep::GetInfoCommand> translate(sptr_t<ast::GetInfoCommand> cmd);
-            sptr_t<sep::GetModelCommand> translate(sptr_t<ast::GetModelCommand> cmd);
-            sptr_t<sep::GetOptionCommand> translate(sptr_t<ast::GetOptionCommand> cmd);
-            sptr_t<sep::GetProofCommand> translate(sptr_t<ast::GetProofCommand> cmd);
-            sptr_t<sep::GetUnsatAssumsCommand> translate(sptr_t<ast::GetUnsatAssumsCommand> cmd);
-            sptr_t<sep::GetUnsatCoreCommand> translate(sptr_t<ast::GetUnsatCoreCommand> cmd);
-            sptr_t<sep::GetValueCommand> translate(sptr_t<ast::GetValueCommand> cmd);
-            sptr_t<sep::PopCommand> translate(sptr_t<ast::PopCommand> cmd);
-            sptr_t<sep::PushCommand> translate(sptr_t<ast::PushCommand> cmd);
-            sptr_t<sep::ResetCommand> translate(sptr_t<ast::ResetCommand> cmd);
-            sptr_t<sep::ResetAssertsCommand> translate(sptr_t<ast::ResetAssertsCommand> cmd);
-            sptr_t<sep::SetInfoCommand> translate(sptr_t<ast::SetInfoCommand> cmd);
-            sptr_t<sep::SetLogicCommand> translate(sptr_t<ast::SetLogicCommand> cmd);
-            sptr_t<sep::SetOptionCommand> translate(sptr_t<ast::SetOptionCommand> cmd);
+            sep::CommandPtr translate(const ast::CommandPtr&);
+            sep::AssertCommandPtr translate(const ast::AssertCommandPtr&);
+            sep::CheckSatCommandPtr translate(const ast::CheckSatCommandPtr&);
+            sep::CheckSatAssumCommandPtr translate(const ast::CheckSatAssumCommandPtr&);
+            sep::DeclareConstCommandPtr translate(const ast::DeclareConstCommandPtr&);
+            sep::DeclareDatatypeCommandPtr translate(const ast::DeclareDatatypeCommandPtr&);
+            sep::DeclareDatatypesCommandPtr translate(const ast::DeclareDatatypesCommandPtr&);
+            sep::DeclareFunCommandPtr translate(const ast::DeclareFunCommandPtr&);
+            sep::DeclareSortCommandPtr translate(const ast::DeclareSortCommandPtr&);
+            sep::DefineFunCommandPtr translate(const ast::DefineFunCommandPtr&);
+            sep::DefineFunRecCommandPtr translate(const ast::DefineFunRecCommandPtr&);
+            sep::DefineFunsRecCommandPtr translate(const ast::DefineFunsRecCommandPtr&);
+            sep::DefineSortCommandPtr translate(const ast::DefineSortCommandPtr&);
+            sep::EchoCommandPtr translate(const ast::EchoCommandPtr&);
+            sep::ExitCommandPtr translate(const ast::ExitCommandPtr&);
+            sep::GetAssertsCommandPtr translate(const ast::GetAssertsCommandPtr&);
+            sep::GetAssignsCommandPtr translate(const ast::GetAssignsCommandPtr&);
+            sep::GetInfoCommandPtr translate(const ast::GetInfoCommandPtr&);
+            sep::GetModelCommandPtr translate(const ast::GetModelCommandPtr&);
+            sep::GetOptionCommandPtr translate(const ast::GetOptionCommandPtr&);
+            sep::GetProofCommandPtr translate(const ast::GetProofCommandPtr&);
+            sep::GetUnsatAssumsCommandPtr translate(const ast::GetUnsatAssumsCommandPtr&);
+            sep::GetUnsatCoreCommandPtr translate(const ast::GetUnsatCoreCommandPtr&);
+            sep::GetValueCommandPtr translate(const ast::GetValueCommandPtr&);
+            sep::PopCommandPtr translate(const ast::PopCommandPtr&);
+            sep::PushCommandPtr translate(const ast::PushCommandPtr&);
+            sep::ResetCommandPtr translate(const ast::ResetCommandPtr&);
+            sep::ResetAssertsCommandPtr translate(const ast::ResetAssertsCommandPtr&);
+            sep::SetInfoCommandPtr translate(const ast::SetInfoCommandPtr&);
+            sep::SetLogicCommandPtr translate(const ast::SetLogicCommandPtr&);
+            sep::SetOptionCommandPtr translate(const ast::SetOptionCommandPtr&);
 
-            sptr_t<sep::SortDeclaration> translate(sptr_t<ast::SortDeclaration> decl);
-            sptr_t<sep::SelectorDeclaration> translate(sptr_t<ast::SelectorDeclaration> decl);
-            sptr_t<sep::ConstructorDeclaration> translate(sptr_t<ast::ConstructorDeclaration> decl);
-            sptr_t<sep::DatatypeDeclaration> translate(sptr_t<ast::DatatypeDeclaration> decl);
+            sep::SortDeclarationPtr translate(const ast::SortDeclarationPtr&);
+            sep::SelectorDeclarationPtr translate(const ast::SelectorDeclarationPtr&);
+            sep::ConstructorDeclarationPtr translate(const ast::ConstructorDeclarationPtr&);
+            sep::DatatypeDeclarationPtr translate(const ast::DatatypeDeclarationPtr&);
 
-            sptr_t<sep::SimpleDatatypeDeclaration> translate(
-                sptr_t<ast::SimpleDatatypeDeclaration> decl);
+            sep::SimpleDatatypeDeclarationPtr translate(
+                    const ast::SimpleDatatypeDeclarationPtr& decl);
 
-            sptr_t<sep::ParametricDatatypeDeclaration> translate(
-                sptr_t<ast::ParametricDatatypeDeclaration> decl);
+            sep::ParametricDatatypeDeclarationPtr translate(
+                    const ast::ParametricDatatypeDeclarationPtr& decl);
 
-            sptr_t<sep::FunctionDeclaration> translate(sptr_t<ast::FunctionDeclaration> decl);
-            sptr_t<sep::FunctionDefinition> translate(sptr_t<ast::FunctionDefinition> def);
+            sep::FunctionDeclarationPtr translate(const ast::FunctionDeclarationPtr&);
+            sep::FunctionDefinitionPtr translate(const ast::FunctionDefinitionPtr&);
 
-            sptr_t<sep::Index> translate(sptr_t<ast::Index> index);
+            sep::IndexPtr translate(const ast::IndexPtr&);
 
-            sptr_t<sep::Identifier> translate(sptr_t<ast::Identifier> id);
-            sptr_t<sep::SimpleIdentifier> translate(sptr_t<ast::SimpleIdentifier> id);
-            sptr_t<sep::QualifiedIdentifier> translate(sptr_t<ast::QualifiedIdentifier> id);
+            sep::IdentifierPtr translate(const ast::IdentifierPtr&);
+            sep::SimpleIdentifierPtr translate(const ast::SimpleIdentifierPtr&);
+            sep::QualifiedIdentifierPtr translate(const ast::QualifiedIdentifierPtr&);
 
-            sptr_t<sep::SpecConstant> translate(sptr_t<ast::SpecConstant> constant);
-            sptr_t<sep::DecimalLiteral> translate(sptr_t<ast::DecimalLiteral> literal);
-            sptr_t<sep::NumeralLiteral> translate(sptr_t<ast::NumeralLiteral> literal);
-            sptr_t<sep::StringLiteral> translate(sptr_t<ast::StringLiteral> literal);
+            sep::SpecConstantPtr translate(const ast::SpecConstantPtr&);
+            sep::DecimalLiteralPtr translate(const ast::DecimalLiteralPtr&);
+            sep::NumeralLiteralPtr translate(const ast::NumeralLiteralPtr&);
+            sep::StringLiteralPtr translate(const ast::StringLiteralPtr&);
 
-            sptr_t<sep::Sort> translate(sptr_t<ast::Sort> sort);
+            sep::SortPtr translate(const ast::SortPtr&);
 
-            sptr_t<sep::SExpression> translate(sptr_t<ast::SExpression> exp);
-            sptr_t<sep::CompSExpression> translate(sptr_t<ast::CompSExpression> exp);
+            sep::SExpressionPtr translate(const ast::SExpressionPtr&);
+            sep::CompSExpressionPtr translate(const ast::CompSExpressionPtr&);
 
-            sptr_t<sep::SortSymbolDeclaration> translate(sptr_t<ast::SortSymbolDeclaration> decl);
-            sptr_t<sep::FunSymbolDeclaration> translate(sptr_t<ast::FunSymbolDeclaration> decl);
-            sptr_t<sep::SpecConstFunDeclaration> translate(sptr_t<ast::SpecConstFunDeclaration> decl);
+            sep::SortSymbolDeclarationPtr translate(const ast::SortSymbolDeclarationPtr&);
+            sep::FunSymbolDeclarationPtr translate(const ast::FunSymbolDeclarationPtr&);
+            sep::SpecConstFunDeclarationPtr translate(const ast::SpecConstFunDeclarationPtr&);
 
-            sptr_t<sep::MetaSpecConstFunDeclaration> translate(
-                sptr_t<ast::MetaSpecConstFunDeclaration> decl);
+            sep::MetaSpecConstFunDeclarationPtr translate(
+                    const ast::MetaSpecConstFunDeclarationPtr& decl);
 
-            sptr_t<sep::SimpleFunDeclaration> translate(sptr_t<ast::SimpleFunDeclaration> decl);
+            sep::SimpleFunDeclarationPtr translate(const ast::SimpleFunDeclarationPtr&);
 
-            sptr_t<sep::ParametricFunDeclaration> translate(
-                sptr_t<ast::ParametricFunDeclaration> decl);
+            sep::ParametricFunDeclarationPtr translate(
+                    const ast::ParametricFunDeclarationPtr& decl);
 
-            sptr_t<sep::Constructor> translate(sptr_t<ast::Constructor> cons);
-            sptr_t<sep::QualifiedConstructor> translate(sptr_t<ast::QualifiedConstructor> cons);
-            sptr_t<sep::Pattern> translate(sptr_t<ast::Pattern> pattern);
-            sptr_t<sep::QualifiedPattern> translate(sptr_t<ast::QualifiedPattern> pattern);
-            sptr_t<sep::MatchCase> translate(sptr_t<ast::MatchCase> mcase);
+            sep::ConstructorPtr translate(const ast::ConstructorPtr&);
+            sep::QualifiedConstructorPtr translate(const ast::QualifiedConstructorPtr&);
+            sep::PatternPtr translate(const ast::PatternPtr&);
+            sep::QualifiedPatternPtr translate(const ast::QualifiedPatternPtr&);
+            sep::MatchCasePtr translate(const ast::MatchCasePtr&);
 
-            sptr_t<sep::Term> translate(sptr_t<ast::Term> term);
-            sptr_t<sep::QualifiedTerm> translate(sptr_t<ast::QualifiedTerm> term);
-            sptr_t<sep::LetTerm> translate(sptr_t<ast::LetTerm> term);
-            sptr_t<sep::ForallTerm> translate(sptr_t<ast::ForallTerm> term);
-            sptr_t<sep::ExistsTerm> translate(sptr_t<ast::ExistsTerm> term);
-            sptr_t<sep::MatchTerm> translate(sptr_t<ast::MatchTerm> term);
-            sptr_t<sep::AnnotatedTerm> translate(sptr_t<ast::AnnotatedTerm> term);
+            sep::TermPtr translate(const ast::TermPtr&);
+            sep::QualifiedTermPtr translate(const ast::QualifiedTermPtr&);
+            sep::LetTermPtr translate(const ast::LetTermPtr&);
+            sep::ForallTermPtr translate(const ast::ForallTermPtr&);
+            sep::ExistsTermPtr translate(const ast::ExistsTermPtr&);
+            sep::MatchTermPtr translate(const ast::MatchTermPtr&);
+            sep::AnnotatedTermPtr translate(const ast::AnnotatedTermPtr&);
 
-            sptr_t<sep::SortedVariable> translate(sptr_t<ast::SortedVariable> var);
-            sptr_t<sep::VariableBinding> translate(sptr_t<ast::VariableBinding> binding);
+            sep::SortedVariablePtr translate(const ast::SortedVariablePtr&);
+            sep::VariableBindingPtr translate(const ast::VariableBindingPtr&);
         };
+
+        typedef std::shared_ptr<Translator> TranslatorPtr;
     }
 }
 

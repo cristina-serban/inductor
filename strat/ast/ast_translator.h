@@ -18,18 +18,20 @@ namespace strat {
          */
         class Translator {
         private:
-            sptr_t<Strategy> output;
-            sptr_t<File> input;
+            StrategyPtr output;
+            FilePtr input;
 
         public:
-            sptr_t<Strategy> translate(sptr_t<File> file);
+            StrategyPtr translate(const FilePtr& file);
 
-            sptr_t<Strategy> translate(sptr_t<Automaton> aut);
+            StrategyPtr translate(const AutomatonPtr& aut);
 
-            proof::Rule translate(sptr_t<Rule> rule);
+            proof::Rule translate(const RulePtr& rule);
             
-            std::string translate(sptr_t<State> state);
+            std::string translate(const StatePtr& state);
         };
+
+        typedef std::shared_ptr<Translator> TranslatorPtr;
     }
 }
 

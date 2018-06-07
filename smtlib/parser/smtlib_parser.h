@@ -18,7 +18,7 @@ namespace smtlib {
         ast::NodePtr ast;
         std::shared_ptr<std::string> filename;
     public:
-        ast::NodePtr parse(std::string filename);
+        ast::NodePtr parse(const std::string& filename);
 
         /** Get input file */
         std::shared_ptr<std::string> getFilename();
@@ -30,9 +30,11 @@ namespace smtlib {
         void setAst(ast::NodePtr ast);
 
         /** Report a parsing error */
-        void reportError(unsigned int lineLeft, unsigned int colLeft,
-                         unsigned int lineRight, unsigned int colRight, const char* msg);
+        void reportError(int lineLeft, int colLeft,
+                         int lineRight, int colRight, const char* msg);
     };
+
+    typedef std::shared_ptr<Parser> ParserPtr;
 }
 
 #endif //INDUCTOR_SMT_PARSER_H
