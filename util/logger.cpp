@@ -31,6 +31,10 @@ void Logger::sortednessError(const char* fun, const char* msg) {
     fprintf(stderr, "%s: Well-sortedness errors\n\n%s", fun, msg);
 }
 
+void Logger::heapError(const char* fun, const char* msg) {
+    fprintf(stderr, "\n%s: Heap check errors:\n%s", fun, msg);
+}
+
 void Logger::parsingError(int rowLeft, int colLeft,
                           int rowRight, int colRight,
                           const char* filename, const char* msg) {

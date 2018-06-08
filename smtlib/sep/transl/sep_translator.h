@@ -40,6 +40,18 @@ namespace smtlib {
                 return newVec;
             }
 
+            template<class astT1, class astT2, class smtT1, class smtT2>
+            std::vector<std::pair<std::shared_ptr<smtT1>, std::shared_ptr<smtT2>>>
+            translateToSmt(const std::vector<std::pair<std::shared_ptr<astT1>, std::shared_ptr<astT1>>>& vec) {
+                std::vector<std::pair<std::shared_ptr<smtT1>, std::shared_ptr<smtT2>>> newVec;
+
+                for (const auto pair : vec) {
+                    newVec.push_back(std::make_pair(translate(pair.first), translate(pair.second)));
+                }
+
+                return newVec;
+            }
+
             template<class T>
             std::vector<std::string> translateToString(const std::vector<std::shared_ptr<T>>& vec) {
                 std::vector<std::string> newVec;
@@ -50,6 +62,8 @@ namespace smtlib {
 
                 return newVec;
             }
+
+            void setFileLocation(const sep::NodePtr& output, const ast::NodePtr& source);
 
         public:
             sep::AttributePtr translate(const ast::AttributePtr&);
@@ -67,12 +81,14 @@ namespace smtlib {
             sep::CommandPtr translate(const ast::CommandPtr&);
             sep::AssertCommandPtr translate(const ast::AssertCommandPtr&);
             sep::CheckSatCommandPtr translate(const ast::CheckSatCommandPtr&);
+            sep::CheckUnsatCommandPtr translate(const ast::CheckUnsatCommandPtr&);
             sep::CheckSatAssumCommandPtr translate(const ast::CheckSatAssumCommandPtr&);
             sep::DeclareConstCommandPtr translate(const ast::DeclareConstCommandPtr&);
             sep::DeclareDatatypeCommandPtr translate(const ast::DeclareDatatypeCommandPtr&);
             sep::DeclareDatatypesCommandPtr translate(const ast::DeclareDatatypesCommandPtr&);
             sep::DeclareFunCommandPtr translate(const ast::DeclareFunCommandPtr&);
             sep::DeclareSortCommandPtr translate(const ast::DeclareSortCommandPtr&);
+            sep::DeclareHeapCommandPtr translate(const ast::DeclareHeapCommandPtr&);
             sep::DefineFunCommandPtr translate(const ast::DefineFunCommandPtr&);
             sep::DefineFunRecCommandPtr translate(const ast::DefineFunRecCommandPtr&);
             sep::DefineFunsRecCommandPtr translate(const ast::DefineFunsRecCommandPtr&);

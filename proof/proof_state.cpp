@@ -24,6 +24,8 @@ void State::addBindings(const vector<SortedVariablePtr>& bindings) {
 }
 
 void State::merge(const StatePtr& state) {
+    const HeapEntry& heap = table->getHeap();
+
     // fixme Uniqueness check might not be necessary
     for (const auto& bind : state->bindings) {
         bool found = bindings.end() != find_if(bindings.begin(), bindings.end(),
@@ -47,7 +49,7 @@ void State::merge(const StatePtr& state) {
 
     if (state->constraint) {
         if (!constraint) {
-            constraint = make_shared<Constraint>();
+            constraint = make_shared<Constraint>(state->constraint->table);
         }
 
         constraint->pure.insert(constraint->pure.end(),
@@ -67,7 +69,7 @@ void State::merge(const StatePtr& state) {
         }
 
         if (constraint->spatial.empty() && calls.empty() && !constraint->pure.empty()) {
-            constraint->spatial.push_back(make_shared<EmpTerm>());
+            constraint->spatial.push_back(make_shared<EmpTerm>(heap.first, heap.second));
         }
     }
 
@@ -75,6 +77,7 @@ void State::merge(const StatePtr& state) {
 }
 
 void State::merge(const StatePtr& state, size_t origin) {
+    const HeapEntry& heap = table->getHeap();
     calls.erase(calls.begin() + origin);
 
     // fixme Uniqueness check might not be necessary
@@ -100,7 +103,7 @@ void State::merge(const StatePtr& state, size_t origin) {
 
     if (state->constraint) {
         if (!constraint) {
-            constraint = make_shared<Constraint>();
+            constraint = make_shared<Constraint>(state->constraint->table);
         }
 
         constraint->pure.insert(constraint->pure.end(),
@@ -120,7 +123,7 @@ void State::merge(const StatePtr& state, size_t origin) {
         }
 
         if (constraint->spatial.empty() && calls.empty() && !constraint->pure.empty()) {
-            constraint->spatial.push_back(make_shared<EmpTerm>());
+            constraint->spatial.push_back(make_shared<EmpTerm>(heap.first, heap.second));
         }
     }
 
@@ -221,7 +224,7 @@ StatePtr State::clone() {
         }
     }
 
-    StatePtr newState = make_shared<State>(newBindings, newExpr, newCalls);
+    StatePtr newState = make_shared<State>(newBindings, newExpr, newCalls, table);
     newState->variables.insert(newState->variables.begin(), newVariables.begin(), newVariables.end());
     newState->index = index;
 
@@ -229,11 +232,12 @@ StatePtr State::clone() {
 }
 
 TermPtr State::toTerm() {
+    const HeapEntry& heap = table->getHeap();
     TermPtr caseTerm;
 
     if (!constraint || constraint->pure.empty() && constraint->spatial.empty()) {
         if (calls.empty()) {
-            caseTerm = make_shared<EmpTerm>();
+            caseTerm = make_shared<EmpTerm>(heap.first, heap.second);
         } else if (calls.size() == 1) {
             caseTerm = calls[0]->toTerm();
         } else {

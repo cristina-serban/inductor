@@ -1,5 +1,7 @@
 #include "sep_symbol_stack.h"
 
+#include <algorithm>
+
 using namespace std;
 using namespace smtlib::sep;
 
@@ -11,7 +13,7 @@ SymbolTablePtr SymbolStack::getTopLevel() {
     return stack[stack.size() - 1];
 }
 
-std::vector<SymbolTablePtr>& SymbolStack::getStack() {
+std::vector<SymbolTablePtr>& SymbolStack::getLevels() {
     return stack;
 }
 
@@ -33,7 +35,12 @@ bool SymbolStack::pop() {
         return false;
     } else {
         size_t size = stack.size();
-        stack.erase(stack.begin() + (stack.size() - 1));
+
+        if(!stack[size - 1]->getHeap().empty()) {
+            isGlobalHeapFresh = false;
+        }
+
+        stack.erase(stack.begin() + (size - 1));
         return (stack.size() == size - 1);
     }
 }
@@ -43,7 +50,14 @@ bool SymbolStack::pop(size_t levels) {
         return false;
     } else {
         size_t size = stack.size();
-        stack.erase(stack.begin() + (stack.size() - levels), stack.begin() + (stack.size() - 1));
+
+        for(size_t i = size - levels; i < size; i++) {
+            if(!stack[i]->getHeap().empty()) {
+                isGlobalHeapFresh = false;
+            }
+        }
+
+        stack.erase(stack.begin() + (size - levels), stack.begin() + (size - 1));
         return (stack.size() == size - 1);
     }
 }
@@ -54,13 +68,12 @@ void SymbolStack::reset() {
 }
 
 SortEntryPtr SymbolStack::getSortEntry(const string& name) {
-    SortEntryPtr null;
     for (const auto& lvl : stack) {
         SortEntryPtr entry = lvl->getSortEntry(name);
         if (entry)
             return entry;
     }
-    return null;
+    return SortEntryPtr();
 }
 
 std::vector<FunEntryPtr> SymbolStack::getFunEntry(const string& name) {
@@ -73,27 +86,48 @@ std::vector<FunEntryPtr> SymbolStack::getFunEntry(const string& name) {
 }
 
 VarEntryPtr SymbolStack::getVarEntry(const string& name) {
-    VarEntryPtr null;
     for (const auto& lvl : stack) {
         VarEntryPtr entry = lvl->getVarEntry(name);
         if (entry)
             return entry;
     }
-    return null;
+    return VarEntryPtr();
+}
+
+HeapEntries SymbolStack::getGlobalHeap() {
+    if(isGlobalHeapFresh)
+        return globalHeap;
+
+    globalHeap.clear();
+    for (const auto& lvl : stack) {
+        HeapEntries& lvlHeap = lvl->getHeap();
+
+        for(const auto& heapEntry : lvlHeap) {
+            bool found = globalHeap.end() != find_if(globalHeap.begin(), globalHeap.end(),
+                                                   [&](const HeapEntry& other) {
+                                                       return (heapEntry.first->toString() == other.first->toString() &&
+                                                               heapEntry.second->toString() == other.second->toString());
+                                                   });
+            if(!found) {
+                globalHeap.push_back(heapEntry);
+            }
+        }
+    }
+
+    isGlobalHeapFresh = true;
+    return globalHeap;
 }
 
 SortEntryPtr SymbolStack::findDuplicate(const SortEntryPtr& entry) {
-    SortEntryPtr null;
     for (const auto& lvl : stack) {
         SortEntryPtr dup = lvl->getSortEntry(entry->name);
         if (dup)
             return dup;
     }
-    return null;
+    return SortEntryPtr();
 }
 
 FunEntryPtr SymbolStack::findDuplicate(const FunEntryPtr& entry) {
-    FunEntryPtr null;
     std::vector<FunEntryPtr> knownFuns = getFunEntry(entry->name);
     for (const auto& fun : knownFuns) {
         if (entry->params.empty() && fun->params.empty()) {
@@ -106,7 +140,7 @@ FunEntryPtr SymbolStack::findDuplicate(const FunEntryPtr& entry) {
             }
         }
     }
-    return null;
+    return FunEntryPtr();
 }
 
 VarEntryPtr SymbolStack::findDuplicate(const VarEntryPtr& entry) {
@@ -142,11 +176,33 @@ SortPtr SymbolStack::replace(const SortPtr& sort, unordered_map<string, SortPtr>
     }
 }
 
+HeapEntry SymbolStack::findDuplicate(const HeapEntry& entry) {
+    const SortPtr& locSortExp = expand(entry.first);
+    const SortPtr& dataSortExp = expand(entry.second);
+
+    string locSortStr = std::move(locSortExp->toString());
+    string dataSortExpStr = std::move(dataSortExp->toString());
+
+    for (const auto& lvl : stack) {
+        const HeapEntries& heap = lvl->getHeap();
+
+        auto found = find_if(heap.begin(), heap.end(),
+                             [&](const pair<SortPtr, SortPtr>& p) {
+                                 return locSortStr == p.first->toString() &&
+                                        dataSortExpStr == p.second->toString();
+                             });
+
+        if(found != heap.end())  {
+            return (*found);
+        }
+    }
+
+    return make_pair(SortPtr(), SortPtr());
+}
+
 SortPtr SymbolStack::expand(const SortPtr& sort) {
     if (!sort)
         return sort;
-
-    SortPtr null;
 
     SortEntryPtr entry = getSortEntry(sort->name);
     if (!sort->hasArgs()) {
@@ -156,7 +212,7 @@ SortPtr SymbolStack::expand(const SortPtr& sort) {
                 SortPtr newsort = make_shared<Sort>(entry->name, empty);
                 return newsort;
             } else {
-                return null;
+                return SortPtr();
             }
         } else {
             return sort;
@@ -164,7 +220,7 @@ SortPtr SymbolStack::expand(const SortPtr& sort) {
     } else {
         if (entry) {
             if (entry->arity != sort->arguments.size())
-                return null;
+                return SortPtr();
 
             if (entry->params.size() == sort->arguments.size()) {
                 unordered_map<string, SortPtr> mapping;
@@ -176,7 +232,7 @@ SortPtr SymbolStack::expand(const SortPtr& sort) {
                 newsort = expand(newsort);
                 return newsort;
             } else {
-                return null;
+                return SortPtr();
             }
         } else {
             std::vector<SortPtr> newargs;
@@ -185,7 +241,7 @@ SortPtr SymbolStack::expand(const SortPtr& sort) {
             for (const auto& arg : argSorts) {
                 SortPtr result = expand(arg);
                 if (!result)
-                    return null;
+                    return SortPtr();
 
                 newargs.push_back(result);
                 if (result.get() != arg.get())
@@ -203,7 +259,7 @@ SortPtr SymbolStack::expand(const SortPtr& sort) {
 }
 
 bool SymbolStack::equal(const SortPtr& sort1, const SortPtr& sort2) {
-    if(sort1 && sort2) {
+    if (sort1 && sort2) {
         return sort1->toString() == sort2->toString();
     } else {
         return false;
@@ -213,7 +269,7 @@ bool SymbolStack::equal(const SortPtr& sort1, const SortPtr& sort2) {
 bool SymbolStack::equal(const vector<string>& params1, const SortPtr& sort1,
                         const vector<string>& params2, const SortPtr& sort2,
                         unordered_map<string, string>& mapping) {
-    if(!sort1 || !sort2) {
+    if (!sort1 || !sort2) {
         return false;
     }
 
@@ -309,5 +365,16 @@ VarEntryPtr SymbolStack::tryAdd(const VarEntryPtr& entry) {
     VarEntryPtr dup = findDuplicate(entry);
     if (!dup)
         getTopLevel()->add(entry);
+    return dup;
+}
+
+HeapEntry SymbolStack::tryAdd(const HeapEntry& entry) {
+    const HeapEntry& entryExp = make_pair(expand(entry.first), expand(entry.second));
+
+    HeapEntry dup = findDuplicate(entryExp);
+    if(!dup.first || !dup.second) {
+        getTopLevel()->add(entryExp);
+        isGlobalHeapFresh = false;
+    }
     return dup;
 }

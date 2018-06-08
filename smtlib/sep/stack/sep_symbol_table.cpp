@@ -2,6 +2,8 @@
 
 #include "sep/sep_symbol_decl.h"
 
+#include <algorithm>
+
 using namespace std;
 using namespace smtlib::sep;
 
@@ -36,7 +38,7 @@ VarEntryPtr SymbolTable::getVarEntry(const string& name) {
 }
 
 bool SymbolTable::add(const SortEntryPtr& entry) {
-    if(sorts.find(entry->name) == sorts.end()) {
+    if (sorts.find(entry->name) == sorts.end()) {
         sorts[entry->name] = entry;
         return true;
     } else {
@@ -50,12 +52,17 @@ bool SymbolTable::add(const FunEntryPtr& entry) {
 }
 
 bool SymbolTable::add(const VarEntryPtr& entry) {
-    if(vars.find(entry->name) == vars.end()) {
+    if (vars.find(entry->name) == vars.end()) {
         vars[entry->name] = entry;
         return true;
     } else {
         return false;
     }
+}
+
+bool SymbolTable::add(const HeapEntry& heapPair) {
+    heap.push_back(heapPair);
+    return true;
 }
 
 void SymbolTable::reset() {
@@ -69,7 +76,7 @@ void SymbolTable::reset() {
     }
 
     for (const auto& sortEntry : sortEntries) {
-        if(!dynamic_pointer_cast<SortSymbolDeclaration>(sortEntry->source)) {
+        if (!dynamic_pointer_cast<SortSymbolDeclaration>(sortEntry->source)) {
             sorts.erase(sortEntry->name);
         }
     }
@@ -85,12 +92,12 @@ void SymbolTable::reset() {
     for (size_t i = 0, szi = funKeys.size(); i < szi; i++) {
         std::vector<FunEntryPtr>& entry = funs[funKeys[i]];
         for (size_t j = 0, szj = funEntries[i].size(); j < szj; j++) {
-            if(!dynamic_pointer_cast<FunSymbolDeclaration>(funEntries[i][j]->source)) {
+            if (!dynamic_pointer_cast<FunSymbolDeclaration>(funEntries[i][j]->source)) {
                 entry.erase(entry.begin() + j);
             }
         }
 
-        if(entry.empty())
+        if (entry.empty())
             funs.erase(funKeys[i]);
     }
 }

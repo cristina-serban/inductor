@@ -661,6 +661,15 @@ void SortednessChecker::visit(const DeclareSortCommandPtr& node) {
     }
 }
 
+void SortednessChecker::visit(const DeclareHeapCommandPtr& node) {
+    NodeErrorPtr err;
+
+    for(const auto& pair : node->locDataPairs) {
+        err = checkSort(pair.first, node, err);
+        err = checkSort(pair.second, node, err);
+    }
+}
+
 void SortednessChecker::visit(const DefineFunCommandPtr& node) {
     NodeErrorPtr err;
 

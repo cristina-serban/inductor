@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
         } else if(entail) {
             exec.checkEntailment();
         } else {
-            exec.checkSortedness();
+            exec.checkHeap();
         }
     }
 

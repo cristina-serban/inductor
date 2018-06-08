@@ -329,7 +329,12 @@ namespace smtlib {
         class EmpTerm : public Term,
                         public std::enable_shared_from_this<EmpTerm> {
         public:
-            inline EmpTerm() = default;
+            SortPtr locSort;
+            SortPtr dataSort;
+
+            inline EmpTerm(SortPtr locSort, SortPtr dataSort)
+                    : locSort(std::move(locSort))
+                    , dataSort(std::move(dataSort)) {}
 
             void accept(Visitor0* visitor) override;
 

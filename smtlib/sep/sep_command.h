@@ -55,6 +55,18 @@ namespace smtlib {
             std::string toString() override;
         };
 
+        /* ================================ CheckUnsatCommand ================================= */
+        /** A 'check-unsat' command. */
+        class CheckUnsatCommand : public Command,
+                                  public std::enable_shared_from_this<CheckUnsatCommand> {
+        public:
+            inline CheckUnsatCommand() = default;
+
+            void accept(Visitor0* visitor) override;
+
+            std::string toString() override;
+        };
+
         /* =============================== CheckSatAssumCommand =============================== */
         /** A 'check-sat-assuming' command. */
         class CheckSatAssumCommand : public Command,
@@ -178,6 +190,25 @@ namespace smtlib {
             inline DeclareSortCommand(std::string name, size_t arity)
                     : name(std::move(name))
                     , arity(arity) {}
+
+            void accept(Visitor0* visitor) override;
+
+            std::string toString() override;
+        };
+
+        /* ================================ DeclareHeapCommand ================================ */
+        /** A 'declare-heap' command. */
+        class DeclareHeapCommand : public Command,
+                                   public std::enable_shared_from_this<DeclareHeapCommand> {
+        public:
+            std::vector<std::pair<SortPtr,SortPtr>> locDataPairs;
+
+            /**
+             * \param name      Name of the sort
+             * \param arity     Arity of the sort
+             */
+            inline explicit DeclareHeapCommand(std::vector<std::pair<SortPtr,SortPtr>> locDataPairs)
+                    : locDataPairs(std::move(locDataPairs)) {}
 
             void accept(Visitor0* visitor) override;
 

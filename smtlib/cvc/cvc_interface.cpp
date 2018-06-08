@@ -1,6 +1,7 @@
 #include "cvc_interface.h"
 
 #include "sep/sep_term.h"
+#include "sep/visitor/sep_visitor_stack.h"
 
 using namespace std;
 using namespace CVC4;
@@ -214,7 +215,6 @@ bool CVC4Interface::checkEntailment(const std::vector<sep::SortedVariablePtr>& v
     assertTerm(notExistsRight);
 
     Result res = engine->checkSat();
-
     return res == Result::UNSAT;
 }
 
@@ -310,8 +310,10 @@ void CVC4Interface::loadScript(const sep::ScriptPtr& script) {
 
     ptoTypes.clear();
 
-    sep::StackLoaderPtr loader = make_shared<sep::StackLoader>(shared_from_this());
-    loader->load(script);
+    smtlib::sep::DummyVisitorWithStack0Ptr loader = make_shared<smtlib::sep::DummyVisitorWithStack0>(stack);
+    script->accept(loader.get());
+
+    heapType = stack->getGlobalHeap()[0];
 
     for (const auto& command : script->commands) {
         sep::DeclareSortCommandPtr declSort =

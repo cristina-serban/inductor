@@ -9,6 +9,7 @@
 #include "ast_abstract.h"
 #include "ast_basic.h"
 #include "ast_identifier.h"
+#include "ast_interfaces.h"
 
 #include <memory>
 #include <vector>
@@ -16,7 +17,7 @@
 namespace smtlib {
     namespace ast {
         /** An SMT-LIB sort. */
-        class Sort : public Node,
+        class Sort : public Index,
                      public std::enable_shared_from_this<Sort> {
         public:
             SimpleIdentifierPtr identifier;

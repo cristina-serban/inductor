@@ -27,7 +27,19 @@ void CheckSatCommand::accept(Visitor0* visitor) {
 
 string CheckSatCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_CHK_SAT << ")";
+    ss << "(" << KW_CHK_SAT << ")";
+    return ss.str();
+}
+
+/* ================================ CheckUnsatCommand ================================= */
+
+void CheckUnsatCommand::accept(Visitor0* visitor) {
+    visitor->visit(shared_from_this());
+}
+
+string CheckUnsatCommand::toString() {
+    stringstream ss;
+    ss << "(" << KW_CHK_UNSAT << ")";
     return ss.str();
 }
 
@@ -105,6 +117,7 @@ string DeclareDatatypesCommand::toString() {
     ss << ")";
     return ss.str();
 }
+
 /* =============================== DeclareFunCommand ================================ */
 
 void DeclareFunCommand::accept(Visitor0* visitor) {
@@ -135,6 +148,24 @@ void DeclareSortCommand::accept(Visitor0* visitor) {
 string DeclareSortCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DECL_SORT << " " << symbol->toString() << " " << arity->toString() << ")";
+    return ss.str();
+}
+
+/* =============================== DeclareHeapCommand ================================ */
+
+void DeclareHeapCommand::accept(Visitor0* visitor) {
+    visitor->visit(shared_from_this());
+}
+
+string DeclareHeapCommand::toString() {
+    stringstream ss;
+    ss << "(" << KW_DECL_HEAP << " ";
+
+    for(const auto &pair : locDataPairs) {
+        ss << "(" << pair.first->toString() << " " << pair.second->toString() << ")";
+    }
+
+    ss << ")";
     return ss.str();
 }
 
@@ -217,7 +248,7 @@ string DefineSortCommand::toString() {
 
 void EchoCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string EchoCommand::toString() {
     stringstream ss;
@@ -229,11 +260,11 @@ string EchoCommand::toString() {
 
 void ExitCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string ExitCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_EXIT << ")";
+    ss << "(" << KW_EXIT << ")";
     return ss.str();
 }
 
@@ -241,11 +272,11 @@ string ExitCommand::toString() {
 
 void GetAssertsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string GetAssertsCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_GET_ASSERTS << ")";
+    ss << "(" << KW_GET_ASSERTS << ")";
     return ss.str();
 }
 
@@ -253,11 +284,11 @@ string GetAssertsCommand::toString() {
 
 void GetAssignsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string GetAssignsCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_GET_ASSIGNS << ")";
+    ss << "(" << KW_GET_ASSIGNS << ")";
     return ss.str();
 }
 
@@ -265,7 +296,7 @@ string GetAssignsCommand::toString() {
 
 void GetInfoCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string GetInfoCommand::toString() {
     stringstream ss;
@@ -277,11 +308,11 @@ string GetInfoCommand::toString() {
 
 void GetModelCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string GetModelCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_GET_MODEL << ")";
+    ss << "(" << KW_GET_MODEL << ")";
     return ss.str();
 }
 
@@ -289,7 +320,7 @@ string GetModelCommand::toString() {
 
 void GetOptionCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string GetOptionCommand::toString() {
     stringstream ss;
@@ -301,11 +332,11 @@ string GetOptionCommand::toString() {
 
 void GetProofCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string GetProofCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_GET_PROOF << ")";
+    ss << "(" << KW_GET_PROOF << ")";
     return ss.str();
 }
 
@@ -313,11 +344,11 @@ string GetProofCommand::toString() {
 
 void GetUnsatAssumsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string GetUnsatAssumsCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_GET_UNSAT_ASSUMS << ")";
+    ss << "(" << KW_GET_UNSAT_ASSUMS << ")";
     return ss.str();
 }
 
@@ -325,11 +356,11 @@ string GetUnsatAssumsCommand::toString() {
 
 void GetUnsatCoreCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string GetUnsatCoreCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_GET_UNSAT_CORE << ")";
+    ss << "(" << KW_GET_UNSAT_CORE << ")";
     return ss.str();
 }
 
@@ -337,7 +368,7 @@ string GetUnsatCoreCommand::toString() {
 
 void GetValueCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string GetValueCommand::toString() {
     stringstream ss;
@@ -358,7 +389,7 @@ string GetValueCommand::toString() {
 
 void PopCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string PopCommand::toString() {
     stringstream ss;
@@ -370,7 +401,7 @@ string PopCommand::toString() {
 
 void PushCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string PushCommand::toString() {
     stringstream ss;
@@ -382,11 +413,11 @@ string PushCommand::toString() {
 
 void ResetCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string ResetCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_RESET << ")";
+    ss << "(" << KW_RESET << ")";
     return ss.str();
 }
 
@@ -394,11 +425,11 @@ string ResetCommand::toString() {
 
 void ResetAssertsCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string ResetAssertsCommand::toString() {
     stringstream ss;
-    ss <<  "(" << KW_RESET_ASSERTS << ")";
+    ss << "(" << KW_RESET_ASSERTS << ")";
     return ss.str();
 }
 
@@ -406,7 +437,7 @@ string ResetAssertsCommand::toString() {
 
 void SetInfoCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string SetInfoCommand::toString() {
     stringstream ss;
@@ -419,7 +450,7 @@ string SetInfoCommand::toString() {
 
 void SetLogicCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string SetLogicCommand::toString() {
     stringstream ss;
@@ -431,7 +462,7 @@ string SetLogicCommand::toString() {
 
 void SetOptionCommand::accept(Visitor0* visitor) {
     visitor->visit(shared_from_this());
-} 
+}
 
 string SetOptionCommand::toString() {
     stringstream ss;

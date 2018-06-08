@@ -13,16 +13,14 @@
 #include <memory>
 
 namespace pred {
+    class PredicateTable;
+    typedef std::shared_ptr<PredicateTable> PredicateTablePtr;
+
     class Case;
-
     class BaseCase;
-
     class InductiveCase;
-
     class PredicateCall;
-
     class Constraint;
-
     class InductivePredicate;
 
     typedef std::shared_ptr<Case> CasePtr;
@@ -36,6 +34,9 @@ namespace pred {
     /** An inductive predicate */
     class InductivePredicate {
     public:
+        /** Parent table to which the inductive predicate belongs*/
+        PredicateTablePtr table;
+
         /** Name of the predicate */
         std::string name;
 
@@ -52,12 +53,14 @@ namespace pred {
         std::vector<InductiveCasePtr> indCases;
 
         InductivePredicate(std::string name,
-                           std::vector<smtlib::sep::SortedVariablePtr> parameters);
+                           std::vector<smtlib::sep::SortedVariablePtr> parameters,
+                           PredicateTablePtr table);
 
         InductivePredicate(std::string name,
                            std::vector<smtlib::sep::SortedVariablePtr> parameters,
                            std::vector<BaseCasePtr> baseCases,
-                           std::vector<InductiveCasePtr> indCases);
+                           std::vector<InductiveCasePtr> indCases,
+                           PredicateTablePtr table);
 
         /** Whether the definition includes only self-calls (and not calls to other predicates) */
         bool isOnlySelfRecursive();
@@ -76,11 +79,17 @@ namespace pred {
     /** Non-inductive part of a case  */
     class Constraint {
     public:
+        /** Parent table to which the inductive predicate belongs*/
+        PredicateTablePtr table;
+
         /** Pure part (anything but 'pto', 'emp') */
         std::vector<smtlib::sep::TermPtr> pure;
 
         /** Spatial part ('pto', 'emp') */
         std::vector<smtlib::sep::TermPtr> spatial;
+
+        inline Constraint(PredicateTablePtr table)
+                : table(std::move(table)) {}
 
         /** Merge another constraint into this one */
         void merge(const ConstraintPtr& other);
@@ -98,11 +107,18 @@ namespace pred {
         bool isAlloc();
 
         /** Replace parameter occurrences with terms */
-        void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments);
+        void replace(const std::unordered_map<std::string,
+                     smtlib::sep::TermPtr>& arguments);
     };
 
     /* ======================================= Case ======================================= */
     class Case {
+    public:
+        /** Parent table to which the inductive predicate belongs*/
+        PredicateTablePtr table;
+
+        inline explicit Case(PredicateTablePtr table) : table(std::move(table)) {}
+
         /** Translates the case back into a term */
         virtual smtlib::sep::TermPtr toTerm() = 0;
 
@@ -110,7 +126,8 @@ namespace pred {
         inline virtual std::string toString() { return toTerm()->toString(); }
 
         /** Replace parameter occurrences with terms */
-        virtual void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments) = 0;
+        virtual void replace(const std::unordered_map<std::string,
+                             smtlib::sep::TermPtr>& arguments) = 0;
 
         /** Rename existential bindings by adding a certain index */
         virtual void renameBindings(const std::string& index) = 0;
@@ -125,12 +142,19 @@ namespace pred {
         /** Mandatory expression */
         ConstraintPtr constraint;
 
-        inline explicit BaseCase(ConstraintPtr constraint)
-                : constraint(std::move(constraint)) {}
+        inline explicit BaseCase(PredicateTablePtr table)
+                : Case(std::move(table)) {}
+
+        inline explicit BaseCase(ConstraintPtr constraint,
+                                 PredicateTablePtr table)
+                : Case(std::move(table))
+                , constraint(std::move(constraint)) {}
 
         inline BaseCase(std::vector<smtlib::sep::SortedVariablePtr> bindings,
-                        ConstraintPtr constraint)
-                : constraint(std::move(constraint))
+                        ConstraintPtr constraint,
+                        PredicateTablePtr table)
+                : Case(std::move(table))
+                , constraint(std::move(constraint))
                 , bindings(std::move(bindings)) {}
 
 
@@ -141,7 +165,8 @@ namespace pred {
         smtlib::sep::TermPtr toTerm() override;
 
         /** Replace parameter occurrences with terms */
-        void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments) override;
+        void replace(const std::unordered_map<std::string,
+                     smtlib::sep::TermPtr>& arguments) override;
 
         /** Rename existential bindings by adding a certain index */
         void renameBindings(const std::string& index) override;
@@ -159,25 +184,30 @@ namespace pred {
         /** Inductive calls (at least one) */
         std::vector<PredicateCallPtr> calls;
 
-        inline InductiveCase() = default;
-
-        inline explicit InductiveCase(ConstraintPtr constraint)
-                : constraint(std::move(constraint)) {}
-
-        InductiveCase(std::vector<smtlib::sep::SortedVariablePtr> bindings,
-                      ConstraintPtr constraint);
-
-        InductiveCase(ConstraintPtr constraint,
-                      std::vector<PredicateCallPtr> calls);
+        inline explicit InductiveCase(ConstraintPtr constraint,
+                                      PredicateTablePtr table)
+                : Case(std::move(table))
+                , constraint(std::move(constraint)) {}
 
         InductiveCase(std::vector<smtlib::sep::SortedVariablePtr> bindings,
                       ConstraintPtr constraint,
-                      std::vector<PredicateCallPtr> calls);
+                      PredicateTablePtr table);
 
-        explicit InductiveCase(std::vector<PredicateCallPtr> calls);
+        InductiveCase(ConstraintPtr constraint,
+                      std::vector<PredicateCallPtr> calls,
+                      PredicateTablePtr table);
 
         InductiveCase(std::vector<smtlib::sep::SortedVariablePtr> bindings,
-                      std::vector<PredicateCallPtr> calls);
+                      ConstraintPtr constraint,
+                      std::vector<PredicateCallPtr> calls,
+                      PredicateTablePtr table);
+
+        explicit InductiveCase(std::vector<PredicateCallPtr> calls,
+                               PredicateTablePtr table);
+
+        InductiveCase(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                      std::vector<PredicateCallPtr> calls,
+                      PredicateTablePtr table);
 
         /** Clones the inductive case */
         InductiveCasePtr clone();
@@ -186,7 +216,8 @@ namespace pred {
         smtlib::sep::TermPtr toTerm() override;
 
         /** Replace parameter occurrences with terms */
-        void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments) override;
+        void replace(const std::unordered_map<std::string,
+                     smtlib::sep::TermPtr>& arguments) override;
 
         /** Rename existential bindings by adding a certain index */
         void renameBindings(const std::string& index) override;
@@ -197,6 +228,7 @@ namespace pred {
     public:
         /** Name of the predicate to call */
         std::string predicate;
+
         /** Optional call arguments */
         std::vector<smtlib::sep::TermPtr> arguments;
 
@@ -218,7 +250,8 @@ namespace pred {
         PredicateCallPtr clone();
 
         /** Replace parameter occurrences with terms */
-        void replace(const std::unordered_map<std::string, smtlib::sep::TermPtr>& arguments);
+        void replace(const std::unordered_map<std::string,
+                     smtlib::sep::TermPtr>& arguments);
     };
 }
 

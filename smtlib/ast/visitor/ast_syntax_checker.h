@@ -58,12 +58,14 @@ namespace smtlib {
 
             void visit(const AssertCommandPtr& node) override;
             void visit(const CheckSatCommandPtr& node) override;
+            void visit(const CheckUnsatCommandPtr& node) override;
             void visit(const CheckSatAssumCommandPtr& node) override;
             void visit(const DeclareConstCommandPtr& node) override;
             void visit(const DeclareDatatypeCommandPtr& node) override;
             void visit(const DeclareDatatypesCommandPtr& node) override;
             void visit(const DeclareFunCommandPtr& node) override;
             void visit(const DeclareSortCommandPtr& node) override;
+            void visit(const DeclareHeapCommandPtr& node) override;
             void visit(const DefineFunCommandPtr& node) override;
             void visit(const DefineFunRecCommandPtr& node) override;
             void visit(const DefineFunsRecCommandPtr& node) override;

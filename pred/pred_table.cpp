@@ -1,6 +1,7 @@
 #include "pred_table.h"
 
 #include "sep/sep_script.h"
+#include "sep/visitor/sep_visitor_stack.h"
 #include "util/error_messages.h"
 #include "visitor/sep_occ_checker.h"
 #include "visitor/sep_stack_loader.h"
@@ -50,12 +51,15 @@ PredicateTable::PredicateTable(unordered_map<string, InductivePredicatePtr> pred
         , reach(make_shared<ReachAnalysis>())
         , predicates(std::move(predicates)) {}
 
+HeapEntry PredicateTable::getHeap() {
+    return stack->getGlobalHeap()[0];
+}
+
 bool PredicateTable::load(const ScriptPtr& script) {
     errors.clear();
 
-    StackLoaderContextPtr ctx = make_shared<StackLoaderContext>(stack);
-    StackLoaderPtr loader = make_shared<StackLoader>(ctx);
-    loader->load(script);
+    DummyVisitorWithStack0Ptr loader = make_shared<DummyVisitorWithStack0>(stack);
+    script->accept(loader.get());
 
     const vector<CommandPtr>& cmds = script->commands;
     for (const auto& cmd : cmds) {
@@ -85,11 +89,11 @@ void PredicateTable::print() {
         const InductivePredicatePtr& pred = predEntry.second;
 
         for (const auto& baseCase : pred->baseCases) {
-            cout << "\t" << baseCase->toTerm()->toString() << endl;
+            cout << "\t" << baseCase->toString() << endl;
         }
 
         for (const auto& indCase : pred->indCases) {
-            cout << "\t" << indCase->toTerm()->toString() << endl;
+            cout << "\t" << indCase->toString() << endl;
         }
 
         cout << endl;
@@ -184,7 +188,7 @@ void PredicateTable::load(const InductivePredicatePtr& pred, const OrTermPtr& bo
 }
 
 InductivePredicatePtr PredicateTable::add(const FunctionDeclarationPtr& decl) {
-    auto pred = make_shared<InductivePredicate>(decl->name, decl->parameters);
+    auto pred = make_shared<InductivePredicate>(decl->name, decl->parameters, shared_from_this());
     predicates[decl->name] = pred;
     return pred;
 }
@@ -228,10 +232,10 @@ BaseCasePtr PredicateTable::buildBaseCase(const TermPtr& term) {
     auto eterm = dynamic_pointer_cast<ExistsTerm>(term);
 
     if (eterm) {
-        return make_shared<BaseCase>(eterm->bindings, buildConstraint(eterm->term));
+        return make_shared<BaseCase>(eterm->bindings, buildConstraint(eterm->term), shared_from_this());
     }
 
-    return make_shared<BaseCase>(buildConstraint(term));
+    return make_shared<BaseCase>(buildConstraint(term), shared_from_this());
 }
 
 InductiveCasePtr PredicateTable::buildInductiveCase(const TermPtr& term) {
@@ -246,37 +250,25 @@ InductiveCasePtr PredicateTable::buildInductiveCase(const TermPtr& term) {
         newTerm = term;
     }
 
-    QualifiedTermPtr qterm = dynamic_pointer_cast<QualifiedTerm>(newTerm);
-    if (qterm && isInductiveCall(qterm)) {
-        return buildInductiveCase(bindings, qterm);
+    vector<TermPtr> normalizedTerms = buildTermList(newTerm);
+
+    if(normalizedTerms.empty()) {
+        stringstream ss;
+        ss << ErrorMessages::ERR_INVALID_IND_CASE << ": '" << term->toString() << "'";
+        errors.push_back(ss.str());
+
+        return InductiveCasePtr();
     }
 
-    SepTermPtr sterm = dynamic_pointer_cast<SepTerm>(newTerm);
-    if (sterm) {
-        return buildInductiveCase(bindings, sterm);
-    }
-
-    stringstream ss;
-    ss << ErrorMessages::ERR_INVALID_IND_CASE << ": '" << term->toString() << "'";
-    errors.push_back(ss.str());
-
-    return InductiveCasePtr();
+    return buildInductiveCase(bindings, normalizedTerms);
 }
 
 InductiveCasePtr PredicateTable::buildInductiveCase(const vector<SortedVariablePtr>& bindings,
-                                                    const QualifiedTermPtr& term) {
-    vector<PredicateCallPtr> calls;
-    calls.push_back(buildPredicateCall(term));
-
-    return make_shared<InductiveCase>(bindings, calls);;
-}
-
-InductiveCasePtr PredicateTable::buildInductiveCase(const vector<SortedVariablePtr>& bindings,
-                                                    const SepTermPtr& term) {
+                                                    const vector<TermPtr> terms) {
     vector<PredicateCallPtr> calls;
     vector<TermPtr> constraints;
 
-    for (const auto& subterm : term->terms) {
+    for (const auto& subterm : terms) {
         if (isInductiveCall(subterm)) {
             calls.push_back(buildPredicateCall(dynamic_pointer_cast<QualifiedTerm>(subterm)));
         } else {
@@ -285,14 +277,16 @@ InductiveCasePtr PredicateTable::buildInductiveCase(const vector<SortedVariableP
     }
 
     if (constraints.empty()) {
-        return make_shared<InductiveCase>(bindings, calls);
+        return make_shared<InductiveCase>(bindings, calls, shared_from_this());
     }
 
     if (constraints.size() == 1) {
-        return make_shared<InductiveCase>(bindings, buildConstraint(constraints[0]), calls);
+        return make_shared<InductiveCase>(bindings, buildConstraint(constraints[0]),
+                                          calls, shared_from_this());
     }
 
-    return make_shared<InductiveCase>(bindings, buildConstraint(make_shared<SepTerm>(constraints)), calls);
+    return make_shared<InductiveCase>(bindings, buildConstraint(make_shared<SepTerm>(constraints)),
+                                      calls, shared_from_this());
 }
 
 PredicateCallPtr PredicateTable::buildPredicateCall(const QualifiedTermPtr& term) {
@@ -301,7 +295,7 @@ PredicateCallPtr PredicateTable::buildPredicateCall(const QualifiedTermPtr& term
 }
 
 ConstraintPtr PredicateTable::buildConstraint(const TermPtr& term) {
-    auto constraint = make_shared<Constraint>();
+    auto constraint = make_shared<Constraint>(shared_from_this());
     auto list = buildTermList(term);
 
     for (const auto& elem : list) {

@@ -6,6 +6,8 @@
 
 #include "smtlib-glue.h"
 
+#include <string>
+#include <sstream>
 #include <iostream>
 
 extern "C" {

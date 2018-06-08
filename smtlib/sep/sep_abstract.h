@@ -17,7 +17,13 @@ namespace smtlib {
         /** Node of the SMT-LIB+SEPLOG hierarchy */
         class Node {
         public:
-            Node() = default;
+            int rowLeft{0};
+            int rowRight{0};
+            int colLeft{0};
+            int colRight{0};
+            std::shared_ptr<std::string> filename;
+
+            inline Node() = default;
 
             /** Accept a visitor */
             virtual void accept(class Visitor0* visitor) = 0;

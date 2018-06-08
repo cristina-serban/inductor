@@ -12,6 +12,10 @@ namespace smtlib {
         private:
             std::vector<SymbolTablePtr> stack;
 
+            HeapEntries globalHeap;
+            bool isGlobalHeapFresh{false};
+
+
             bool equal(const SortPtr& sort1, const SortPtr& sort2);
 
             bool equal(const std::vector<SortPtr>& signature1,
@@ -30,7 +34,7 @@ namespace smtlib {
 
             SymbolTablePtr getTopLevel();
 
-            std::vector<SymbolTablePtr>& getStack();
+            std::vector<SymbolTablePtr>& getLevels();
 
             bool push();
             bool push(size_t levels);
@@ -43,10 +47,12 @@ namespace smtlib {
             SortEntryPtr getSortEntry(const std::string& name);
             std::vector<FunEntryPtr> getFunEntry(const std::string& name);
             VarEntryPtr getVarEntry(const std::string& name);
+            HeapEntries getGlobalHeap();
 
             SortEntryPtr findDuplicate(const SortEntryPtr& entry);
             FunEntryPtr findDuplicate(const FunEntryPtr& entry);
             VarEntryPtr findDuplicate(const VarEntryPtr& entry);
+            HeapEntry findDuplicate(const HeapEntry& entry);
 
             SortPtr expand(const SortPtr& sort);
 
@@ -56,6 +62,7 @@ namespace smtlib {
             SortEntryPtr tryAdd(const SortEntryPtr& entry);
             FunEntryPtr tryAdd(const FunEntryPtr& entry);
             VarEntryPtr tryAdd(const VarEntryPtr& entry);
+            HeapEntry tryAdd(const HeapEntry& entry);
         };
 
         typedef std::shared_ptr<SymbolStack> SymbolStackPtr;

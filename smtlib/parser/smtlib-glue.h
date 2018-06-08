@@ -12,12 +12,14 @@ namespace smtlib {
     class Parser;
 }
 class ParserInternalList;
+class ParserInternalPairList;
 
 typedef class smtlib::ast::Node* AstPtr;
 typedef class ParserInternalList* AstList;
+typedef class ParserInternalPairList* AstPairList;
 typedef class smtlib::Parser* SmtPrsr;
 #else
-typedef void *AstPtr, *AstList, *SmtPrsr;
+typedef void *AstPtr, *AstList, *AstPairList, *SmtPrsr;
 #endif
 
 #ifdef __cplusplus
@@ -38,6 +40,10 @@ void ast_reportError(SmtPrsr parser,
 AstList ast_listCreate();
 void ast_listAdd(AstList list, AstPtr item);
 void ast_listDelete(AstList list);
+
+AstPairList ast_pairListCreate();
+void ast_pairListAdd(AstPairList list, AstPtr item1, AstPtr item2);
+void ast_pairListDelete(AstPairList list);
 
 void ast_setLocation(SmtPrsr parser, AstPtr ptr,
                      int rowLeft, int colLeft,
@@ -60,12 +66,14 @@ AstPtr ast_newPropLiteral(AstPtr symbol, int negated);
 // ast_command.h
 AstPtr ast_newAssertCommand(AstPtr term);
 AstPtr ast_newCheckSatCommand();
+AstPtr ast_newCheckUnsatCommand();
 AstPtr ast_newCheckSatAssumCommand(AstList assumptions);
 AstPtr ast_newDeclareConstCommand(AstPtr symbol, AstPtr sort);
 AstPtr ast_newDeclareDatatypeCommand(AstPtr symbol, AstPtr declaration);
 AstPtr ast_newDeclareDatatypesCommand(AstList sorts, AstList declarations);
 AstPtr ast_newDeclareFunCommand(AstPtr symbol, AstList params, AstPtr sort);
 AstPtr ast_newDeclareSortCommand(AstPtr symbol, AstPtr arity);
+AstPtr ast_newDeclareHeapCommand(AstPairList pairs);
 AstPtr ast_newDefineFunCommand(AstPtr definition);
 AstPtr ast_newDefineFunRecCommand(AstPtr definition);
 AstPtr ast_newDefineFunsRecCommand(AstList declarations, AstList bodies);

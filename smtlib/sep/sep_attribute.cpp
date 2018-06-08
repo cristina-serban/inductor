@@ -47,7 +47,7 @@ void BooleanAttribute::accept(Visitor0* visitor) {
 
 string BooleanAttribute::toString() {
     stringstream ss;
-    ss << keyword << " " << value ? "true" : "false";
+    ss << keyword << " " << ((value) ? "true" : "false");
     return ss.str();
 }
 

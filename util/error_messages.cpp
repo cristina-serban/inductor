@@ -1,5 +1,8 @@
 #include "error_messages.h"
 
+#include "ast/ast_sort.h"
+#include "sep/sep_sort.h"
+
 using namespace std;
 using namespace smtlib::ast;
 
@@ -20,6 +23,8 @@ const string ErrorMessages::ERR_DECL_FUN_MISSING_NAME = "Missing function name f
 const string ErrorMessages::ERR_DECL_FUN_MISSING_RET = "Missing function sort from declare-fun command";
 const string ErrorMessages::ERR_DECL_SORT_MISSING_NAME = "Missing sort name from declare-sort command";
 const string ErrorMessages::ERR_DECL_SORT_MISSING_ARITY = "Missing arity from declare-sort command";
+const string ErrorMessages::ERR_DECL_HEAP_MISSING_LOC = "Missing location sort from declare-heap command";
+const string ErrorMessages::ERR_DECL_HEAP_MISSING_DATA = "Missing data sort from declare-heap command";
 const string ErrorMessages::ERR_DEF_FUN_MISSING_DEF = "Missing function definition from define-fun command";
 const string ErrorMessages::ERR_DEF_FUN_REC_MISSING_DEF = "Missing function definition from define-fun-rec command";
 const string ErrorMessages::ERR_DEF_FUNS_REC_EMPTY_DECLS = "Empty function declaration list from define-funs-rec command";
@@ -103,6 +108,10 @@ const string ErrorMessages::ERR_VAR_BIND_MISSING_SORT = "Missing sort from varia
 const string ErrorMessages::ERR_UFLD_LVL_NEGATIVE = "Negative value for unfolding level";
 const string ErrorMessages::ERR_UFLD_LVL_INVALID = "Invalid value for unfolding level";
 const string ErrorMessages::ERR_OUT_PATH_INVALID = "Invalid value for unfolding output path";
+const string ErrorMessages::ERR_UNSPECIFIED_LOC_SORT = "Emp term with unspecified location sort";
+const string ErrorMessages::ERR_UNSPECIFIED_DATA_SORT = "Emp term with unspecified data sort";
+const string ErrorMessages::ERR_UNSPECIFIED_NIL_SORT = "Nil term with unspecified location sort";
+const string ErrorMessages::ERR_PTO_LEFT_NIL = "Points-to with nil as first argument";
 
 string ErrorMessages::extractFirstN(const string& str, unsigned long n) {
     if (str.length() > n)
@@ -559,5 +568,25 @@ string ErrorMessages::buildDefFunsRecCount(size_t declCount,
        << ") is not equal to the number of function bodies ("
        << bodyCount << ") in define-funs-rec command";
 
+    return ss.str();
+}
+
+std::string ErrorMessages::buildLocDataPairUnaccepted(smtlib::sep::SortPtr loc,
+                                                      smtlib::sep::SortPtr data,
+                                                      const vector<string>& acceptedPairs) {
+    stringstream ss;
+    ss << "(" << loc->toString() << ", " << data->toString() << ") "
+       << "is not an accepted pair of location and data sorts. "
+       << "Accepted pairs are: ";
+    printStringArray(ss, acceptedPairs, " ");
+    return ss.str();
+}
+
+std::string ErrorMessages::buildLocSortUnaccepted(smtlib::sep::SortPtr loc,
+                                                  const vector<string>& acceptedLoc) {
+    stringstream ss;
+    ss << loc->toString() << " is not an accepted location sort. "
+       << "Accepted location sorts are: ";
+    printStringArray(ss, acceptedLoc, " ");
     return ss.str();
 }

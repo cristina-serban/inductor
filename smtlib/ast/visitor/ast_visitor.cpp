@@ -43,6 +43,8 @@ void DummyVisitor0::visit(const AssertCommandPtr& node) {
 
 void DummyVisitor0::visit(const CheckSatCommandPtr& node) {}
 
+void DummyVisitor0::visit(const CheckUnsatCommandPtr& node) {}
+
 void DummyVisitor0::visit(const CheckSatAssumCommandPtr& node) {
     visit0(node->assumptions);
 }
@@ -69,6 +71,10 @@ void DummyVisitor0::visit(const DeclareFunCommandPtr& node) {
 
 void DummyVisitor0::visit(const DeclareSortCommandPtr& node) {
     visit0(node->symbol);
+}
+
+void DummyVisitor0::visit(const DeclareHeapCommandPtr& node) {
+    visit0(node->locDataPairs);
 }
 
 void DummyVisitor0::visit(const DefineFunCommandPtr& node) {

@@ -103,8 +103,10 @@ bool EntailmentChecker::check(const ScriptPtr& script) {
     this->script = script;
     table->load(script);
 
-    bool hasEntAssertion = false;
     bool result = true;
+
+    vector<TermPtr> lhs;
+    vector<TermPtr> rhs;
 
     for (const auto& cmd : script->commands) {
         // We look only for assertions
@@ -112,55 +114,71 @@ bool EntailmentChecker::check(const ScriptPtr& script) {
         if (!assrt)
             continue;
 
-        // The entailment must be formatted as an implication
-        ImpliesTermPtr impl = dynamic_pointer_cast<ImpliesTerm>(assrt->term);
-        if (!impl || impl->terms.size() < 2)
-            continue;
-
-        // Build left-hand side
-        StatePtr leftState = toState(table, impl->terms[0]);
-        leftState->index = "0";
-
-        // Build right-hand side
-        OrTermPtr orTerm = dynamic_pointer_cast<OrTerm>(impl->terms[1]);
-        if (!table->isInductiveCase(impl->terms[1]) && !orTerm) {
-            continue;
-        }
-
-        vector<TermPtr> rightTerms;
-        if (orTerm) {
-            rightTerms.insert(rightTerms.begin(), orTerm->terms.begin(), orTerm->terms.end());
-        } else {
-            rightTerms.push_back(impl->terms[1]);
-        }
-
-        vector<StatePtr> rightSet;
-        for (size_t i = 0, sz = rightTerms.size(); i < sz; i++) {
-            StatePtr rightState = toState(table, rightTerms[i]);
-
-            stringstream ss;
-            ss << (i + 1);
-            rightState->index = ss.str();
-
-            rightSet.push_back(rightState);
-        }
-
-        PairPtr pair = make_shared<Pair>(leftState, rightSet);
-
-        hasEntAssertion = true;
-
-        // Build tree root
-        root = make_shared<PairStmtNode>(pair);
-        root->stratStates.emplace_back(strategy->init);
-        nodeQueue.push_back(root);
-
-        if(!check()) {
-            result = false;
+        NotTermPtr notTerm = dynamic_pointer_cast<NotTerm>(assrt->term);
+        if(notTerm) { // If the assertion is negated, then the formula goes on the RHS
+            OrTermPtr orTerm = dynamic_pointer_cast<OrTerm>(notTerm->term);
+            if(orTerm) {
+                rhs.insert(rhs.end(), orTerm->terms.begin(), orTerm->terms.end());
+            } else {
+                rhs.push_back(notTerm->term);
+            }
+        } else { // Otherwise, the formula goes on the LHS
+            lhs.push_back(assrt->term);
         }
     }
 
-    if (!hasEntAssertion) {
-        Logger::warning("EntailmentChecker::check", "No entailment assertion in the input script");
+    if(lhs.empty() || rhs.empty()) {
+        Logger::warning("EntailmentChecker::check", "No entailment in the input script");
+    }
+
+    // Build left-hand side
+    TermPtr lhsTerm;
+
+    vector<TermPtr> normalizedLhsTerms;
+    for(const auto& lhsIt : lhs) {
+        normalize(lhsIt, normalizedLhsTerms);
+    }
+
+    if(normalizedLhsTerms.size() == 1) {
+        lhsTerm = std::move(lhs[0]);
+    } else {
+        lhsTerm = make_shared<SepTerm>(std::move(normalizedLhsTerms));
+    }
+
+    StatePtr leftState = toState(lhsTerm, table);
+    leftState->index = "0";
+
+    // Build right-hand side
+    vector<StatePtr> rhsSet;
+    for (size_t i = 0, sz = rhs.size(); i < sz; i++) {
+        vector<TermPtr> normalizedRhsTerms;
+        normalize (rhs[i], normalizedRhsTerms);
+
+        TermPtr rhsTerm;
+        if(normalizedRhsTerms.size() == 1) {
+            rhsTerm = std::move(normalizedRhsTerms[0]);
+        } else {
+            rhsTerm = make_shared<SepTerm>(std::move(normalizedRhsTerms));
+        }
+
+        StatePtr rightState = toState(rhsTerm, table);
+
+        stringstream ss;
+        ss << (i + 1);
+        rightState->index = ss.str();
+
+        rhsSet.push_back(rightState);
+    }
+
+    PairPtr pair = make_shared<Pair>(leftState, rhsSet);
+
+    // Build tree root
+    root = make_shared<PairStmtNode>(pair);
+    root->stratStates.emplace_back(strategy->init);
+    nodeQueue.push_back(root);
+
+    if(!check()) {
+        result = false;
     }
 
     return result;
@@ -414,6 +432,8 @@ bool EntailmentChecker::tryUnfoldRight(const PairStmtNodePtr& node,
 
 bool EntailmentChecker::tryReduce(const PairStmtNodePtr& node,
                                   const ReduceApplicationPtr& appl) {
+    const HeapEntry& heap = table->getHeap();
+
     const StatePtr& leftState = node->pair->left;
     const vector<StatePtr>& rightSet = node->pair->right;
 
@@ -433,7 +453,7 @@ bool EntailmentChecker::tryReduce(const PairStmtNodePtr& node,
 
     TermPtr left;
     if (!leftState->constraint) {
-        left = make_shared<EmpTerm>();
+        left = make_shared<EmpTerm>(heap.first, heap.second);
     } else {
         left = leftState->constraint->toTerm();
     }
@@ -448,7 +468,7 @@ bool EntailmentChecker::tryReduce(const PairStmtNodePtr& node,
 
         TermPtr expr;
         if (!rightSet[i]->constraint) {
-            expr = make_shared<EmpTerm>();
+            expr = make_shared<EmpTerm>(heap.first, heap.second);
         } else {
             expr = rightSet[i]->constraint->toTerm();
         }
@@ -767,6 +787,7 @@ void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplic
                 newRightState->variables = rstate->variables;
                 newRightState->nilVariables = rstate->nilVariables;
                 newRightState->bindings = rstate->bindings;
+                newRightState->table = table;
 
                 vector<StatePtr> newRightSet;
                 newRightSet.push_back(newRightState);
@@ -848,6 +869,7 @@ void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplic
                     newRightState->variables = right[k]->variables;
                     newRightState->nilVariables = right[k]->nilVariables;
                     newRightState->bindings = right[k]->bindings;
+                    newRightState->table = table;
                 }
 
                 if (cf[j][k] == pf[j]) {
@@ -866,6 +888,7 @@ void EntailmentChecker::applySplit(const PairStmtNodePtr& node, const RuleApplic
             newLeftState->index = left->index;
             newLeftState->variables = left->variables;
             newLeftState->bindings = left->bindings;
+            newLeftState->table = table;
 
             PairPtr nextPair = make_shared<Pair>(newLeftState, newRightSet);
             PairStmtNodePtr nextNode = make_shared<PairStmtNode>(nextPair, ruleNode);
@@ -1020,7 +1043,7 @@ vector<StatePtr> EntailmentChecker::applyUnfold(const StatePtr& state, size_t ca
     InductivePredicatePtr called = unfold(state->calls[callIndex], state->index);
     for (const auto& bcase : called->baseCases) {
         StatePtr merged = state->clone();
-        merged->merge(toState(bcase), callIndex);
+        merged->merge(toState(bcase, table), callIndex);
 
         stringstream ss;
         ss << state->index << index;
@@ -1032,7 +1055,7 @@ vector<StatePtr> EntailmentChecker::applyUnfold(const StatePtr& state, size_t ca
 
     for (const auto& icase : called->indCases) {
         StatePtr merged = state->clone();
-        merged->merge(toState(icase), callIndex);
+        merged->merge(toState(icase, table), callIndex);
 
         stringstream ss;
         ss << state->index << index;

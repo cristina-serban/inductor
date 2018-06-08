@@ -1,4 +1,5 @@
 #include "pred_definition.h"
+#include "pred_table.h"
 
 #include "visitor/sep_duplicator.h"
 #include "visitor/sep_term_replacer.h"
@@ -35,20 +36,24 @@ unordered_map<string, TermPtr> getRenaming(const string& index,
 
 /* ================================ InductivePredicate ================================ */
 InductivePredicate::InductivePredicate(string name,
-                                       vector<SortedVariablePtr> parameters)
+                                       vector<SortedVariablePtr> parameters,
+                                       PredicateTablePtr table)
         : name(std::move(name))
         , sort(make_shared<Sort>(SORT_BOOL))
-        , parameters(std::move(parameters)) {}
+        , parameters(std::move(parameters))
+        , table(std::move(table)) {}
 
 InductivePredicate::InductivePredicate(string name,
                                        vector<SortedVariablePtr> parameters,
                                        vector<BaseCasePtr> baseCases,
-                                       vector<InductiveCasePtr> indCases)
+                                       vector<InductiveCasePtr> indCases,
+                                       PredicateTablePtr table)
         : name(std::move(name))
         , sort(make_shared<Sort>(SORT_BOOL))
         , parameters(std::move(parameters))
         , baseCases(std::move(baseCases))
-        , indCases(std::move(indCases)) {}
+        , indCases(std::move(indCases))
+        , table(std::move(table)) {}
 
 bool InductivePredicate::isOnlySelfRecursive() {
     for (const auto& icase : indCases) {
@@ -81,7 +86,7 @@ InductivePredicatePtr InductivePredicate::clone() {
         newIndCases.push_back(icase->clone());
     }
 
-    return make_shared<InductivePredicate>(name, newParameters, newBaseCases, newIndCases);
+    return make_shared<InductivePredicate>(name, newParameters, newBaseCases, newIndCases, table);
 }
 
 void InductivePredicate::replace(const unordered_map<string, TermPtr>& arguments) {
@@ -113,7 +118,8 @@ void Constraint::merge(const ConstraintPtr& constr) {
 TermPtr Constraint::toTerm() {
     if (pure.empty() && spatial.empty()) {
         // [] + [] => (emp)
-        return make_shared<EmpTerm>();
+        const HeapEntry& heap = table->getHeap();
+        return make_shared<EmpTerm>(heap.first, heap.second);
     }
 
     if (!pure.empty() && spatial.empty()) {
@@ -155,7 +161,7 @@ TermPtr Constraint::toTerm() {
 
 ConstraintPtr Constraint::clone() {
     DuplicatorPtr duplicator = make_shared<Duplicator>();
-    ConstraintPtr newExpr = make_shared<Constraint>();
+    ConstraintPtr newExpr = make_shared<Constraint>(table);
 
     for (const auto& pformula : pure) {
         newExpr->pure.push_back(dynamic_pointer_cast<Term>(duplicator->run(pformula)));
@@ -227,7 +233,7 @@ BaseCasePtr BaseCase::clone() {
         newExpr = constraint->clone();
     }
 
-    return make_shared<BaseCase>(newBindings, newExpr);
+    return make_shared<BaseCase>(newBindings, newExpr, table);
 }
 
 TermPtr BaseCase::toTerm() {
@@ -256,28 +262,38 @@ void BaseCase::renameBindings(const string& index) {
 
 /* ================================== InductiveCase =================================== */
 InductiveCase::InductiveCase(vector<SortedVariablePtr> bindings,
-                             ConstraintPtr constraint)
-        : constraint(std::move(constraint))
+                             ConstraintPtr constraint,
+                             PredicateTablePtr table)
+        : Case(std::move(table))
+        , constraint(std::move(constraint))
         , bindings(std::move(bindings)) {}
 
 InductiveCase::InductiveCase(ConstraintPtr constraint,
-                             vector<PredicateCallPtr> calls)
-        : constraint(std::move(constraint))
+                             vector<PredicateCallPtr> calls,
+                             PredicateTablePtr table)
+        : Case(std::move(table))
+        , constraint(std::move(constraint))
         , calls(std::move(calls)) {}
 
 InductiveCase::InductiveCase(vector<SortedVariablePtr> bindings,
                              ConstraintPtr constraint,
-                             vector<PredicateCallPtr> calls)
-        : constraint(std::move(constraint))
+                             vector<PredicateCallPtr> calls,
+                             PredicateTablePtr table)
+        : Case(std::move(table))
+        , constraint(std::move(constraint))
         , bindings(std::move(bindings))
         , calls(std::move(calls)) {}
 
-InductiveCase::InductiveCase(vector<PredicateCallPtr> calls)
-        : calls(std::move(calls)) {}
+InductiveCase::InductiveCase(vector<PredicateCallPtr> calls,
+                             PredicateTablePtr table)
+        : Case(std::move(table))
+        , calls(std::move(calls)) {}
 
 InductiveCase::InductiveCase(vector<SortedVariablePtr> bindings,
-                             vector<PredicateCallPtr> calls)
-        : bindings(std::move(bindings))
+                             vector<PredicateCallPtr> calls,
+                             PredicateTablePtr table)
+        : Case(std::move(table))
+        , bindings(std::move(bindings))
         , calls(std::move(calls)) {}
 
 InductiveCasePtr InductiveCase::clone() {
@@ -299,7 +315,7 @@ InductiveCasePtr InductiveCase::clone() {
         newCalls.push_back(call->clone());
     }
 
-    return make_shared<InductiveCase>(newBindings, newExpr, newCalls);
+    return make_shared<InductiveCase>(newBindings, newExpr, newCalls, table);
 }
 
 TermPtr InductiveCase::toTerm() {

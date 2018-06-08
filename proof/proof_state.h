@@ -12,11 +12,12 @@
 namespace proof {
     /* ====================================== State ======================================= */
     class State;
-
     typedef std::shared_ptr<State> StatePtr;
 
     class State {
     public:
+        pred::PredicateTablePtr table;
+
         /** Existential bindings */
         std::vector<smtlib::sep::SortedVariablePtr> bindings;
 
@@ -39,54 +40,74 @@ namespace proof {
 
         inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
                      pred::ConstraintPtr constraint,
-                     std::vector<pred::PredicateCallPtr> calls)
+                     std::vector<pred::PredicateCallPtr> calls,
+                     pred::PredicateTablePtr table)
                 : constraint(std::move(constraint))
                 , bindings(std::move(bindings))
-                , calls(std::move(calls)) {}
+                , calls(std::move(calls))
+                , table(std::move(table)) {}
 
         inline State(pred::ConstraintPtr constraint,
-                     std::vector<pred::PredicateCallPtr> calls)
+                     std::vector<pred::PredicateCallPtr> calls,
+                     pred::PredicateTablePtr table)
                 : constraint(std::move(constraint))
-                , calls(std::move(calls)) {}
-
-        inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
-                     pred::ConstraintPtr constraint)
-                : constraint(std::move(constraint))
-                , bindings(std::move(bindings)) {}
-
-        explicit State(pred::ConstraintPtr constraint)
-                : constraint(std::move(constraint)) {}
-
-        inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
-                     std::vector<pred::PredicateCallPtr> calls)
-                : bindings(std::move(bindings))
-                , calls(std::move(calls)) {}
-
-        explicit State(std::vector<pred::PredicateCallPtr> calls)
-                : calls(std::move(calls)) {}
+                , calls(std::move(calls))
+                , table(std::move(table)) {}
 
         inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
                      pred::ConstraintPtr constraint,
-                     pred::PredicateCallPtr call)
+                     pred::PredicateTablePtr table)
+                : constraint(std::move(constraint))
+                , bindings(std::move(bindings))
+                , table(std::move(table)) {}
+
+        explicit State(pred::ConstraintPtr constraint,
+                       pred::PredicateTablePtr table)
+                : constraint(std::move(constraint))
+                , table(std::move(table)) {}
+
+        inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                     std::vector<pred::PredicateCallPtr> calls,
+                     pred::PredicateTablePtr table)
                 : bindings(std::move(bindings))
-                , constraint(std::move(constraint)){
+                , calls(std::move(calls))
+                , table(std::move(table)) {}
+
+        explicit State(std::vector<pred::PredicateCallPtr> calls,
+                       pred::PredicateTablePtr table)
+                : calls(std::move(calls))
+                , table(std::move(table)) {}
+
+        inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
+                     pred::ConstraintPtr constraint,
+                     pred::PredicateCallPtr call,
+                     pred::PredicateTablePtr table)
+                : bindings(std::move(bindings))
+                , constraint(std::move(constraint))
+                , table(std::move(table)) {
             calls.push_back(std::move(call));
         }
 
         inline State(pred::ConstraintPtr constraint,
-                     pred::PredicateCallPtr call)
-                : constraint(std::move(constraint)) {
+                     pred::PredicateCallPtr call,
+                     pred::PredicateTablePtr table)
+                : constraint(std::move(constraint))
+                , table(std::move(table)) {
             calls.push_back(std::move(call));
         }
 
 
         inline State(std::vector<smtlib::sep::SortedVariablePtr> bindings,
-                     pred::PredicateCallPtr call)
-                : bindings(std::move(bindings)) {
+                     pred::PredicateCallPtr call,
+                     pred::PredicateTablePtr table)
+                : bindings(std::move(bindings))
+                , table(std::move(table)) {
             calls.push_back(std::move(call));
         }
 
-        explicit State(pred::PredicateCallPtr call) {
+        explicit State(pred::PredicateCallPtr call,
+                       pred::PredicateTablePtr table)
+                : table(std::move(table)) {
             calls.push_back(std::move(call));
         }
 

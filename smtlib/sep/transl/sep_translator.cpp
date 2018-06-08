@@ -29,10 +29,21 @@
 #include "sep/sep_variable.h"
 
 #include "util/global_values.h"
+#include "util/logger.h"
+
+#include <sstream>
 
 using namespace std;
 using namespace smtlib;
 using namespace smtlib::sep;
+
+void Translator::setFileLocation(const sep::NodePtr& output, const ast::NodePtr& source) {
+    output->filename = source->filename;
+    output->rowLeft = source->rowLeft;
+    output->colLeft = source->colLeft;
+    output->rowRight = source->rowRight;
+    output->colRight = source->colRight;
+}
 
 sep::AttributePtr Translator::translate(const ast::AttributePtr& attr) {
     string keyword = std::move(attr->keyword->toString());
@@ -41,102 +52,156 @@ sep::AttributePtr Translator::translate(const ast::AttributePtr& attr) {
     if (value) {
         ast::SymbolPtr val1 = dynamic_pointer_cast<ast::Symbol>(value);
         if (val1) {
-            return make_shared<sep::SymbolAttribute>(keyword, val1->value);
+            auto result = std::move(make_shared<sep::SymbolAttribute>(keyword, val1->value));
+
+            setFileLocation(result, attr);
+            return result;
         }
 
         ast::BooleanValuePtr val2 = dynamic_pointer_cast<ast::BooleanValue>(value);
         if (val2) {
-            return make_shared<sep::BooleanAttribute>(keyword, val2->value);
+            auto result = make_shared<sep::BooleanAttribute>(keyword, val2->value);
+
+            setFileLocation(result, attr);
+            return result;
         }
 
         ast::NumeralLiteralPtr val3 = dynamic_pointer_cast<ast::NumeralLiteral>(value);
         if (val3) {
-            return make_shared<sep::NumeralAttribute>(keyword, std::move(translate(val3)));
+            auto result = make_shared<sep::NumeralAttribute>(keyword, std::move(translate(val3)));
+
+            setFileLocation(result, attr);
+            return result;
         }
 
         ast::DecimalLiteralPtr val4 = dynamic_pointer_cast<ast::DecimalLiteral>(value);
         if (val4) {
-            return make_shared<sep::DecimalAttribute>(keyword, std::move(translate(val4)));
+            auto result = make_shared<sep::DecimalAttribute>(keyword, std::move(translate(val4)));
+
+            setFileLocation(result, attr);
+            return result;
         }
 
         ast::StringLiteralPtr val5 = dynamic_pointer_cast<ast::StringLiteral>(value);
         if (val5) {
-            return make_shared<sep::StringAttribute>(keyword, std::move(translate(val5)));
+            auto result = make_shared<sep::StringAttribute>(keyword, std::move(translate(val5)));
+
+            setFileLocation(result, attr);
+            return result;
         }
 
         ast::CompAttributeValuePtr val6 = dynamic_pointer_cast<ast::CompAttributeValue>(value);
 
         if (val6 && keyword == KW_THEORIES) {
             auto newTheories = std::move(translateToString<ast::AttributeValue>(val6->values));
-            return make_shared<sep::TheoriesAttribute>(std::move(newTheories));
+            auto result = make_shared<sep::TheoriesAttribute>(std::move(newTheories));
+
+            setFileLocation(result, attr);
+            return result;
         }
 
         if (val6 && keyword == KW_SORTS) {
             auto newSorts = std::move(translateToSmtCast<ast::AttributeValue,
                     ast::SortSymbolDeclaration, sep::SortSymbolDeclaration>(val6->values));
-            return make_shared<sep::SortsAttribute>(std::move(newSorts));
+            auto result = make_shared<sep::SortsAttribute>(std::move(newSorts));
+
+            setFileLocation(result, attr);
+            return result;
         }
 
         if (val6 && keyword == KW_FUNS) {
             auto newFuns = std::move(translateToSmtCast<ast::AttributeValue,
                     ast::FunSymbolDeclaration, sep::FunSymbolDeclaration>(val6->values));
-            return make_shared<sep::FunsAttribute>(std::move(newFuns));
+            auto result = make_shared<sep::FunsAttribute>(std::move(newFuns));
+
+            setFileLocation(result, attr);
+            return result;
         }
 
         ast::SExpressionPtr val7 = dynamic_pointer_cast<ast::SExpression>(value);
         if (val7) {
-            make_shared<sep::SExpressionAttribute>(keyword, translate(val7));
+            auto result = make_shared<sep::SExpressionAttribute>(keyword, translate(val7));
+
+            setFileLocation(result, attr);
+            return result;
         }
 
     } else {
-        return make_shared<sep::SimpleAttribute>(attr->keyword->value);
+        auto result = make_shared<sep::SimpleAttribute>(attr->keyword->value);
+
+        setFileLocation(result, attr);
+        return result;
     }
 
-    sep::AttributePtr null;
-    return null;
+    return sep::AttributePtr();
 }
 
 sep::SymbolPtr Translator::translate(const ast::SymbolPtr& symbol) {
-    return make_shared<sep::Symbol>(symbol->value);
+    auto result = make_shared<sep::Symbol>(symbol->value);
+
+    setFileLocation(result, symbol);
+    return result;
 }
 
 sep::KeywordPtr Translator::translate(const ast::KeywordPtr& keyword) {
-    return make_shared<sep::Keyword>(keyword->value);
+    auto result = make_shared<sep::Keyword>(keyword->value);
+
+    setFileLocation(result, keyword);
+    return result;
 }
 
 sep::MetaSpecConstantPtr Translator::translate(const ast::MetaSpecConstantPtr& constant) {
     ast::MetaSpecConstant::Type type = constant->type;
+    sep::MetaSpecConstantPtr result;
 
     if (type == ast::MetaSpecConstant::Type::NUMERAL) {
-        return make_shared<sep::MetaSpecConstant>(sep::MetaSpecConstant::Type::NUMERAL);
+        result = make_shared<sep::MetaSpecConstant>(sep::MetaSpecConstant::Type::NUMERAL);
     } else if (type == ast::MetaSpecConstant::Type::DECIMAL) {
-        return make_shared<sep::MetaSpecConstant>(sep::MetaSpecConstant::Type::DECIMAL);
+        result = make_shared<sep::MetaSpecConstant>(sep::MetaSpecConstant::Type::DECIMAL);
     } else {
-        return make_shared<sep::MetaSpecConstant>(sep::MetaSpecConstant::Type::STRING);
+        result = make_shared<sep::MetaSpecConstant>(sep::MetaSpecConstant::Type::STRING);
     }
+
+    setFileLocation(result, constant);
+    return result;
 }
 
 sep::BooleanValuePtr Translator::translate(const ast::BooleanValuePtr& value) {
-    return make_shared<sep::BooleanValue>(value->value);
+    auto result = make_shared<sep::BooleanValue>(value->value);
+
+    setFileLocation(result, value);
+    return result;
 }
 
 sep::PropLiteralPtr Translator::translate(const ast::PropLiteralPtr& literal) {
-    return make_shared<sep::PropLiteral>(std::move(literal->symbol->toString()), literal->negated);
+    auto result = make_shared<sep::PropLiteral>(std::move(literal->symbol->toString()), literal->negated);
+
+    setFileLocation(result, literal);
+    return result;
 }
 
 sep::LogicPtr Translator::translate(const ast::LogicPtr& logic) {
     auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(logic->attributes));
-    return make_shared<sep::Logic>(logic->name->value, std::move(newAttrs));
+    auto result = make_shared<sep::Logic>(logic->name->value, std::move(newAttrs));
+
+    setFileLocation(result, logic);
+    return result;
 }
 
 sep::ScriptPtr Translator::translate(const ast::ScriptPtr& script) {
     auto newCmds = std::move(translateToSmt<ast::Command, sep::Command>(script->commands));
-    return make_shared<sep::Script>(std::move(newCmds));
+    auto result = make_shared<sep::Script>(std::move(newCmds));
+
+    setFileLocation(result, script);
+    return result;
 }
 
 sep::TheoryPtr Translator::translate(const ast::TheoryPtr& theory) {
     auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(theory->attributes));
-    return make_shared<sep::Theory>(theory->name->value, std::move(newAttrs));
+    auto result = make_shared<sep::Theory>(theory->name->value, std::move(newAttrs));
+
+    setFileLocation(result, theory);
+    return result;
 }
 
 sep::CommandPtr Translator::translate(const ast::CommandPtr& cmd) {
@@ -148,6 +213,11 @@ sep::CommandPtr Translator::translate(const ast::CommandPtr& cmd) {
     ast::CheckSatCommandPtr cmd2 = dynamic_pointer_cast<ast::CheckSatCommand>(cmd);
     if (cmd2) {
         return translate(cmd2);
+    }
+
+    ast::CheckUnsatCommandPtr cmd2b = dynamic_pointer_cast<ast::CheckUnsatCommand>(cmd);
+    if (cmd2b) {
+        return translate(cmd2b);
     }
 
     ast::CheckSatAssumCommandPtr cmd3 = dynamic_pointer_cast<ast::CheckSatAssumCommand>(cmd);
@@ -178,6 +248,11 @@ sep::CommandPtr Translator::translate(const ast::CommandPtr& cmd) {
     ast::DeclareSortCommandPtr cmd8 = dynamic_pointer_cast<ast::DeclareSortCommand>(cmd);
     if (cmd8) {
         return translate(cmd8);
+    }
+
+    ast::DeclareHeapCommandPtr cmd8b = dynamic_pointer_cast<ast::DeclareHeapCommand>(cmd);
+    if (cmd8b) {
+        return translate(cmd8b);
     }
 
     ast::DefineFunCommandPtr cmd9 = dynamic_pointer_cast<ast::DefineFunCommand>(cmd);
@@ -294,59 +369,104 @@ sep::CommandPtr Translator::translate(const ast::CommandPtr& cmd) {
 }
 
 sep::AssertCommandPtr Translator::translate(const ast::AssertCommandPtr& cmd) {
-    return make_shared<sep::AssertCommand>(std::move(translate(cmd->term)));
+    auto result = make_shared<sep::AssertCommand>(std::move(translate(cmd->term)));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::CheckSatCommandPtr Translator::translate(const ast::CheckSatCommandPtr& cmd) {
-    return make_shared<sep::CheckSatCommand>();
+    auto result = make_shared<sep::CheckSatCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
+}
+
+sep::CheckUnsatCommandPtr Translator::translate(const ast::CheckUnsatCommandPtr& cmd) {
+    auto result = make_shared<sep::CheckUnsatCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::CheckSatAssumCommandPtr Translator::translate(const ast::CheckSatAssumCommandPtr& cmd) {
     auto newAssums = std::move(translateToSmt<ast::PropLiteral, sep::PropLiteral>(cmd->assumptions));
-    return make_shared<sep::CheckSatAssumCommand>(std::move(newAssums));
+    auto result = make_shared<sep::CheckSatAssumCommand>(std::move(newAssums));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::DeclareConstCommandPtr Translator::translate(const ast::DeclareConstCommandPtr& cmd) {
-    return make_shared<sep::DeclareConstCommand>(cmd->symbol->value,
-                                                 std::move(translate(cmd->sort)));
+    auto result = make_shared<sep::DeclareConstCommand>(cmd->symbol->value,
+                                                        std::move(translate(cmd->sort)));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::DeclareDatatypeCommandPtr Translator::translate(const ast::DeclareDatatypeCommandPtr& cmd) {
-    return make_shared<sep::DeclareDatatypeCommand>(std::move(cmd->symbol->toString()),
-                                                    std::move(translate(cmd->declaration)));
+    auto result = make_shared<sep::DeclareDatatypeCommand>(std::move(cmd->symbol->toString()),
+                                                           std::move(translate(cmd->declaration)));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::DeclareDatatypesCommandPtr Translator::translate(const ast::DeclareDatatypesCommandPtr& cmd) {
     auto newSorts = std::move(translateToSmt<ast::SortDeclaration, sep::SortDeclaration>(cmd->sorts));
     auto newDecls = std::move(translateToSmt<ast::DatatypeDeclaration, sep::DatatypeDeclaration>(cmd->declarations));
+    auto result = make_shared<sep::DeclareDatatypesCommand>(std::move(newSorts), std::move(newDecls));
 
-    return make_shared<sep::DeclareDatatypesCommand>(std::move(newSorts), std::move(newDecls));
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::DeclareFunCommandPtr Translator::translate(const ast::DeclareFunCommandPtr& cmd) {
     auto newParams = std::move(translateToSmt<ast::Sort, sep::Sort>(cmd->parameters));
-    return make_shared<sep::DeclareFunCommand>(cmd->symbol->value,
-                                               std::move(newParams),
-                                               std::move(translate(cmd->sort)));
+    auto result = make_shared<sep::DeclareFunCommand>(cmd->symbol->value,
+                                                      std::move(newParams),
+                                                      std::move(translate(cmd->sort)));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::DeclareSortCommandPtr Translator::translate(const ast::DeclareSortCommandPtr& cmd) {
-    return make_shared<sep::DeclareSortCommand>(cmd->symbol->value, cmd->arity->value);
+    auto result = make_shared<sep::DeclareSortCommand>(cmd->symbol->value, cmd->arity->value);
+
+    setFileLocation(result, cmd);
+    return result;
+}
+
+sep::DeclareHeapCommandPtr Translator::translate(const ast::DeclareHeapCommandPtr& cmd) {
+    auto result = make_shared<sep::DeclareHeapCommand>(
+            std::move(translateToSmt<ast::Sort, ast::Sort, sep::Sort, sep::Sort>(cmd->locDataPairs)));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::DefineFunCommandPtr Translator::translate(const ast::DefineFunCommandPtr& cmd) {
-    return make_shared<sep::DefineFunCommand>(std::move(translate(cmd->definition)));
+    auto result = make_shared<sep::DefineFunCommand>(std::move(translate(cmd->definition)));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::DefineFunRecCommandPtr Translator::translate(const ast::DefineFunRecCommandPtr& cmd) {
-    return make_shared<sep::DefineFunRecCommand>(std::move(translate(cmd->definition)));
+    auto result = make_shared<sep::DefineFunRecCommand>(std::move(translate(cmd->definition)));
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::DefineFunsRecCommandPtr Translator::translate(const ast::DefineFunsRecCommandPtr& cmd) {
     auto newDecls = std::move(translateToSmt<ast::FunctionDeclaration, sep::FunctionDeclaration>(cmd->declarations));
     auto newBodies = std::move(translateToSmt<ast::Term, sep::Term>(cmd->bodies));
+    auto result = make_shared<sep::DefineFunsRecCommand>(std::move(newDecls), std::move(newBodies));
 
-    return make_shared<sep::DefineFunsRecCommand>(std::move(newDecls), std::move(newBodies));
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::DefineSortCommandPtr Translator::translate(const ast::DefineSortCommandPtr& cmd) {
@@ -355,82 +475,139 @@ sep::DefineSortCommandPtr Translator::translate(const ast::DefineSortCommandPtr&
         newParams.push_back(param->value);
     }
 
-    return make_shared<sep::DefineSortCommand>(cmd->symbol->value,
-                                               std::move(newParams),
-                                               std::move(translate(cmd->sort)));
+    auto result = make_shared<sep::DefineSortCommand>(cmd->symbol->value,
+                                                      std::move(newParams),
+                                                      std::move(translate(cmd->sort)));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::EchoCommandPtr Translator::translate(const ast::EchoCommandPtr& cmd) {
-    return make_shared<sep::EchoCommand>(cmd->message);
+    auto result = make_shared<sep::EchoCommand>(cmd->message);
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::ExitCommandPtr Translator::translate(const ast::ExitCommandPtr& cmd) {
-    return make_shared<sep::ExitCommand>();
+    auto result = make_shared<sep::ExitCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::GetAssertsCommandPtr Translator::translate(const ast::GetAssertsCommandPtr& cmd) {
-    return make_shared<sep::GetAssertsCommand>();
+    auto result = make_shared<sep::GetAssertsCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::GetAssignsCommandPtr Translator::translate(const ast::GetAssignsCommandPtr& cmd) {
-    return make_shared<sep::GetAssignsCommand>();
+    auto result = make_shared<sep::GetAssignsCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::GetInfoCommandPtr Translator::translate(const ast::GetInfoCommandPtr& cmd) {
-    return make_shared<sep::GetInfoCommand>(cmd->flag->value);
+    auto result = make_shared<sep::GetInfoCommand>(cmd->flag->value);
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::GetModelCommandPtr Translator::translate(const ast::GetModelCommandPtr& cmd) {
-    return make_shared<sep::GetModelCommand>();
+    auto result = make_shared<sep::GetModelCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::GetOptionCommandPtr Translator::translate(const ast::GetOptionCommandPtr& cmd) {
-    return make_shared<sep::GetOptionCommand>(cmd->option->value);
+    auto result = make_shared<sep::GetOptionCommand>(cmd->option->value);
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::GetProofCommandPtr Translator::translate(const ast::GetProofCommandPtr& cmd) {
-    return make_shared<sep::GetProofCommand>();
+    auto result = make_shared<sep::GetProofCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::GetUnsatAssumsCommandPtr Translator::translate(const ast::GetUnsatAssumsCommandPtr& cmd) {
-    return make_shared<sep::GetUnsatAssumsCommand>();
+    auto result = make_shared<sep::GetUnsatAssumsCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::GetUnsatCoreCommandPtr Translator::translate(const ast::GetUnsatCoreCommandPtr& cmd) {
-    return make_shared<sep::GetUnsatCoreCommand>();
+    auto result = make_shared<sep::GetUnsatCoreCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::GetValueCommandPtr Translator::translate(const ast::GetValueCommandPtr& cmd) {
     auto newTerms = std::move(translateToSmt<ast::Term, sep::Term>(cmd->terms));
-    return make_shared<sep::GetValueCommand>(std::move(newTerms));
+    auto result = make_shared<sep::GetValueCommand>(std::move(newTerms));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::PopCommandPtr Translator::translate(const ast::PopCommandPtr& cmd) {
-    return make_shared<sep::PopCommand>(cmd->numeral->value);
+    auto result = make_shared<sep::PopCommand>(cmd->numeral->value);
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::PushCommandPtr Translator::translate(const ast::PushCommandPtr& cmd) {
-    return make_shared<sep::PushCommand>(cmd->numeral->value);
+    auto result = make_shared<sep::PushCommand>(cmd->numeral->value);
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::ResetCommandPtr Translator::translate(const ast::ResetCommandPtr& cmd) {
-    return make_shared<sep::ResetCommand>();
+    auto result = make_shared<sep::ResetCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::ResetAssertsCommandPtr Translator::translate(const ast::ResetAssertsCommandPtr& cmd) {
-    return make_shared<sep::ResetAssertsCommand>();
+    auto result = make_shared<sep::ResetAssertsCommand>();
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::SetInfoCommandPtr Translator::translate(const ast::SetInfoCommandPtr& cmd) {
-    return make_shared<sep::SetInfoCommand>(std::move(translate(cmd->info)));
+    auto result = make_shared<sep::SetInfoCommand>(std::move(translate(cmd->info)));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::SetLogicCommandPtr Translator::translate(const ast::SetLogicCommandPtr& cmd) {
-    return make_shared<sep::SetLogicCommand>(std::move(cmd->logic->toString()));
+    auto result = make_shared<sep::SetLogicCommand>(std::move(cmd->logic->toString()));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::SetOptionCommandPtr Translator::translate(const ast::SetOptionCommandPtr& cmd) {
-    return make_shared<sep::SetOptionCommand>(std::move(translate(cmd->option)));
+    auto result = make_shared<sep::SetOptionCommand>(std::move(translate(cmd->option)));
+
+    setFileLocation(result, cmd);
+    return result;
 }
 
 sep::TermPtr Translator::translate(const ast::TermPtr& term) {
@@ -439,13 +616,62 @@ sep::TermPtr Translator::translate(const ast::TermPtr& term) {
         string symbol = std::move(term1->symbol->toString());
 
         if (symbol == "true") {
-            return make_shared<sep::TrueTerm>();
+            auto result = make_shared<sep::TrueTerm>();
+            setFileLocation(result, term);
+            return result;
         } else if (symbol == "false") {
-            return make_shared<sep::FalseTerm>();
+            auto result = make_shared<sep::FalseTerm>();
+            setFileLocation(result, term);
+            return result;
         } else if (symbol == "emp") {
-            return make_shared<sep::EmpTerm>();
+            ast::SortPtr locPtr;
+            ast::SortPtr dataPtr;
+
+            if (term1->indices.size() == 2) {
+                locPtr = dynamic_pointer_cast<ast::Sort>(term1->indices[0]);
+                ast::SymbolPtr locSymbol = dynamic_pointer_cast<ast::Symbol>(term1->indices[0]);
+
+                if (!locPtr && locSymbol) {
+                    locPtr = make_shared<ast::Sort>(make_shared<ast::SimpleIdentifier>(locSymbol));
+                }
+
+                dataPtr = dynamic_pointer_cast<ast::Sort>(term1->indices[1]);
+                ast::SymbolPtr dataSymbol = dynamic_pointer_cast<ast::Symbol>(term1->indices[1]);
+
+                if (!dataPtr && dataSymbol) {
+                    dataPtr = make_shared<ast::Sort>(make_shared<ast::SimpleIdentifier>(dataSymbol));
+                }
+
+                if (locPtr && dataPtr) {
+                    auto result = make_shared<sep::EmpTerm>(std::move(translate(locPtr)),
+                                                            std::move(translate(dataPtr)));
+                    setFileLocation(result, term);
+                    return result;
+                }
+            } else {
+                stringstream ss;
+                ss << term1->toString() << " (at " << term1->rowLeft << ":" << term1->colLeft
+                   << " - " << term1->rowRight << ":" << term1->colRight << ")";
+
+                if (term1->indices.empty()) {
+                    ss << " has no indices specifying location and data sorts";
+                } else if (term1->indices.size() == 1) {
+                    ss << " has only one index (discarded upon translation)";
+                } else if (term1->indices.size() > 2) {
+                    ss << " has too many indices (all discarded upon translation)";
+                }
+
+                Logger::error("smtlib::sep::Translator::translate()", ss.str().c_str());
+            }
+
+            auto result = make_shared<sep::EmpTerm>(sep::SortPtr(), sep::SortPtr());
+
+            setFileLocation(result, term);
+            return result;
         } else if (symbol == "nil") {
-            return make_shared<sep::NilTerm>();
+            auto result = make_shared<sep::NilTerm>();
+            setFileLocation(result, term);
+            return result;
         } else
             return translate(term1);
     }
@@ -453,7 +679,9 @@ sep::TermPtr Translator::translate(const ast::TermPtr& term) {
     ast::QualifiedIdentifierPtr term2 = dynamic_pointer_cast<ast::QualifiedIdentifier>(term);
     if (term2) {
         if (term2->identifier->toString() == "nil") {
-            return make_shared<sep::NilTerm>(std::move(translate(term2->sort)));
+            auto result = make_shared<sep::NilTerm>(std::move(translate(term2->sort)));
+            setFileLocation(result, term);
+            return result;
         } else {
             return translate(term2);
         }
@@ -461,17 +689,23 @@ sep::TermPtr Translator::translate(const ast::TermPtr& term) {
 
     ast::NumeralLiteralPtr term3 = dynamic_pointer_cast<ast::NumeralLiteral>(term);
     if (term3) {
-        return make_shared<sep::NumeralLiteral>(term3->value, term3->base);
+        auto result = make_shared<sep::NumeralLiteral>(term3->value, term3->base);
+        setFileLocation(result, term);
+        return result;
     }
 
     ast::DecimalLiteralPtr term4 = dynamic_pointer_cast<ast::DecimalLiteral>(term);
     if (term4) {
-        return make_shared<sep::DecimalLiteral>(term4->value);
+        auto result = make_shared<sep::DecimalLiteral>(term4->value);
+        setFileLocation(result, term);
+        return result;
     }
 
     ast::StringLiteralPtr term5 = dynamic_pointer_cast<ast::StringLiteral>(term);
     if (term5) {
-        return make_shared<sep::StringLiteral>(term5->value);
+        auto result = make_shared<sep::StringLiteral>(term5->value);
+        setFileLocation(result, term);
+        return result;
     }
 
     ast::QualifiedTermPtr term6 = dynamic_pointer_cast<ast::QualifiedTerm>(term);
@@ -479,7 +713,9 @@ sep::TermPtr Translator::translate(const ast::TermPtr& term) {
         string identifier = std::move(term6->identifier->toString());
         if (identifier == "not") {
             if (term6->terms.size() == 1) {
-                return make_shared<sep::NotTerm>(translate(term6->terms[0]));
+                auto result = make_shared<sep::NotTerm>(translate(term6->terms[0]));
+                setFileLocation(result, term);
+                return result;
             }
         } else if (identifier == "=>" || identifier == "and"
                    || identifier == "or" || identifier == "xor"
@@ -492,32 +728,52 @@ sep::TermPtr Translator::translate(const ast::TermPtr& term) {
             }
 
             if (identifier == "=>") {
-                return make_shared<sep::ImpliesTerm>(std::move(newTerms));
+                auto result = make_shared<sep::ImpliesTerm>(std::move(newTerms));
+                setFileLocation(result, term);
+                return result;
             } else if (identifier == "and") {
-                return make_shared<sep::AndTerm>(std::move(newTerms));
+                auto result = make_shared<sep::AndTerm>(std::move(newTerms));
+                setFileLocation(result, term);
+                return result;
             } else if (identifier == "or") {
-                return make_shared<sep::OrTerm>(std::move(newTerms));
+                auto result = make_shared<sep::OrTerm>(std::move(newTerms));
+                setFileLocation(result, term);
+                return result;
             } else if (identifier == "xor") {
-                return make_shared<sep::XorTerm>(std::move(newTerms));
+                auto result = make_shared<sep::XorTerm>(std::move(newTerms));
+                setFileLocation(result, term);
+                return result;
             } else if (identifier == "=") {
-                return make_shared<sep::EqualsTerm>(std::move(newTerms));
+                auto result = make_shared<sep::EqualsTerm>(std::move(newTerms));
+                setFileLocation(result, term);
+                return result;
             } else if (identifier == "distinct") {
-                return make_shared<sep::DistinctTerm>(std::move(newTerms));
+                auto result = make_shared<sep::DistinctTerm>(std::move(newTerms));
+                setFileLocation(result, term);
+                return result;
             } else if (identifier == "sep") {
-                return make_shared<sep::SepTerm>(std::move(newTerms));
+                auto result = make_shared<sep::SepTerm>(std::move(newTerms));
+                setFileLocation(result, term);
+                return result;
             } else if (identifier == "wand") {
-                return make_shared<sep::WandTerm>(std::move(newTerms));
+                auto result = make_shared<sep::WandTerm>(std::move(newTerms));
+                setFileLocation(result, term);
+                return result;
             }
         } else if (identifier == "ite") {
             if (term6->terms.size() == 3) {
-                return make_shared<sep::IteTerm>(std::move(translate(term6->terms[0])),
-                                                 std::move(translate(term6->terms[1])),
-                                                 std::move(translate(term6->terms[2])));
+                auto result = make_shared<sep::IteTerm>(std::move(translate(term6->terms[0])),
+                                                        std::move(translate(term6->terms[1])),
+                                                        std::move(translate(term6->terms[2])));
+                setFileLocation(result, term);
+                return result;
             }
         } else if (identifier == "pto") {
             if (term6->terms.size() == 2) {
-                return make_shared<sep::PtoTerm>(std::move(translate(term6->terms[0])),
-                                                 std::move(translate(term6->terms[1])));
+                auto result = make_shared<sep::PtoTerm>(std::move(translate(term6->terms[0])),
+                                                        std::move(translate(term6->terms[1])));
+                setFileLocation(result, term);
+                return result;
             }
         } else {
             std::vector<sep::TermPtr> newTerms;
@@ -525,8 +781,10 @@ sep::TermPtr Translator::translate(const ast::TermPtr& term) {
                 newTerms.push_back(std::move(translate(t)));
             }
 
-            return make_shared<sep::QualifiedTerm>(std::move(translate(term6->identifier)),
-                                                   std::move(newTerms));
+            auto result = make_shared<sep::QualifiedTerm>(std::move(translate(term6->identifier)),
+                                                          std::move(newTerms));
+            setFileLocation(result, term);
+            return result;
         }
     }
 
@@ -547,8 +805,10 @@ sep::TermPtr Translator::translate(const ast::TermPtr& term) {
             newBindings.push_back(std::move(translate(bind)));
         }
 
-        return make_shared<sep::ExistsTerm>(std::move(newBindings),
-                                            std::move(translate(term9->term)));
+        auto result = make_shared<sep::ExistsTerm>(std::move(newBindings),
+                                                   std::move(translate(term9->term)));
+        setFileLocation(result, term);
+        return result;
     }
 
     ast::MatchTermPtr term10 = dynamic_pointer_cast<ast::MatchTerm>(term);
@@ -575,8 +835,7 @@ sep::IndexPtr Translator::translate(const ast::IndexPtr& index) {
         return translate(index2);
     }
 
-    sep::IndexPtr null;
-    return null;
+    return sep::IndexPtr();
 }
 
 sep::IdentifierPtr Translator::translate(const ast::IdentifierPtr& id) {
@@ -590,46 +849,65 @@ sep::IdentifierPtr Translator::translate(const ast::IdentifierPtr& id) {
         return translate(id2);
     }
 
-    sep::IdentifierPtr null;
-    return null;
+    return sep::IdentifierPtr();
 }
 
 sep::SimpleIdentifierPtr Translator::translate(const ast::SimpleIdentifierPtr& id) {
     auto newIndices = std::move(translateToSmt<ast::Index, sep::Index>(id->indices));
-    return make_shared<sep::SimpleIdentifier>(id->symbol->value,
-                                              std::move(newIndices));
+    auto result = make_shared<sep::SimpleIdentifier>(id->symbol->value, std::move(newIndices));
+
+    setFileLocation(result, id);
+    return result;
 }
 
 sep::QualifiedIdentifierPtr Translator::translate(const ast::QualifiedIdentifierPtr& id) {
-    return make_shared<sep::QualifiedIdentifier>(std::move(translate(id->identifier)),
-                                                 std::move(translate(id->sort)));
+    auto result = make_shared<sep::QualifiedIdentifier>(std::move(translate(id->identifier)),
+                                                        std::move(translate(id->sort)));
+
+    setFileLocation(result, id);
+    return result;
 }
 
 sep::SortPtr Translator::translate(const ast::SortPtr& sort) {
     auto newArgs = std::move(translateToSmt<ast::Sort, sep::Sort>(sort->arguments));
-    return make_shared<sep::Sort>(std::move(sort->identifier->toString()), std::move(newArgs));
+    auto result = make_shared<sep::Sort>(std::move(sort->identifier->toString()), std::move(newArgs));
+
+    setFileLocation(result, sort);
+    return result;
 }
 
 sep::SortedVariablePtr Translator::translate(const ast::SortedVariablePtr& var) {
-    return make_shared<sep::SortedVariable>(var->symbol->value,
-                                            std::move(translate(var->sort)));
+    auto result = make_shared<sep::SortedVariable>(var->symbol->value,
+                                                   std::move(translate(var->sort)));
+
+    setFileLocation(result, var);
+    return result;
 }
 
 sep::VariableBindingPtr Translator::translate(const ast::VariableBindingPtr& binding) {
-    return make_shared<sep::VariableBinding>(binding->symbol->value,
-                                             std::move(translate(binding->term)));
+    auto result = make_shared<sep::VariableBinding>(binding->symbol->value,
+                                                    std::move(translate(binding->term)));
+
+    setFileLocation(result, binding);
+    return result;
 }
 
 sep::FunctionDefinitionPtr Translator::translate(const ast::FunctionDefinitionPtr& def) {
-    return make_shared<sep::FunctionDefinition>(std::move(translate(def->signature)),
-                                                std::move(translate(def->body)));
+    auto result = make_shared<sep::FunctionDefinition>(std::move(translate(def->signature)),
+                                                       std::move(translate(def->body)));
+
+    setFileLocation(result, def);
+    return result;
 }
 
 sep::FunctionDeclarationPtr Translator::translate(const ast::FunctionDeclarationPtr& decl) {
     auto newParams = translateToSmt<ast::SortedVariable, sep::SortedVariable>(decl->parameters);
-    return make_shared<sep::FunctionDeclaration>(decl->symbol->value,
-                                                 std::move(newParams),
-                                                 std::move(translate(decl->sort)));
+    auto result = make_shared<sep::FunctionDeclaration>(decl->symbol->value,
+                                                        std::move(newParams),
+                                                        std::move(translate(decl->sort)));
+
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::SpecConstantPtr Translator::translate(const ast::SpecConstantPtr& constant) {
@@ -647,18 +925,28 @@ sep::SpecConstantPtr Translator::translate(const ast::SpecConstantPtr& constant)
     if (const3) {
         return translate(const3);
     }
+    return sep::SpecConstantPtr();
 }
 
 sep::DecimalLiteralPtr Translator::translate(const ast::DecimalLiteralPtr& literal) {
-    return make_shared<sep::DecimalLiteral>(literal->value);
+    auto result = make_shared<sep::DecimalLiteral>(literal->value);
+
+    setFileLocation(result, literal);
+    return result;
 }
 
 sep::NumeralLiteralPtr Translator::translate(const ast::NumeralLiteralPtr& literal) {
-    return make_shared<sep::NumeralLiteral>(literal->value, literal->base);
+    auto result = make_shared<sep::NumeralLiteral>(literal->value, literal->base);
+
+    setFileLocation(result, literal);
+    return result;
 }
 
 sep::StringLiteralPtr Translator::translate(const ast::StringLiteralPtr& literal) {
-    return make_shared<sep::StringLiteral>(literal->value);
+    auto result = make_shared<sep::StringLiteral>(literal->value);
+
+    setFileLocation(result, literal);
+    return result;
 }
 
 sep::SExpressionPtr Translator::translate(const ast::SExpressionPtr& exp) {
@@ -681,25 +969,38 @@ sep::SExpressionPtr Translator::translate(const ast::SExpressionPtr& exp) {
     if (exp4) {
         return translate(exp4);
     }
+    return sep::SExpressionPtr();
 }
 
 sep::CompSExpressionPtr Translator::translate(const ast::CompSExpressionPtr& exp) {
     auto newExps = std::move(translateToSmt<ast::SExpression, sep::SExpression>(exp->expressions));
-    return make_shared<sep::CompSExpression>(std::move(newExps));
+    auto result = make_shared<sep::CompSExpression>(std::move(newExps));
+
+    setFileLocation(result, exp);
+    return result;
 }
 
 sep::SortDeclarationPtr Translator::translate(const ast::SortDeclarationPtr& decl) {
-    return make_shared<sep::SortDeclaration>(decl->symbol->value, decl->arity->value);
+    auto result = make_shared<sep::SortDeclaration>(decl->symbol->value, decl->arity->value);
+
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::SelectorDeclarationPtr Translator::translate(const ast::SelectorDeclarationPtr& decl) {
-    return make_shared<sep::SelectorDeclaration>(decl->symbol->value,
-                                                 std::move(translate(decl->sort)));
+    auto result = make_shared<sep::SelectorDeclaration>(decl->symbol->value,
+                                                        std::move(translate(decl->sort)));
+
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::ConstructorDeclarationPtr Translator::translate(const ast::ConstructorDeclarationPtr& decl) {
     auto newSels = std::move(translateToSmt<ast::SelectorDeclaration, sep::SelectorDeclaration>(decl->selectors));
-    return make_shared<sep::ConstructorDeclaration>(decl->symbol->value, std::move(newSels));
+    auto result = make_shared<sep::ConstructorDeclaration>(decl->symbol->value, std::move(newSels));
+
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::DatatypeDeclarationPtr Translator::translate(const ast::DatatypeDeclarationPtr& decl) {
@@ -714,14 +1015,16 @@ sep::DatatypeDeclarationPtr Translator::translate(const ast::DatatypeDeclaration
         return translate(decl2);
     }
 
-    sep::SimpleDatatypeDeclarationPtr null;
-    return null;
+    return sep::SimpleDatatypeDeclarationPtr();
 }
 
 sep::SimpleDatatypeDeclarationPtr Translator::translate(const ast::SimpleDatatypeDeclarationPtr& decl) {
     auto newCons = std::move(
             translateToSmt<ast::ConstructorDeclaration, sep::ConstructorDeclaration>(decl->constructors));
-    return make_shared<sep::SimpleDatatypeDeclaration>(std::move(newCons));
+    auto result = make_shared<sep::SimpleDatatypeDeclaration>(std::move(newCons));
+
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::ParametricDatatypeDeclarationPtr Translator::translate(const ast::ParametricDatatypeDeclarationPtr& decl) {
@@ -732,14 +1035,20 @@ sep::ParametricDatatypeDeclarationPtr Translator::translate(const ast::Parametri
 
     auto newCons = std::move(
             translateToSmt<ast::ConstructorDeclaration, sep::ConstructorDeclaration>(decl->constructors));
-    return make_shared<sep::ParametricDatatypeDeclaration>(std::move(newParams), std::move(newCons));
+    auto result = make_shared<sep::ParametricDatatypeDeclaration>(std::move(newParams), std::move(newCons));
+
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::SortSymbolDeclarationPtr Translator::translate(const ast::SortSymbolDeclarationPtr& decl) {
     auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes));
-    return make_shared<sep::SortSymbolDeclaration>(std::move(translate(decl->identifier)),
-                                                   decl->arity->value,
-                                                   std::move(newAttrs));
+    auto result = make_shared<sep::SortSymbolDeclaration>(std::move(translate(decl->identifier)),
+                                                          decl->arity->value,
+                                                          std::move(newAttrs));
+
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::FunSymbolDeclarationPtr Translator::translate(const ast::FunSymbolDeclarationPtr& decl) {
@@ -768,25 +1077,33 @@ sep::FunSymbolDeclarationPtr Translator::translate(const ast::FunSymbolDeclarati
 
 sep::SpecConstFunDeclarationPtr Translator::translate(const ast::SpecConstFunDeclarationPtr& decl) {
     auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes));
-    return make_shared<sep::SpecConstFunDeclaration>(std::move(translate(decl->constant)),
-                                                     std::move(translate(decl->sort)),
-                                                     std::move(newAttrs));
+    auto result = make_shared<sep::SpecConstFunDeclaration>(std::move(translate(decl->constant)),
+                                                            std::move(translate(decl->sort)),
+                                                            std::move(newAttrs));
+
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::MetaSpecConstFunDeclarationPtr Translator::translate(const ast::MetaSpecConstFunDeclarationPtr& decl) {
     auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes));
-    return make_shared<sep::MetaSpecConstFunDeclaration>(std::move(translate(decl->constant)),
-                                                         std::move(translate(decl->sort)),
-                                                         std::move(newAttrs));
+    auto result = make_shared<sep::MetaSpecConstFunDeclaration>(std::move(translate(decl->constant)),
+                                                                std::move(translate(decl->sort)),
+                                                                std::move(newAttrs));
+
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::SimpleFunDeclarationPtr Translator::translate(const ast::SimpleFunDeclarationPtr& decl) {
     auto newSign = translateToSmt<ast::Sort, sep::Sort>(decl->signature);
     auto newAttrs = translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes);
+    auto result = make_shared<sep::SimpleFunDeclaration>(std::move(translate(decl->identifier)),
+                                                         std::move(newSign),
+                                                         std::move(newAttrs));
 
-    return make_shared<sep::SimpleFunDeclaration>(std::move(translate(decl->identifier)),
-                                                  std::move(newSign),
-                                                  std::move(newAttrs));
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::ParametricFunDeclarationPtr Translator::translate(const ast::ParametricFunDeclarationPtr& decl) {
@@ -797,11 +1114,13 @@ sep::ParametricFunDeclarationPtr Translator::translate(const ast::ParametricFunD
 
     auto newSign = std::move(translateToSmt<ast::Sort, sep::Sort>(decl->signature));
     auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(decl->attributes));
+    auto result = make_shared<sep::ParametricFunDeclaration>(std::move(newParams),
+                                                             std::move(translate(decl->identifier)),
+                                                             std::move(newSign),
+                                                             std::move(newAttrs));
 
-    return make_shared<sep::ParametricFunDeclaration>(std::move(newParams),
-                                                      std::move(translate(decl->identifier)),
-                                                      std::move(newSign),
-                                                      std::move(newAttrs));
+    setFileLocation(result, decl);
+    return result;
 }
 
 sep::ConstructorPtr Translator::translate(const ast::ConstructorPtr& cons) {
@@ -819,8 +1138,11 @@ sep::ConstructorPtr Translator::translate(const ast::ConstructorPtr& cons) {
 }
 
 sep::QualifiedConstructorPtr Translator::translate(const ast::QualifiedConstructorPtr& cons) {
-    return make_shared<sep::QualifiedConstructor>(cons->symbol->value,
-                                                  std::move(translate(cons->sort)));
+    auto result = make_shared<sep::QualifiedConstructor>(cons->symbol->value,
+                                                         std::move(translate(cons->sort)));
+
+    setFileLocation(result, cons);
+    return result;
 }
 
 sep::PatternPtr Translator::translate(const ast::PatternPtr& pattern) {
@@ -843,41 +1165,65 @@ sep::QualifiedPatternPtr Translator::translate(const ast::QualifiedPatternPtr& p
         newArgs.push_back(arg->value);
     }
 
-    return make_shared<sep::QualifiedPattern>(std::move(translate(pattern->constructor)),
-                                              std::move(newArgs));
+    auto result = make_shared<sep::QualifiedPattern>(std::move(translate(pattern->constructor)),
+                                                     std::move(newArgs));
+
+    setFileLocation(result, pattern);
+    return result;
 }
 
 sep::MatchCasePtr Translator::translate(const ast::MatchCasePtr& mcase) {
-    return make_shared<sep::MatchCase>(std::move(translate(mcase->pattern)),
-                                       std::move(translate(mcase->term)));
+    auto result = make_shared<sep::MatchCase>(std::move(translate(mcase->pattern)),
+                                              std::move(translate(mcase->term)));
+
+    setFileLocation(result, mcase);
+    return result;
 }
 
 sep::QualifiedTermPtr Translator::translate(const ast::QualifiedTermPtr& term) {
     auto newTerms = std::move(translateToSmt<ast::Term, sep::Term>(term->terms));
-    return make_shared<sep::QualifiedTerm>(std::move(translate(term->identifier)), std::move(newTerms));
+    auto result = make_shared<sep::QualifiedTerm>(std::move(translate(term->identifier)), std::move(newTerms));
+
+    setFileLocation(result, term);
+    return result;
 }
 
 sep::LetTermPtr Translator::translate(const ast::LetTermPtr& term) {
     auto newBindings = std::move(translateToSmt<ast::VariableBinding, sep::VariableBinding>(term->bindings));
-    return make_shared<sep::LetTerm>(std::move(newBindings), std::move(translate(term->term)));
+    auto result = make_shared<sep::LetTerm>(std::move(newBindings), std::move(translate(term->term)));
+
+    setFileLocation(result, term);
+    return result;
 }
 
 sep::ForallTermPtr Translator::translate(const ast::ForallTermPtr& term) {
     auto newBindings = std::move(translateToSmt<ast::SortedVariable, sep::SortedVariable>(term->bindings));
-    return make_shared<sep::ForallTerm>(std::move(newBindings), std::move(translate(term->term)));
+    auto result = make_shared<sep::ForallTerm>(std::move(newBindings), std::move(translate(term->term)));
+
+    setFileLocation(result, term);
+    return result;
 }
 
 sep::ExistsTermPtr Translator::translate(const ast::ExistsTermPtr& term) {
     auto newBindings = std::move(translateToSmt<ast::SortedVariable, sep::SortedVariable>(term->bindings));
-    return make_shared<sep::ExistsTerm>(std::move(newBindings), std::move(translate(term->term)));
+    auto result = make_shared<sep::ExistsTerm>(std::move(newBindings), std::move(translate(term->term)));
+
+    setFileLocation(result, term);
+    return result;
 }
 
 sep::MatchTermPtr Translator::translate(const ast::MatchTermPtr& term) {
     auto newCases = std::move(translateToSmt<ast::MatchCase, sep::MatchCase>(term->cases));
-    return make_shared<sep::MatchTerm>(std::move(translate(term->term)), std::move(newCases));
+    auto result = make_shared<sep::MatchTerm>(std::move(translate(term->term)), std::move(newCases));
+
+    setFileLocation(result, term);
+    return result;
 }
 
 sep::AnnotatedTermPtr Translator::translate(const ast::AnnotatedTermPtr& term) {
     auto newAttrs = std::move(translateToSmt<ast::Attribute, sep::Attribute>(term->attributes));
-    return make_shared<sep::AnnotatedTerm>(std::move(translate(term->term)), std::move(newAttrs));
+    auto result = make_shared<sep::AnnotatedTerm>(std::move(translate(term->term)), std::move(newAttrs));
+
+    setFileLocation(result, term);
+    return result;
 }

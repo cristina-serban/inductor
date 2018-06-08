@@ -29,6 +29,18 @@ string CheckSatCommand::toString() {
     return ss.str();
 }
 
+/* ================================ CheckUnsatCommand ================================= */
+
+void CheckUnsatCommand::accept(Visitor0* visitor) {
+    visitor->visit(shared_from_this());
+}
+
+string CheckUnsatCommand::toString() {
+    stringstream ss;
+    ss << "(" << KW_CHK_UNSAT << ")";
+    return ss.str();
+}
+
 /* =============================== CheckSatAssumCommand =============================== */
 
 void CheckSatAssumCommand::accept(Visitor0* visitor) {
@@ -135,6 +147,24 @@ void DeclareSortCommand::accept(Visitor0* visitor) {
 string DeclareSortCommand::toString() {
     stringstream ss;
     ss << "(" << KW_DECL_SORT << " " << name << " " << arity << ")";
+    return ss.str();
+}
+
+/* =============================== DeclareHeapCommand ================================ */
+
+void DeclareHeapCommand::accept(Visitor0* visitor) {
+    visitor->visit(shared_from_this());
+}
+
+string DeclareHeapCommand::toString() {
+    stringstream ss;
+    ss << "(" << KW_DECL_HEAP << " ";
+
+    for(const auto &pair : locDataPairs) {
+        ss << "(" << pair.first->toString() << " " << pair.second->toString() << ")";
+    }
+
+    ss << ")";
     return ss.str();
 }
 

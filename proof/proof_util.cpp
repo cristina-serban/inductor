@@ -7,13 +7,13 @@ using namespace pred;
 using namespace proof;
 using namespace smtlib::sep;
 
-StatePtr proof::toState(const PredicateTablePtr& table, const TermPtr& term) {
+StatePtr proof::toState(const TermPtr &term, const PredicateTablePtr &table) {
     StatePtr state;
 
     if (table->isInductiveCase(term)) {
-        state = toState(table->buildInductiveCase(term));
+        state = toState(table->buildInductiveCase(term), table);
     } else {
-        state = toState(table->buildBaseCase(term));
+        state = toState(table->buildBaseCase(term), table);
     }
 
     VariableFinderContextPtr ctx = make_shared<VariableFinderContext>(table->stack);
@@ -26,31 +26,34 @@ StatePtr proof::toState(const PredicateTablePtr& table, const TermPtr& term) {
     return state;
 }
 
-std::vector<StatePtr> proof::toState(const InductivePredicatePtr& pred) {
+std::vector<StatePtr> proof::toState(const InductivePredicatePtr &pred,
+                                     const PredicateTablePtr &table) {
     std::vector<StatePtr> result;
-    for (const auto& bcase : pred->baseCases) {
-        result.push_back(toState(bcase));
+    for (const auto &bcase : pred->baseCases) {
+        result.push_back(toState(bcase, table));
     }
 
-    for (const auto& icase : pred->indCases) {
-        result.push_back(toState(icase));
+    for (const auto &icase : pred->indCases) {
+        result.push_back(toState(icase, table));
     }
 
     return result;
 }
 
-StatePtr proof::toState(const BaseCasePtr& bcase) {
+StatePtr proof::toState(const BaseCasePtr &bcase, const PredicateTablePtr &table) {
     StatePtr state = make_shared<State>();
     state->bindings.insert(state->bindings.begin(), bcase->bindings.begin(), bcase->bindings.end());
     state->constraint = bcase->constraint;
+    state->table = table;
     return state;
 }
 
-StatePtr proof::toState(const InductiveCasePtr& icase) {
+StatePtr proof::toState(const InductiveCasePtr &icase, const PredicateTablePtr &table) {
     StatePtr state = make_shared<State>();
     state->bindings.insert(state->bindings.begin(), icase->bindings.begin(), icase->bindings.end());
     state->constraint = icase->constraint;
     state->calls.insert(state->calls.begin(), icase->calls.begin(), icase->calls.end());
+    state->table = table;
     return state;
 }
 
@@ -113,5 +116,24 @@ void proof::removeSpatial(const StatePtr& state) {
         state->constraint = ConstraintPtr();
     } else {
         state->constraint->spatial.clear();
+    }
+}
+
+void proof::normalize(const TermPtr &term, vector<TermPtr> &accumulator) {
+    vector<TermPtr> result;
+
+    SepTermPtr sepTerm = dynamic_pointer_cast<SepTerm>(term);
+    AndTermPtr andTerm = dynamic_pointer_cast<AndTerm>(term);
+
+    if (sepTerm) {
+        for (const auto &innerTerm : sepTerm->terms) {
+            normalize(innerTerm, accumulator);
+        }
+    } else if (andTerm) {
+        for (const auto &innerTerm : andTerm->terms) {
+            normalize(innerTerm, accumulator);
+        }
+    } else {
+        accumulator.push_back(term);
     }
 }

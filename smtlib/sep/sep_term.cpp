@@ -304,7 +304,23 @@ void EmpTerm::accept(Visitor0* visitor) {
 }
 
 string EmpTerm::toString() {
-    return "emp";
+    stringstream ss;
+
+    if(locSort || dataSort)
+        ss << "(_ ";
+
+    ss << "emp";
+
+    if(locSort)
+        ss << " " << locSort->toString();
+
+    if(dataSort)
+        ss << " " << dataSort->toString();
+
+    if(locSort || dataSort)
+        ss << ")";
+
+    return ss.str();
 }
 
 /* ===================================== SepTerm ====================================== */

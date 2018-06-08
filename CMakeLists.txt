@@ -132,6 +132,9 @@ set(SOURCE_FILES
         smtlib/sep/visitor/sep_visitor.h
         smtlib/sep/visitor/sep_visitor.cpp
         smtlib/sep/visitor/sep_visitor_extra.h
+        smtlib/sep/visitor/sep_visitor_stack.h
+        smtlib/sep/visitor/sep_visitor_stack.cpp
+        smtlib/sep/visitor/sep_visitor_stack_extra.h
         smtlib/sep/visitor/sep_var_renamer.h
         smtlib/sep/visitor/sep_var_renamer.cpp
         smtlib/sep/visitor/sep_term_replacer.h
@@ -144,6 +147,8 @@ set(SOURCE_FILES
         smtlib/sep/stack/sep_symbol_stack.h
         smtlib/sep/visitor/sep_duplicator.h
         smtlib/sep/visitor/sep_duplicator.cpp
+        smtlib/sep/visitor/sep_heap_checker.h
+        smtlib/sep/visitor/sep_heap_checker.cpp
         smtlib/sep/visitor/sep_stack_loader.h
         smtlib/sep/visitor/sep_stack_loader.cpp
         smtlib/sep/visitor/sep_term_sorter.h

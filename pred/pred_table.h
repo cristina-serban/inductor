@@ -21,16 +21,16 @@ namespace proof {
     typedef std::shared_ptr<State> StatePtr;
     typedef std::shared_ptr<EntailmentChecker> EntailmentCheckerPtr;
 
-    proof::StatePtr toState(const pred::PredicateTablePtr& table,
-                            const smtlib::sep::TermPtr& term);
+    proof::StatePtr toState(const smtlib::sep::TermPtr& term,
+                            const pred::PredicateTablePtr& table);
 }
 
 namespace pred {
-    class PredicateTable {
+    class PredicateTable : public std::enable_shared_from_this<PredicateTable> {
         friend class proof::EntailmentChecker;
 
-        friend proof::StatePtr proof::toState(const pred::PredicateTablePtr& table,
-                                              const smtlib::sep::TermPtr& term);
+        friend proof::StatePtr proof::toState(const smtlib::sep::TermPtr& term,
+                                              const pred::PredicateTablePtr& table);
 
     private:
         smtlib::sep::SymbolStackPtr stack;
@@ -75,13 +75,9 @@ namespace pred {
         /** Builds an inductive case from the term */
         InductiveCasePtr buildInductiveCase(const smtlib::sep::TermPtr& term);
 
-        /** Builds an inductive case from the bindings and the qualified term */
+        /** Builds an inductive case from the bindings and the set of terms */
         InductiveCasePtr buildInductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-                                            const smtlib::sep::QualifiedTermPtr& term);
-
-        /** Builds an inductive case from the bindings and the separation term */
-        InductiveCasePtr buildInductiveCase(const std::vector<smtlib::sep::SortedVariablePtr>& bindings,
-                                            const smtlib::sep::SepTermPtr& term);
+                                            const std::vector<smtlib::sep::TermPtr> terms);
 
         /** Builds a predicate call from the qualified term */
         PredicateCallPtr buildPredicateCall(const smtlib::sep::QualifiedTermPtr& term);
@@ -154,6 +150,9 @@ namespace pred {
                 , stack(std::make_shared<smtlib::sep::SymbolStack>()) {}
 
         explicit PredicateTable(std::unordered_map<std::string, InductivePredicatePtr> predicates);
+
+        /** Get the type of the heap */
+        smtlib::sep::HeapEntry getHeap();
 
         /** Load predicate definitions from an SMT-LIB+SEPLOG script */
         bool load(const smtlib::sep::ScriptPtr& script);

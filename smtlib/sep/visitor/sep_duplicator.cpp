@@ -439,7 +439,9 @@ void Duplicator::visit(const IteTermPtr& node) {
 }
 
 void Duplicator::visit(const EmpTermPtr& node) {
-    ret = make_shared<EmpTerm>();
+    ret = make_shared<EmpTerm>(
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->locSort))),
+            std::move(dynamic_pointer_cast<Sort>(wrappedVisit(node->dataSort))));
 }
 
 void Duplicator::visit(const SepTermPtr& node) {

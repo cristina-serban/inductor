@@ -9,6 +9,7 @@
 #include "visitor/ast_predicate_unfolder.h"
 #include "visitor/ast_syntax_checker.h"
 #include "visitor/ast_sortedness_checker.h"
+#include "visitor/sep_heap_checker.h"
 
 #include <iostream>
 #include <chrono>
@@ -131,23 +132,35 @@ bool Execution::checkSortedness() {
     return sortednessCheckSuccessful;
 }
 
-bool Execution::unfoldPredicates() {
+bool Execution::checkHeap() {
+    if (heapCheckAttempted)
+        return heapCheckSuccessful;
+
+    heapCheckAttempted = true;
+
     if (!checkSortedness()) {
+        //Logger::error("SmtExecution::checkHeap()", "Stopped due to previous errors");
         return false;
     }
 
-    PredicateUnfolderContextPtr ctx = make_shared<PredicateUnfolderContext>(settings->getUnfoldLevel(),
-                                                                            settings->isUnfoldExistential(),
-                                                                            settings->getUnfoldOutputPath(),
-                                                                            settings->isCvcEmp());
-    PredicateUnfolderPtr unfolder = make_shared<PredicateUnfolder>(ctx);
-    unfolder->run(ast);
+    ast::ScriptPtr astScript = dynamic_pointer_cast<Script>(ast);
+    if (astScript) {
+        sep::TranslatorPtr transl = make_shared<sep::Translator>();
+        sep::ScriptPtr sepScript = transl->translate(astScript);
 
-    return true;
+        sep::HeapCheckerPtr checker = make_shared<sep::HeapChecker>();
+        heapCheckSuccessful = checker->check(sepScript);
+
+        if(!heapCheckSuccessful) {
+            Logger::heapError("SmtExecution::checkHeap()", checker->getErrors().c_str());
+        }
+    }
+
+    return heapCheckSuccessful;
 }
 
 bool Execution::checkEntailment() {
-    if (!checkSortedness()) {
+    if (!checkHeap()) {
         return false;
     }
 
@@ -168,6 +181,21 @@ bool Execution::checkEntailment() {
 
         cout << "Time: " << ms2.count()-ms1.count() << " ms" << endl << endl;
     }
+
+    return true;
+}
+
+bool Execution::unfoldPredicates() {
+    if (!checkSortedness()) {
+        return false;
+    }
+
+    PredicateUnfolderContextPtr ctx = make_shared<PredicateUnfolderContext>(settings->getUnfoldLevel(),
+                                                                            settings->isUnfoldExistential(),
+                                                                            settings->getUnfoldOutputPath(),
+                                                                            settings->isCvcEmp());
+    PredicateUnfolderPtr unfolder = make_shared<PredicateUnfolder>(ctx);
+    unfolder->run(ast);
 
     return true;
 }

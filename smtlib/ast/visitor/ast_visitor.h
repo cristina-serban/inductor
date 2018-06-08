@@ -25,6 +25,14 @@ namespace smtlib {
                     visit0(item);
                 }
             }
+
+            template<class T1, class T2>
+            void visit0(const std::vector<std::pair<std::shared_ptr<T1>, std::shared_ptr<T2>>>& arr) {
+                for (const auto pair : arr) {
+                    visit0(pair.first);
+                    visit0(pair.second);
+                }
+            }
         public:
             virtual void visit(const AttributePtr& node) = 0;
             virtual void visit(const CompAttributeValuePtr& node) = 0;
@@ -37,12 +45,14 @@ namespace smtlib {
 
             virtual void visit(const AssertCommandPtr& node) = 0;
             virtual void visit(const CheckSatCommandPtr& node) = 0;
+            virtual void visit(const CheckUnsatCommandPtr& node) = 0;
             virtual void visit(const CheckSatAssumCommandPtr& node) = 0;
             virtual void visit(const DeclareConstCommandPtr& node) = 0;
             virtual void visit(const DeclareDatatypeCommandPtr& node) = 0;
             virtual void visit(const DeclareDatatypesCommandPtr& node) = 0;
             virtual void visit(const DeclareFunCommandPtr& node) = 0;
             virtual void visit(const DeclareSortCommandPtr& node) = 0;
+            virtual void visit(const DeclareHeapCommandPtr& node) = 0;
             virtual void visit(const DefineFunCommandPtr& node) = 0;
             virtual void visit(const DefineFunRecCommandPtr& node) = 0;
             virtual void visit(const DefineFunsRecCommandPtr& node) = 0;
@@ -126,12 +136,14 @@ namespace smtlib {
 
             void visit(const AssertCommandPtr& node) override;
             void visit(const CheckSatCommandPtr& node) override;
+            void visit(const CheckUnsatCommandPtr& node) override;
             void visit(const CheckSatAssumCommandPtr& node) override;
             void visit(const DeclareConstCommandPtr& node) override;
             void visit(const DeclareDatatypeCommandPtr& node) override;
             void visit(const DeclareDatatypesCommandPtr& node) override;
             void visit(const DeclareFunCommandPtr& node) override;
             void visit(const DeclareSortCommandPtr& node) override;
+            void visit(const DeclareHeapCommandPtr& node) override;
             void visit(const DefineFunCommandPtr& node) override;
             void visit(const DefineFunRecCommandPtr& node) override;
             void visit(const DefineFunsRecCommandPtr& node) override;

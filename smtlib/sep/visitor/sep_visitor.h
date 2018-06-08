@@ -14,6 +14,8 @@
 
 namespace smtlib {
     namespace sep {
+        /* ===================================== Visitor0 ===================================== */
+        /** A visitor for the smtlib::sep hierarchy */
         class Visitor0 {
         protected:
             virtual void visit0(const NodePtr& node);
@@ -21,6 +23,14 @@ namespace smtlib {
             void visit0(std::vector<std::shared_ptr<T>>& arr) {
                 for (const auto& item : arr) {
                     visit0(item);
+                }
+            }
+
+            template<class T1, class T2>
+            void visit0(const std::vector<std::pair<std::shared_ptr<T1>, std::shared_ptr<T2>>>& arr) {
+                for (const auto pair : arr) {
+                    visit0(pair.first);
+                    visit0(pair.second);
                 }
             }
         public:
@@ -43,12 +53,14 @@ namespace smtlib {
 
             virtual void visit(const AssertCommandPtr& node) = 0;
             virtual void visit(const CheckSatCommandPtr& node) = 0;
+            virtual void visit(const CheckUnsatCommandPtr& node) = 0;
             virtual void visit(const CheckSatAssumCommandPtr& node) = 0;
             virtual void visit(const DeclareConstCommandPtr& node) = 0;
             virtual void visit(const DeclareDatatypeCommandPtr& node) = 0;
             virtual void visit(const DeclareDatatypesCommandPtr& node) = 0;
             virtual void visit(const DeclareFunCommandPtr& node) = 0;
             virtual void visit(const DeclareSortCommandPtr& node) = 0;
+            virtual void visit(const DeclareHeapCommandPtr& node) = 0;
             virtual void visit(const DefineFunCommandPtr& node) = 0;
             virtual void visit(const DefineFunRecCommandPtr& node) = 0;
             virtual void visit(const DefineFunsRecCommandPtr& node) = 0;
@@ -134,6 +146,8 @@ namespace smtlib {
             virtual void visit(const VariableBindingPtr& node) = 0;
         };
 
+        /* ================================== DummyVisitor0 =================================== */
+        /** A dummy (empty) implementation of Visitor0 */
         class DummyVisitor0 : public virtual Visitor0 {
         public:
             void visit(const SimpleAttributePtr& node) override;
@@ -155,12 +169,14 @@ namespace smtlib {
 
             void visit(const AssertCommandPtr& node) override;
             void visit(const CheckSatCommandPtr& node) override;
+            void visit(const CheckUnsatCommandPtr& node) override;
             void visit(const CheckSatAssumCommandPtr& node) override;
             void visit(const DeclareConstCommandPtr& node) override;
             void visit(const DeclareDatatypeCommandPtr& node) override;
             void visit(const DeclareDatatypesCommandPtr& node) override;
             void visit(const DeclareFunCommandPtr& node) override;
             void visit(const DeclareSortCommandPtr& node) override;
+            void visit(const DeclareHeapCommandPtr& node) override;
             void visit(const DefineFunCommandPtr& node) override;
             void visit(const DefineFunRecCommandPtr& node) override;
             void visit(const DefineFunsRecCommandPtr& node) override;
@@ -245,6 +261,8 @@ namespace smtlib {
             void visit(const SortedVariablePtr& node) override;
             void visit(const VariableBindingPtr& node) override;
         };
+
+        typedef std::shared_ptr<DummyVisitor0> DummyVisitor0Ptr;
     }
 }
 

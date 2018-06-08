@@ -23,6 +23,7 @@ namespace inductor {
         bool parseAttempted, parseSuccessful;
         bool syntaxCheckAttempted, syntaxCheckSuccessful;
         bool sortednessCheckAttempted, sortednessCheckSuccessful;
+        bool heapCheckAttempted, heapCheckSuccessful;
 
     public:
         /** Execution instance with default settings */
@@ -40,11 +41,14 @@ namespace inductor {
         /** Check the sortedness of an input file */
         bool checkSortedness();
 
-        /** Unfold the inductive predicates defined in an input file */
-        bool unfoldPredicates();
+        /** Check heap correctness */
+        bool checkHeap();
 
         /** Check entailment(s) specified in an input file */
         bool checkEntailment();
+
+        /** Unfold the inductive predicates defined in an input file */
+        bool unfoldPredicates();
 
         /** Run the input file in CVC4 */
         bool run();

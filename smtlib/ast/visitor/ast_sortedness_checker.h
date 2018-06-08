@@ -161,6 +161,7 @@ namespace smtlib {
             void visit(const DeclareDatatypeCommandPtr& node) override;
             void visit(const DeclareDatatypesCommandPtr& node) override;
             void visit(const DeclareSortCommandPtr& node) override;
+            void visit(const DeclareHeapCommandPtr& node) override;
             void visit(const DefineFunCommandPtr& node) override;
             void visit(const DefineFunRecCommandPtr& node) override;
             void visit(const DefineFunsRecCommandPtr& node) override;

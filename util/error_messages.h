@@ -6,8 +6,8 @@
 #ifndef INDUCTOR_ERROR_MESSAGES_H
 #define INDUCTOR_ERROR_MESSAGES_H
 
-#include "ast/ast_abstract.h"
-#include "ast/ast_sort.h"
+#include "ast/ast_classes.h"
+#include "sep/sep_classes.h"
 
 #include <sstream>
 #include <string>
@@ -51,6 +51,8 @@ public:
     static const std::string ERR_DECL_FUN_MISSING_RET;
     static const std::string ERR_DECL_SORT_MISSING_NAME;
     static const std::string ERR_DECL_SORT_MISSING_ARITY;
+    static const std::string ERR_DECL_HEAP_MISSING_LOC;
+    static const std::string ERR_DECL_HEAP_MISSING_DATA;
     static const std::string ERR_DEF_FUN_MISSING_DEF;
     static const std::string ERR_DEF_FUN_REC_MISSING_DEF;
     static const std::string ERR_DEF_FUNS_REC_EMPTY_DECLS;
@@ -134,6 +136,10 @@ public:
     static const std::string ERR_UFLD_LVL_NEGATIVE;
     static const std::string ERR_UFLD_LVL_INVALID;
     static const std::string ERR_OUT_PATH_INVALID;
+    static const std::string ERR_UNSPECIFIED_LOC_SORT;
+    static const std::string ERR_UNSPECIFIED_DATA_SORT;
+    static const std::string ERR_UNSPECIFIED_NIL_SORT;
+    static const std::string ERR_PTO_LEFT_NIL;
 
     static std::string buildTheoryUnloadable(const std::string& theory);
 
@@ -299,6 +305,13 @@ public:
 
     static std::string buildDefFunsRecCount(size_t declCount,
                                             size_t bodyCount);
+
+    static std::string buildLocDataPairUnaccepted(smtlib::sep::SortPtr loc,
+                                                  smtlib::sep::SortPtr data,
+                                                  const std::vector<std::string>& acceptedPairs);
+
+    static std::string buildLocSortUnaccepted(smtlib::sep::SortPtr loc,
+                                              const std::vector<std::string>& acceptedLoc);
 };
 
 typedef std::shared_ptr<ErrorMessages> ErrorMessagesPtr;

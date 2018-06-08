@@ -3,7 +3,7 @@
 #include "smtlib-glue.h"
 
 int yylex();
-int yyerror(SmtPrsr parser, const char *);
+void yyerror(SmtPrsr parser, const char *);
 
 #define YYMAXDEPTH 300000
 #define YYINITDEPTH 300000
@@ -20,14 +20,15 @@ int yyerror(SmtPrsr parser, const char *);
 {
 	AstPtr ptr;
 	AstList list;
+	AstPairList pairList;
 };
 
 %token KW_AS KW_LET KW_FORALL KW_EXISTS KW_MATCH KW_PAR NOT
 
 %token <ptr> NUMERAL DECIMAL HEXADECIMAL BINARY
 
-%token KW_ASSERT KW_CHK_SAT KW_CHK_SAT_ASSUM KW_DECL_CONST KW_DECL_FUN KW_DECL_SORT
-%token KW_DEF_FUN KW_DEF_FUN_REC KW_DEF_FUNS_REC KW_DEF_SORT KW_ECHO KW_EXIT
+%token KW_ASSERT KW_CHK_SAT KW_CHK_UNSAT KW_CHK_SAT_ASSUM KW_DECL_CONST KW_DECL_FUN KW_DECL_SORT
+%token KW_DECL_HEAP KW_DEF_FUN KW_DEF_FUN_REC KW_DEF_FUNS_REC KW_DEF_SORT KW_ECHO KW_EXIT
 %token KW_GET_ASSERTS KW_GET_ASSIGNS KW_GET_INFO KW_GET_MODEL KW_GET_OPT KW_GET_PROOF
 %token KW_GET_UNSAT_ASSUMS KW_GET_UNSAT_CORE KW_GET_VALUE KW_POP KW_PUSH
 %token KW_RESET KW_RESET_ASSERTS KW_SET_INFO KW_SET_LOGIC KW_SET_OPT
@@ -49,6 +50,8 @@ int yyerror(SmtPrsr parser, const char *);
 %type <list> symbol_star symbol_plus theory_attr_plus sort_symbol_decl_plus
 %type <list> par_fun_symbol_decl_plus logic_attr_plus sort_star sorted_var_star
 %type <list> constructor_decl_plus selector_decl_star sort_decl_plus match_case_plus datatype_decl_plus
+
+%type <pairList> sort_pair_plus
 
 %start smt_file
 
@@ -116,6 +119,18 @@ command:
 	'(' KW_CHK_SAT ')'			
 		{ 
 			$$ = ast_newCheckSatCommand(); 
+
+			@$.first_line = @1.first_line;
+            @$.first_column = @1.first_column;
+			@$.last_line = @3.last_line;
+            @$.last_column = @3.last_column;
+
+			ast_setLocation(parser, $$, @$.first_line, @$.first_column, @$.last_line, @$.last_column);
+		}
+|
+	'(' KW_CHK_UNSAT ')'
+		{
+			$$ = ast_newCheckUnsatCommand();
 
 			@$.first_line = @1.first_line;
             @$.first_column = @1.first_column;
@@ -193,6 +208,18 @@ command:
             @$.first_column = @1.first_column;
 			@$.last_line = @5.last_line;
             @$.last_column = @5.last_column;
+
+			ast_setLocation(parser, $$, @$.first_line, @$.first_column, @$.last_line, @$.last_column);
+		}
+|
+	'(' KW_DECL_HEAP sort_pair_plus ')'
+		{
+			$$ = ast_newDeclareHeapCommand($3);
+
+			@$.first_line = @1.first_line;
+            @$.first_column = @1.first_column;
+			@$.last_line = @4.last_line;
+            @$.last_column = @4.last_column;
 
 			ast_setLocation(parser, $$, @$.first_line, @$.first_column, @$.last_line, @$.last_column);
 		}
@@ -988,7 +1015,7 @@ identifier:
 			@$.last_line = @1.last_line;
             @$.last_column = @1.last_column;
 
-
+            ast_setLocation(parser, $$, @$.first_line, @$.first_column, @$.last_line, @$.last_column);
 		}
 |
 	'(' '_' symbol index_plus ')'
@@ -1126,6 +1153,30 @@ sort_star:
 				@$.last_line = @2.last_line;
             	@$.last_column = @2.last_column;
 			}
+		}
+;
+
+sort_pair_plus:
+	'(' sort sort ')'
+		{
+			$$ = ast_pairListCreate();
+			ast_pairListAdd($$, $2, $3);
+
+			@$.first_line = @1.first_line;
+            @$.first_column = @1.first_column;
+			@$.last_line = @3.last_line;
+            @$.last_column = @3.last_column;
+		}
+|
+	sort_pair_plus '(' sort sort ')'
+		{
+			ast_pairListAdd($1, $3, $4);
+			$$ = $1;
+
+			@$.first_line = @1.first_line;
+            @$.first_column = @1.first_column;
+			@$.last_line = @5.last_line;
+            @$.last_column = @5.last_column;
 		}
 ;
 
@@ -1873,7 +1924,7 @@ logic_attr_plus:
 
 %%
 
-int yyerror(SmtPrsr parser, const char* s) {
+void yyerror(SmtPrsr parser, const char* s) {
 	ast_reportError(parser, yylloc.first_line, yylloc.first_column,
 					yylloc.last_line, yylloc.last_column, s);
 }

@@ -68,6 +68,11 @@ CommandPtr share(AstPtr nakedPtr) {
         return option2->shared_from_this();
     }
 
+    CheckUnsatCommandPtr option2b = dynamic_pointer_cast<CheckUnsatCommand>(smtlib_nodemap[nakedPtr]);
+    if (option2b) {
+        return option2b->shared_from_this();
+    }
+
     CheckSatAssumCommandPtr option3 = dynamic_pointer_cast<CheckSatAssumCommand>(smtlib_nodemap[nakedPtr]);
     if (option3) {
         return option3->shared_from_this();
@@ -86,6 +91,11 @@ CommandPtr share(AstPtr nakedPtr) {
     DeclareSortCommandPtr option6 = dynamic_pointer_cast<DeclareSortCommand>(smtlib_nodemap[nakedPtr]);
     if (option6) {
         return option6->shared_from_this();
+    }
+
+    DeclareHeapCommandPtr option6b = dynamic_pointer_cast<DeclareHeapCommand>(smtlib_nodemap[nakedPtr]);
+    if (option6b) {
+        return option6b->shared_from_this();
     }
 
     DefineFunCommandPtr option7 = dynamic_pointer_cast<DefineFunCommand>(smtlib_nodemap[nakedPtr]);
@@ -445,6 +455,27 @@ public:
         v.push_back(item);
     }
 };
+
+class ParserInternalPairList {
+private:
+    vector<pair<AstPtr, AstPtr>> v;
+public:
+    template<class T1, class T2>
+    vector<pair<shared_ptr<T1>, shared_ptr<T2>>> unwrap() {
+        vector<pair<shared_ptr<T1>, shared_ptr<T2>>> result;
+        for (const auto& pair : v) {
+            shared_ptr<T1> ptr1 = share<T1>(pair.first);
+            shared_ptr<T1> ptr2 = share<T2>(pair.second);
+            result.push_back(make_pair(ptr1, ptr2));
+        }
+        v.clear();
+        return result;
+    };
+
+    inline void add(AstPtr item1, AstPtr item2) {
+        v.push_back(make_pair(item1, item2));
+    }
+};
 //}
 //}
 
@@ -457,6 +488,18 @@ void ast_listAdd(AstList list, AstPtr item) {
 }
 
 void ast_listDelete(AstList list) {
+    delete list;
+}
+
+AstPairList ast_pairListCreate() {
+    return new ParserInternalPairList();
+}
+
+void ast_pairListAdd(AstPairList list, AstPtr item1, AstPtr item2) {
+    list->add(item1, item2);
+}
+
+void ast_pairListDelete(AstList list) {
     delete list;
 }
 
@@ -566,6 +609,12 @@ AstPtr ast_newCheckSatCommand() {
     return ptr.get();
 }
 
+AstPtr ast_newCheckUnsatCommand() {
+    CheckUnsatCommandPtr ptr = make_shared<CheckUnsatCommand>();
+    smtlib_nodemap[ptr.get()] = ptr;
+    return ptr.get();
+}
+
 AstPtr ast_newCheckSatAssumCommand(AstList assumptions) {
     CheckSatAssumCommandPtr ptr =
             make_shared<CheckSatAssumCommand>(std::move(assumptions->unwrap<PropLiteral>()));
@@ -598,7 +647,6 @@ AstPtr ast_newDeclareDatatypesCommand(AstList sorts, AstList declarations) {
 }
 
 AstPtr ast_newDeclareFunCommand(AstPtr symbol, AstList params, AstPtr sort) {
-    vector<SortPtr> v();
     DeclareFunCommandPtr ptr = make_shared<DeclareFunCommand>(std::move(share<Symbol>(symbol)),
                                                               std::move(params->unwrap<Sort>()),
                                                               std::move(share<Sort>(sort)));
@@ -610,6 +658,13 @@ AstPtr ast_newDeclareSortCommand(AstPtr symbol, AstPtr arity) {
     DeclareSortCommandPtr ptr =
             make_shared<DeclareSortCommand>(std::move(share<Symbol>(symbol)),
                                             std::move(share<NumeralLiteral>(arity)));
+    smtlib_nodemap[ptr.get()] = ptr;
+    return ptr.get();
+}
+
+AstPtr ast_newDeclareHeapCommand(AstPairList pairs) {
+    DeclareHeapCommandPtr ptr =
+            make_shared<DeclareHeapCommand>(std::move(pairs->unwrap<Sort, Sort>()));
     smtlib_nodemap[ptr.get()] = ptr;
     return ptr.get();
 }

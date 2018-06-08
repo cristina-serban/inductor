@@ -28,6 +28,9 @@ namespace smtlib {
                               public sep::IStackLoaderContext,
                               public std::enable_shared_from_this<CVC4Interface> {
         private:
+            /** Heap type */
+            smtlib::sep::HeapEntry heapType;
+
             /** Location argument for emp */
             CVC4::Expr empLocArg;
             /** Data argument for emp */

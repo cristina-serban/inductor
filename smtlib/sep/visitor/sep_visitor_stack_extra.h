@@ -1,25 +1,17 @@
-/**
- * \file sep_visitor_extra.h
- * \brief Additional visitor types.
- */
+#ifndef SLCOMP_PARSER_SEP_VISITOR_STACK_EXTRA_H
+#define SLCOMP_PARSER_SEP_VISITOR_STACK_EXTRA_H
 
-#ifndef INDUCTOR_SEP_VISITOR_EXTRA_H
-#define INDUCTOR_SEP_VISITOR_EXTRA_H
-
-#include "sep_visitor.h"
-
-#include "sep/sep_abstract.h"
-#include "util/logger.h"
+#include "sep_visitor_stack.h"
 
 namespace smtlib {
     namespace sep {
-        /* ===================================== Visitor1 ===================================== */
+        /* ================================ VisitorWithStack1 ================================= */
         /**
-         * An extended visitor for the smtlib::sep hierarchy,
+         * An extended visitor with stack for the smtlib::sep hierarchy,
          * where each visit returns a result
          */
         template<class RetT>
-        class Visitor1 : public virtual Visitor0 {
+        class VisitorWithStack1 : public virtual VisitorWithStack0 {
         protected:
             RetT ret;
 
@@ -45,13 +37,13 @@ namespace smtlib {
             }
         };
 
-        /* ===================================== Visitor2 ===================================== */
+        /* ================================ VisitorWithStack2 ================================= */
         /**
-         * An extended visitor for the smtlib::sep hierarchy,
-         * where each visit returns a result and takes an additional argument
-         */
+        * An extended visitor with stack for the smtlib::sep hierarchy,
+        * where each visit returns a result and takes an additional argument
+        */
         template<class RetT, class ArgT>
-        class Visitor2 : public virtual Visitor0 {
+        class VisitorWithStack2 : public virtual VisitorWithStack0 {
         protected:
             ArgT arg;
             RetT ret;
@@ -82,26 +74,22 @@ namespace smtlib {
             }
         };
 
-        /* ================================== DummyVisitor1 =================================== */
-        /** A dummy (empty) implementation of Visitor1 */
+        /* ============================== DummyVisitorWithStack1 ============================== */
         template<class RetT>
-        class DummyVisitor1 : public Visitor1<RetT>,
-                              public DummyVisitor0 {
+        class DummyVisitorWithStack1 : public VisitorWithStack1<RetT>,
+                                       public DummyVisitorWithStack0 {
         };
 
-        template<class RetT>
-        using DummyVisitor1Ptr = std::shared_ptr<DummyVisitor1<RetT>>;
+        typedef std::shared_ptr<DummyVisitorWithStack1> DummyVisitorWithStack1Ptr;
 
-        /* ================================== DummyVisitor2 =================================== */
-        /** A dummy (empty) implementation of Visitor2 */
+        /* ============================== DummyVisitorWithStack2 ============================== */
         template<class RetT, class ArgT>
-        class DummyVisitor2 : public Visitor2<RetT, ArgT>,
-                              public DummyVisitor0 {
+        class DummyVisitorWithStack2 : public VisitorWithStack2<RetT, ArgT>,
+                                       public DummyVisitorWithStack0 {
         };
 
-        template<class RetT, class ArgT>
-        using DummyVisitor2Ptr = std::shared_ptr<DummyVisitor2<RetT, ArgT>>;
+        typedef std::shared_ptr<DummyVisitorWithStack2> DummyVisitorWithStack2Ptr;
     }
 }
 
-#endif //INDUCTOR_AST_VISITOR_EXTRA_H
+#endif //SLCOMP_PARSER_SEP_VISITOR_STACK_EXTRA_H

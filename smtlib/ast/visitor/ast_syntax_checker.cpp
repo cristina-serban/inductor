@@ -170,6 +170,15 @@ void SyntaxChecker::visit(const CheckSatCommandPtr& node) {
     }
 }
 
+void SyntaxChecker::visit(const CheckUnsatCommandPtr& node) {
+    ErrorPtr err;
+
+    if (!node) {
+        err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
+        return;
+    }
+}
+
 void SyntaxChecker::visit(const CheckSatAssumCommandPtr& node) {
     ErrorPtr err;
 
@@ -309,6 +318,29 @@ void SyntaxChecker::visit(const DeclareSortCommandPtr& node) {
         err = addError(ErrorMessages::ERR_DECL_SORT_MISSING_ARITY, node, err);
     } else {
         visit0(node->arity);
+    }
+}
+
+void SyntaxChecker::visit(const DeclareHeapCommandPtr& node) {
+    ErrorPtr err;
+
+    if (!node) {
+        err = addError(ErrorMessages::ERR_NULL_NODE_VISIT, node, err);
+        return;
+    }
+
+    for(const auto& pair : node->locDataPairs) {
+        if (!pair.first) {
+            err = addError(ErrorMessages::ERR_DECL_HEAP_MISSING_LOC, node, err);
+        } else {
+            visit0(pair.first);
+        }
+
+        if (!pair.second) {
+            err = addError(ErrorMessages::ERR_DECL_HEAP_MISSING_DATA, node, err);
+        } else {
+            visit0(pair.second);
+        }
     }
 }
 

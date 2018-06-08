@@ -31,6 +31,8 @@ public:
 
     static void sortednessError(const char *fun, const char *msg);
 
+    static void heapError(const char *fun, const char *msg);
+
     static void predicateError(const char *msg);
 };
 
