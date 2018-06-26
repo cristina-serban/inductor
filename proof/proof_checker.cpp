@@ -354,10 +354,10 @@ bool EntailmentChecker::tryAxiom(const PairStmtNodePtr& node) {
     if (!pair->left->calls.empty())
         return false;
 
-    CVC4InterfacePtr cvc = make_shared<CVC4Interface>();
-    cvc->loadScript(script);
-
     for (const auto& rstate : pair->right) {
+        CVC4InterfacePtr cvc = make_shared<CVC4Interface>();
+        cvc->loadScript(script);
+
         // TODO allow predicate calls as uninterpreted functions
         if (!rstate->calls.empty())
             continue;
@@ -458,10 +458,10 @@ bool EntailmentChecker::tryReduce(const PairStmtNodePtr& node,
         left = leftState->constraint->toTerm();
     }
 
-    CVC4InterfacePtr cvc = make_shared<CVC4Interface>();
-    cvc->loadScript(script);
-
     for (size_t i = 0, sz = rightSet.size(); i < sz; i++) {
+        CVC4InterfacePtr cvc = make_shared<CVC4Interface>();
+        cvc->loadScript(script);
+
         StateSubstitutionVector subst;
         appl->subst.push_back(subst);
         appl->entails.push_back(false);

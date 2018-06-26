@@ -202,7 +202,7 @@ bool CVC4Interface::checkSat() {
 
 bool CVC4Interface::checkEntailment(const std::vector<sep::SortedVariablePtr>& vars,
                                     const sep::TermPtr& left, const sep::TermPtr& right) {
-    reset();
+    //reset();
 
     for (const auto& var : vars) {
         Expr expr = manager->mkVar(var->name, translateSort(var->sort));
@@ -221,7 +221,7 @@ bool CVC4Interface::checkEntailment(const std::vector<sep::SortedVariablePtr>& v
 bool CVC4Interface::checkEntailment(const std::vector<sep::SortedVariablePtr>& vars,
                                     const std::vector<sep::SortedVariablePtr>& binds,
                                     const sep::TermPtr& left, const sep::TermPtr& right) {
-    reset();
+    //reset();
 
     for (const auto& var : vars) {
         Expr expr = manager->mkVar(var->name, translateSort(var->sort));
@@ -249,7 +249,7 @@ bool CVC4Interface::checkEntailment(const std::vector<sep::SortedVariablePtr>& v
                                     const std::vector<sep::SortedVariablePtr>& binds,
                                     const sep::TermPtr& left, const sep::TermPtr& right,
                                     proof::StateSubstitutionVector& stateSubst) {
-    reset();
+    //reset();
 
     for (const auto& var : vars) {
         Expr expr = manager->mkVar(var->name, translateSort(var->sort));
@@ -434,7 +434,7 @@ void CVC4Interface::loadDatatype(const string& name, const sep::DatatypeDeclarat
         constructors[cons.getName()] = type;
 
         for(const auto& sel : cons) {
-            selectors[sel.getName()] = type;
+            selectors[sel.getName()] = sel.getType();
         }
     }
 }
@@ -450,7 +450,7 @@ void CVC4Interface::loadDatatypes(const std::vector<sep::SortDeclarationPtr>& so
             constructors[cons.getName()] = types[i];
 
             for(const auto& sel : cons) {
-                selectors[sel.getName()] = types[i];
+                selectors[sel.getName()] = sel.getType();
             }
         }
     }

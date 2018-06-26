@@ -171,7 +171,7 @@ void TermTranslator::visit(const sep::QualifiedTermPtr& node) {
         ret = arg->mkExpr(Kind::APPLY_CONSTRUCTOR, datatype.getConstructor(op), args);
     } else if (ctx->isDatatypeSelector(op)) {
         auto args = wrappedVisit(arg, node->terms);
-        auto datatype = ctx->getDatatypeForConstructor(op);
+        auto datatype = ctx->getDatatypeForSelector(op);
 
         for (const auto& cons : datatype.getDatatype()) {
             for (const auto& sel : cons) {

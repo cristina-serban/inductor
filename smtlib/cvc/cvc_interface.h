@@ -10,6 +10,7 @@
 
 #include "proof/proof_rule.h"
 #include "sep/sep_script.h"
+#include "sep/stack/sep_symbol_util.h"
 #include "visitor/sep_stack_loader.h"
 
 // CVC4 with `make install` (both standard and non-standard prefix)
@@ -65,7 +66,7 @@ namespace smtlib {
 
             std::unordered_map<std::string, CVC4::DatatypeType> datatypes;
             std::unordered_map<std::string, CVC4::DatatypeType> constructors;
-            std::unordered_map<std::string, CVC4::DatatypeType> selectors;
+            std::unordered_map<std::string, CVC4::SelectorType> selectors;
 
             std::vector<std::pair<CVC4::Type, CVC4::Type>> ptoTypes;
 
