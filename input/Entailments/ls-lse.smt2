@@ -37,4 +37,7 @@
 (declare-const x Int)
 (declare-const y Int)
 
-(assert ((=> (ls x y) (lse x y))))
+(assert (ls x y))
+(assert (not (lse x y)))
+
+(check-sat)

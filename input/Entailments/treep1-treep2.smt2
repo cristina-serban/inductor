@@ -4,8 +4,10 @@
 
 (declare-datatypes ((Node 0)) (((node (left Int) (right Int)))))
 
+(declare-heap (Int Node))
+
 (define-fun-rec tree ((x Int)) Bool
-        (or (and (= x (as nil Int)) emp)
+        (or (and (= x (as nil Int)) (_ emp Int Node))
             (exists ((l Int) (r Int)) (sep (pto x (node l r)) (tree l) (tree r)))
         )
 )
@@ -25,4 +27,7 @@
 
 (declare-const x Int)
 
-(assert ((=> (treep1 x) (treep2 x))))
+(assert (treep1 x))
+(assert (not (treep2 x)))
+
+(check-sat)

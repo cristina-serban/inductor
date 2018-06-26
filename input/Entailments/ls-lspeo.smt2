@@ -2,8 +2,10 @@
 
 (set-logic SEPLOGLIA)
 
+(declare-heap (Int Int))
+
 (define-fun-rec ls ((x Int) (y Int)) Bool
-        (or (and ( = x y) emp)
+        (or (and ( = x y) (_ emp Int Int))
             (exists ((z Int))
                 (sep (pto x z) (ls z y)))
         )
@@ -17,7 +19,7 @@
 )
 
 (define-funs-rec ((lse ((x Int) (y Int)) Bool) (lso ((x Int) (y Int)) Bool))
-        ((or (and ( = x y) emp)
+        ((or (and ( = x y) (_ emp Int Int))
             (exists ((z Int))
                 (sep (pto x z) (lso z y)))
         )
@@ -37,4 +39,7 @@
 (declare-const x Int)
 (declare-const y Int)
 
-(assert ((=> (ls x y) (lspeo x y))))
+(assert (ls x y))
+(assert (not (lspeo x y)))
+
+(check-sat)
