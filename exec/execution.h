@@ -20,10 +20,10 @@ namespace inductor {
         ExecutionSettingsPtr settings;
         smtlib::ast::NodePtr ast;
 
-        bool parseAttempted, parseSuccessful;
-        bool syntaxCheckAttempted, syntaxCheckSuccessful;
-        bool sortednessCheckAttempted, sortednessCheckSuccessful;
-        bool heapCheckAttempted, heapCheckSuccessful;
+        bool parseAttempted{false}, parseSuccessful{false};
+        bool syntaxCheckAttempted{false}, syntaxCheckSuccessful{false};
+        bool sortednessCheckAttempted{false}, sortednessCheckSuccessful{false};
+        bool heapCheckAttempted{false}, heapCheckSuccessful{false};
 
     public:
         /** Execution instance with default settings */

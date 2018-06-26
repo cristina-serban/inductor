@@ -22,14 +22,7 @@ using namespace std::chrono;
 
 
 Execution::Execution()
-        : settings(make_shared<ExecutionSettings>()) {
-    parseAttempted = false;
-    parseSuccessful = false;
-    syntaxCheckAttempted = false;
-    syntaxCheckSuccessful = false;
-    sortednessCheckAttempted = false;
-    sortednessCheckSuccessful = false;
-}
+        : settings(make_shared<ExecutionSettings>()) {}
 
 Execution::Execution(const ExecutionSettingsPtr& settings)
         : settings(make_shared<ExecutionSettings>(settings)) {
@@ -37,15 +30,7 @@ Execution::Execution(const ExecutionSettingsPtr& settings)
         ast = settings->getInputAst();
         parseAttempted = true;
         parseSuccessful = true;
-    } else {
-        parseAttempted = false;
-        parseSuccessful = false;
     }
-
-    syntaxCheckAttempted = false;
-    syntaxCheckSuccessful = false;
-    sortednessCheckAttempted = false;
-    sortednessCheckSuccessful = false;
 }
 
 bool Execution::parse() {
