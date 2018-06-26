@@ -58,13 +58,26 @@ To erase the generated code, run `make clean`.
 .../inductor$ ./inductor --check-ent input_file_path1 input_file_path2 input_file_path3 ...
 ```
 
-(5) As examples, here is how you would run the sample entailments in `input/Entailments`:
+(5) As examples, here is how you would run some sample entailment sets from `input/Entailments`:
 ```
-.../inductor$ ./inductor --check-ent input/Entailments/list-liseo.smt2
-.../inductor$ ./inductor --check-ent input/Entailments/listp-list.smt2
-.../inductor$ ./inductor --check-ent input/Entailments/lsa-ls.smt2
-.../inductor$ ./inductor --check-ent input/Entailments/ls-lseo.smt2
-.../inductor$ ./inductor --check-ent input/Entailments/lsp-ls.smt2
+.../inductor$ ./inductor --check-ent input/Entailments/ls-lsa.smt2 \
+                                     input/Entailments/lsa-ls.smt2
+                                     
+.../inductor$ ./inductor --check-ent input/Entailments/treep1-tree.smt2 \
+                                     input/Entailments/treep2-tree.smt2 \
+                                     input/Entailments/treep2-treep1.smt2 \
+                                     input/Entailments/tree-treep1.smt2 \
+                                     input/Entailments/tree-treep2.smt2 \
+                                     input/Entailments/treep1-treep2.smt2
+                                     
+.../inductor$ ./inductor --check-ent input/Entailments/lso-lspeo.smt2 \
+                                     input/Entailments/lsp-lspeo.smt2 \
+                                     input/Entailments/lsp-lse+lso.smt2 \
+                                     input/Entailments/lspeo-lse+lso.smt2 \
+                                     input/Entailments/lse-lspeo.smt2 \
+                                     input/Entailments/lse-lso.smt2 \
+                                     input/Entailments/lsp-lse.smt2 \
+                                     input/Entailments/lspeo-lso.smt2
 ```
 
 ## Generating documentation ##
